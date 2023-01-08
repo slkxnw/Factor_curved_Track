@@ -32,4 +32,11 @@ void myFrontend::ConcatTrklist(myTrkList::Ptr new_trk_list)
     }
 }
 
+void myFrontend::Stop()
+{
+    frontend_running_.store(true);
+    trk_list_update_.notify_one();
+    frontend_thread.join();
+}
+
 } // namespace mytrk

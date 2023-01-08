@@ -31,7 +31,10 @@ public:
     void ClearTrklist();
 
     //设置轨迹的id
-    void SetTrkId(unsigned long id);
+    void SetTrkId(unsigned long id)
+    {
+        trk_list_->SetObjID(id);
+    }
 
     //结束该线程
     void Stop();
@@ -78,8 +81,10 @@ private:
     void Optimize(myTrkList::KeyframeType &keyframes);
 
     std::thread frontend_thread;
+    std::atomic<bool> frontend_running_;
+
     std::mutex data_mutex_;
-    // std::condition_variable trk_list_update_;
+    std::condition_variable trk_list_update_;
     
     myFrame::Ptr last_frame_ = nullptr;
     myFrame::Ptr cur_frame_ = nullptr;

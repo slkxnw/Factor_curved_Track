@@ -60,15 +60,7 @@ public:
         std::unique_lock<std::mutex> lck(data_mutex_);
         return active_keyframes_;
     }
-
-    //返回当前trklist共有多少个frame
-    unsigned long GetNumofFrame()
-    {
-        std::unique_lock<std::mutex> lck(data_mutex_);
-        return num_of_frames;
-    }
-
-    
+ 
 
 private:
 
@@ -86,7 +78,6 @@ private:
     myFrame::Ptr cur_frame_ = nullptr;
 
     unsigned long obj_id_;
-    unsigned long num_of_frames = 0;
     int num_active_keyframes = 20;
     double max_obs_time_gap = 3.0;
     double max_ext_time_gap = 0.7;  

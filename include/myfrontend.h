@@ -20,6 +20,7 @@ public:
     typedef std::unique_ptr<myFrontend> Ptr;
     // typedef std::vector<myTrkList::Ptr> TrkListType;
 
+    //构造函数中，启动循环，并且挂起
     myFrontend();
 
     //航迹管理相关，初始化放在private里
@@ -49,7 +50,7 @@ public:
     
     //优化相关的操作
 
-    //有了新的观测，触发优化
+    //有了新的观测，触发优化,在外部使用这个frontend类的地方调用这个函数
     void UpdateTrkList();
 
     //TODO：得到边的测量，并把数据添加给measure——list
@@ -63,6 +64,7 @@ private:
 
     //初始化轨迹使用
     void FrontendLoop();
+    
 
     //获取上一帧状态
     void GetLastFrameInfo()
@@ -72,7 +74,10 @@ private:
     };
 
     //插入关键帧
-    bool InsertKeyFrame();
+    bool InsertKeyFrame()
+    {
+        trk_list_->InsertKeyframe(cur_frame_);
+    }
 
     //TODO：在设置因子图的时候，从trklist中取measure-list的数据，赋给edge
     void SetMeasurement();
@@ -90,6 +95,7 @@ private:
     myFrame::Ptr cur_frame_ = nullptr;
 
     myTrkList::Ptr trk_list_ = nullptr;
+    unsigned long num_of_frames = 0;
 
 
     Vec6 last_state_;

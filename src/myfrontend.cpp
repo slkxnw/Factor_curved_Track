@@ -67,24 +67,8 @@ myFrame::Ptr myFrontend::CreateMeasureFrame(Vec3 measure, double time, bool is_m
 myFrame::Ptr myFrontend::CreateExtrpFrame(double time)
 {
     myFrame::Ptr new_frame(new myFrame);
-    double th = last_state_[2];
-    double v = last_state_[3];
-    double a = last_state_[4];
-    double w = last_state_[5];
-    double dt = time - last_timestamp_;
-        
-    double dth = w * dt;
-    double dv = a * dt;
-
-    //[(v(t)ω + aωT) sin(θ(t) + ωT)+a cos(θ(t) + ωT)−v(t)ω sin θ(t) − a cos θ(t)] / ω^2
-    double dx = ((v * w + a * dth) * sin(th + dth) + a * cos(th + dth)
-         - v * w * sin(th) - a * cos(th)) / (w * w);
-    //[(−v(t)ω − aωT) cos(θ(t) + ωT)+a sin(θ(t) + ωT)+v(t)ω cos θ(t) − a sin θ(t)] / ω^2
-    double dy = ((-v * w - a * dth) * cos(th + dth) + a * sin(th + dth)
-         + v * w * cos(th) - a * sin(th)) / (w * w);
-    Vec6 cur_state;
-    cur_state << last_state_[0] + dx, last_state_[1] + dy; last_state_[3] + dth,
-                 last_state_[4] + dv, last_state_[5], last_state_[6];
+    
+    Vec6 cur_state = PredictState(time);
     new_frame->id_ = num_of_frames++;
     new_frame->obj_state_ = cur_state;
     new_frame->time_stamp_ = time;
@@ -111,6 +95,44 @@ void myFrontend::UpdateTrkList()
 {
     std::unique_lock<std::mutex> lock(data_mutex_);
     trk_list_update_.notify_one();
+}
+
+Vec3 myFrontend::PredictPostion(double time)
+{
+    Vec3 cur_position;
+    double th = last_state_[2];
+    double v = last_state_[3];
+    double a = last_state_[4];
+    double w = last_state_[5];
+    double dt = time - last_timestamp_;
+        
+    double dth = w * dt;
+    double dv = a * dt;
+
+    //[(v(t)ω + aωT) sin(θ(t) + ωT)+a cos(θ(t) + ωT)−v(t)ω sin θ(t) − a cos θ(t)] / ω^2
+    double dx = ((v * w + a * dth) * sin(th + dth) + a * cos(th + dth)
+         - v * w * sin(th) - a * cos(th)) / (w * w);
+    //[(−v(t)ω − aωT) cos(θ(t) + ωT)+a sin(θ(t) + ωT)+v(t)ω cos θ(t) − a sin θ(t)] / ω^2
+    double dy = ((-v * w - a * dth) * cos(th + dth) + a * sin(th + dth)
+         + v * w * cos(th) - a * sin(th)) / (w * w);
+    cur_position<<last_state_[0] + dx, last_state_[1] + dy, last_state_[2] + dth;
+    return cur_position;
+}
+
+Vec6 myFrontend::PredictState(double time)
+{
+    Vec6 cur_state;
+    double a = last_state_[4];
+    double w = last_state_[5];
+    double dt = time - last_timestamp_;
+        
+    double dth = w * dt;
+    double dv = a * dt;
+    Vec3 cur_position = PredictPostion(time);
+    
+    cur_state << cur_position[0], cur_position[1], cur_position[2],
+                 last_state_[3] + dv, last_state_[4], last_state_[5];
+    return cur_state;
 }
 
 } // namespace mytrk

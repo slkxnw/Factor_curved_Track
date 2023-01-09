@@ -57,6 +57,21 @@ public:
     //TODO：设计一个measurelist，他是tek-list的一部分，存放这里计算的结果
     Vec6 CalEdgeMeasure();
 
+    //数据关联相关操作
+    Vec3 PredictPostion(double time);
+
+    Vec6 PredictState(double time);
+
+    // void SetObjSize(Vec3 size)
+    // {
+    //     obj_size_ = size;
+    // }
+    // Vec3 GetObjSize()
+    // {
+    //     return obj_size_;
+    // }
+
+
 private:
 
     //初始化轨迹,设定初始车速为14，初始加速度和横摆角速度为0，根据匹配的观测结果和分配的目标id，初始化轨迹
@@ -100,6 +115,7 @@ private:
 
     Vec6 last_state_;
     double last_timestamp_;
+    // Vec3 obj_size_;
 
 };
 

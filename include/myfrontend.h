@@ -25,8 +25,18 @@ public:
 
     //航迹管理相关，初始化放在private里
 
+    //初始化轨迹,设定初始车速为14，初始加速度和横摆角速度为0，根据匹配的观测结果和分配的目标id，初始化轨迹
+    bool BuildInitTrkList(Vec3 measure, double time, unsigned int id);
+
     //合并两个轨迹
-    void ConcatTrklist(myTrkList::Ptr old_trk_list);
+    void ConcatTrklist(myTrkList::Ptr new_trk_list);
+
+    //提取出本frontend中的trklist
+    myTrkList::Ptr GetTrklist()
+    {
+        std::unique_lock<std::mutex> lock(data_mutex_);
+        return trk_list_;
+    }
 
     //删除轨迹
     void ClearTrklist();
@@ -40,7 +50,13 @@ public:
     //结束该线程
     void Stop();
 
-    //和frame相关操作，插入frame和获取上一帧状态放在private里
+    //和frame相关操作
+
+    //插入关键帧
+    bool InsertKeyFrame()
+    {
+        trk_list_->InsertKeyframe(cur_frame_);
+    }
 
     //基于观测和上一帧数据，确定帧状态,同时更新teklist的帧数量信息
     myFrame::Ptr CreateMeasureFrame(Vec3 measure, double time, bool is_measure = true);
@@ -74,9 +90,6 @@ public:
 
 private:
 
-    //初始化轨迹,设定初始车速为14，初始加速度和横摆角速度为0，根据匹配的观测结果和分配的目标id，初始化轨迹
-    bool BuildInitTrkList(Vec3 measure, double time, unsigned int id);
-
     //初始化轨迹使用
     void FrontendLoop();
     
@@ -87,12 +100,6 @@ private:
         last_state_ = last_frame_->ObjState();
         last_timestamp_ = last_frame_->ObjTimestamp();
     };
-
-    //插入关键帧
-    bool InsertKeyFrame()
-    {
-        trk_list_->InsertKeyframe(cur_frame_);
-    }
 
     //TODO：在设置因子图的时候，从trklist中取measure-list的数据，赋给edge
     void SetMeasurement();

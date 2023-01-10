@@ -42,7 +42,7 @@ void myFrontend::ConcatTrklist(myTrkList::Ptr new_trk_list)
 
 void myFrontend::Stop()
 {
-    frontend_running_.store(true);
+    frontend_running_.store(false);
     trk_list_update_.notify_one();
     frontend_thread.join();
 }
@@ -133,6 +133,11 @@ Vec6 myFrontend::PredictState(double time)
     cur_state << cur_position[0], cur_position[1], cur_position[2],
                  last_state_[3] + dv, last_state_[4], last_state_[5];
     return cur_state;
+}
+
+void myFrontend::Optimize(myTrkList::KeyframeType &keyframes)
+{
+    
 }
 
 } // namespace mytrk

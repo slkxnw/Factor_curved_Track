@@ -104,7 +104,7 @@ private:
     //TODO：在设置因子图的时候，从trklist中取measure-list的数据，赋给edge
     void SetMeasurement();
 
-    //更新关键帧的状态
+    //更新关键帧的状态,参考slam14讲，利用g2o和李代数进行位姿图优化的代码
     void Optimize(myTrkList::KeyframeType &keyframes);
 
     std::thread frontend_thread;

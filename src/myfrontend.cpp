@@ -1,5 +1,5 @@
 # include "myfrontend.h"
-
+# include "myg2o_simple_types.h"
 namespace mytrk
 {
 
@@ -135,9 +135,12 @@ Vec6 myFrontend::PredictState(double time)
     return cur_state;
 }
 
+
 void myFrontend::Optimize(myTrkList::KeyframeType &keyframes)
 {
-    
+    typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 6>> BlockSolverType;
+    typedef g2o::LinearSolverEigen<BlockSolverType::PoseMatrixType> LinearSolverType;
+
 }
 
 } // namespace mytrk

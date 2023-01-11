@@ -138,9 +138,59 @@ Vec6 myFrontend::PredictState(double time)
 
 void myFrontend::Optimize(myTrkList::KeyframeType &keyframes)
 {
+    //TODO:确定huber鲁棒核函数参数如何设计
+    double chi2_th = 5.991;  // robust kernel 阈值
+    
     typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 6>> BlockSolverType;
     typedef g2o::LinearSolverEigen<BlockSolverType::PoseMatrixType> LinearSolverType;
 
+    //这是一个简化的写法，正常要写三行代码
+    auto solver = new g2o::OptimizationAlgorithmLevenberg(
+        g2o::make_unique<BlockSolverType> (g2o::make_unique<LinearSolverType>()));
+    g2o::SparseOptimizer optimizer;
+    optimizer.setAlgorithm(solver);
+    optimizer.setVerbose(false);
+
+    int edge_cnt = 0;
+    std::map<unsigned long, VertexState *> vertexs;
+    std::map<unsigned long, EdgeConstVary *> edges;
+    double last_time = 0.0;
+    unsigned long last_id = 0;
+    for (auto &kf_pair : keyframes)
+    {
+        auto kf = kf_pair.second;
+        VertexState * vertex_state = new VertexState();
+        vertex_state->setId(kf_pair.first);
+        vertex_state->setEstimate(kf->obj_state_);
+        optimizer.addVertex(vertex_state);
+        vertexs.insert({kf_pair.first, vertex_state});
+
+        if (last_time != 0.0)
+        {
+            double dt = kf->time_stamp_ - last_time;
+            EdgeConstVary * edge = new EdgeConstVary(dt);
+
+            edge->setId(edge_cnt);
+            edge->setVertex(0, vertexs.at(last_id));
+            edge->setVertex(1, vertexs.at(kf_pair.first));
+            edge->setMeasurement(Vec6::Zero());
+            edge->setInformation(Mat66::Identity());
+            auto rk = new g2o::RobustKernelHuber();
+            rk->setDelta(chi2_th);
+            edge->setRobustKernel(rk);
+            optimizer.addEdge(edge);
+            edges.insert({edge_cnt, edge});
+            edge_cnt++;
+        }
+        last_id = kf_pair.first;
+        last_time = kf->time_stamp_;
+    }
+
+    optimizer.initializeOptimization();
+    optimizer.optimize(10);
+
+    for(auto &v : vertexs)
+        keyframes.at(v.first)->SetObjState(v.second->estimate()); 
 }
 
 } // namespace mytrk

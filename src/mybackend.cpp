@@ -3,7 +3,7 @@
 namespace mytrk
 {
 
-void myBackend::InitObj(std::vector<Vec7> od_res, double time)
+void myBackend::InitObj(std::vector<Vec7> &od_res, double time)
 {
     Vec3 measure;
     for (auto &od :od_res)
@@ -20,7 +20,7 @@ void myBackend::InitObj(std::vector<Vec7> od_res, double time)
     }
 }
 
-void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec7> matches, double time)
+void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec7> &matches, double time)
 {
     Vec3 measure;
     for (auto &match :matches)
@@ -48,7 +48,7 @@ void myBackend::StopObj(std::vector<unsigned long> dead_ids)
 myBackend::PredictObjtype myBackend::GetStatePrediction(double time)
 {
     Vec3 position_prediction;
-    for (auto state_pair : state_prediction_list_)
+    for (auto &state_pair : state_prediction_list_)
     {
         position_prediction = obj_list_[state_pair.first]->PredictPostion(time);
         state_pair.second.block<3, 1>(0, 0) = position_prediction;

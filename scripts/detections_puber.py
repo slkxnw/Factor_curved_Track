@@ -53,7 +53,8 @@ def detection_puber(args):
 
     detection_res_pub = rospy.Publisher('/detections', Detection_list, queue_size = 10)
 
-    rate = rospy.Rate(30)
+    # TODO：数据关联接收来自两个节点的数据，为了不造成数据匹配的误差问题，将数据发布频率降低
+    rate = rospy.Rate(10)
     
     path = os.path.join(args.datadir, args.dataset, args.det_name + '_' + args.categ + '_' + args.val, args.seqs + '.txt');
     

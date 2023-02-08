@@ -41,7 +41,8 @@ public:
         _estimate[5] += update[5];
     }
 
-    virtual bool read(std::istream &in) override {return true;}
+    virtual bool read(std::istream &in) override 
+    {return true;}
 
     virtual bool write(std::ostream &out) const override {return true;}
 

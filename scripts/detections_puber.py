@@ -66,9 +66,10 @@ def detection_puber(args):
     while not rospy.is_shutdown():
         dets_frame,infos_frame = get_frame_det(dets, frame_id)
         det_list = Detection_list()
-        # TODO：这里可能有问题，主要在于，第一，在msg文件中设置了几个默认值，不知是否可行
+        # TODO：这里可能有问题，主要在于
+        # 第一，在msg文件中设置了几个默认值，不知是否可行
         # 第二，不知道ros的数组在Python对应什么格式，目前是按照对应list来看的，
-        # ROS的UInt16MultiArray Message在Python是一个类，self.data = []
+        # 因为，ROS的UInt16MultiArray Message在Python是一个类，其中self.data = []
         for det,info in zip(dets_frame, infos_frame):
             inf = Information()
             inf.type = info[0]

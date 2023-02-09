@@ -1,0 +1,77 @@
+#!/home/chenz/anaconda3/envs/surroundCam_cap/bin/python
+# 将检测结果从当前帧坐标系转换到起始帧坐标系，目前是基于kitti官方的轨迹文件实现，后续改成可以接收来自slam算法的结果
+
+import rospy
+import numpy as np
+from .kitti_oxts import load_oxts_packets_and_poses
+import warnings
+import argparse
+import os
+from Factor_curved_Track.msg import Detection_list
+from Factor_curved_Track.msg import Pairs
+from Factor_curved_Track.msg import Information
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='transform')
+    parser.add_argument('--datadir', type=str, default='/home/chenz/GD/dataset')
+    parser.add_argument('--dataset', type=str, default='KITTI', help='KITTI, nuScenes')
+    parser.add_argument('--split', type=str, default='val', help='train, val, test')
+    parser.add_argument('--seqs', type=str, default='0001')
+    args = parser.parse_args()
+    return args
+
+
+def get_ego_traj(imu_poses, frame, pref, futf, inverse=False, only_fut=False):
+    # compute the motion of the ego vehicle for ego-motion compensation
+    # using the current frame as the coordinate
+    # current frame means one frame prior to future, and also the last frame of the past
+    
+    # compute the start and end frame to retrieve the imu poses
+    num_frames = imu_poses.shape[0]
+    assert frame >= 0 and frame <= num_frames - 1, 'error'
+    if inverse:             # pre and fut are inverse, i.e., inverse ego motion compensation
+        start = min(frame+pref-1, num_frames-1)
+        end   = max(frame-futf-1, -1)
+        index = [*range(start, end, -1)]
+    else:
+        start = max(frame-pref+1, 0)
+        end   = min(frame+futf+1, num_frames)
+        index = [*range(start, end)]
+    
+    # compute frame offset due to sequence boundary
+    left  = start - (frame-pref+1)
+    right = (frame+futf+1) - end
+
+    # compute relative transition compared to the current frame of the ego
+    all_world_xyz = imu_poses[index, :3, 3]    # N x 3, only translation, frame = 10-19 for fut only (0-19 for all)
+    cur_world_xyz = imu_poses[frame]                        # 4 x 4, frame = 9
+    T_world2imu   = np.linalg.inv(cur_world_xyz)            
+    all_world_hom = np.concatenate((all_world_xyz, np.ones((all_world_xyz.shape[0], 1))), axis=1)       # N x 4
+    all_xyz = all_world_hom.dot(T_world2imu.T)[:, :3]       # N x 3
+
+    # compute relative rotation compared to the current frame of the ego
+    all_world_rot = imu_poses[index, :3, :3]   # N x 3 x 3, only rotation
+    cur_world_rot = imu_poses[frame, :3, :3]                # 3 x 3, frame = 9
+    T_world2imu_rot = np.linalg.inv(cur_world_rot)        
+    all_rot_list = list()
+    for frame in range(all_world_rot.shape[0]):
+        all_rot_tmp = all_world_rot[frame].dot(T_world2imu_rot)   # 3 x 3
+        all_rot_list.append(all_rot_tmp)
+    
+    if only_fut:
+        fut_xyz, fut_rot_list = all_xyz[pref-left:], all_rot_list[pref-left:]
+        return fut_xyz, fut_rot_list, left, right
+    else:
+        return all_xyz, all_rot_list, left, right
+
+def transform(args):
+    oxt_path = os.path.join(args.datadir, args.dataset, "oxts" ,args.val, args.seqs + '.txt')
+    imu_pose = load_oxts_packets_and_poses(oxt_path)
+
+
+if __name__ == '__main__':
+    args = parse_args()
+    try:
+        transform(args)
+    except rospy.ROSInterruptException:
+        pass

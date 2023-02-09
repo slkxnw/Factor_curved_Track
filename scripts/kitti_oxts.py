@@ -1,6 +1,20 @@
 import numpy as np, json
 from numba import jit
-from xinshuo_io import fileparts
+# from xinshuo_io import fileparts
+
+# Per dataformat.txt
+OxtsPacket = namedtuple('OxtsPacket',
+                        'lat, lon, alt, ' +
+                        'roll, pitch, yaw, ' +
+                        'vn, ve, vf, vl, vu, ' +
+                        'ax, ay, az, af, al, au, ' +
+                        'wx, wy, wz, wf, wl, wu, ' +
+                        'pos_accuracy, vel_accuracy, ' +
+                        'navstat, numsats, ' +
+                        'posmode, velmode, orimode')
+
+# Bundle into an easy-to-access structure
+OxtsData = namedtuple('OxtsData', 'packet, T_w_imu')
 
 @jit
 def rotx(t):
@@ -37,7 +51,7 @@ def transform_from_rot_trans(R, t):
     return np.vstack((np.hstack([R, t]), [0, 0, 0, 1]))
 
 @jit
-def _poses_from_oxts(oxts_packets):
+def poses_from_oxts(oxts_packets):
 
     """Helper method to compute SE(3) pose matrices from OXTS packets."""
     # https://github.com/pratikac/kitti/blob/master/pykitti/raw.py
@@ -77,13 +91,14 @@ def load_oxts(oxts_file):
     """Load OXTS data from file."""
     # https://github.com/pratikac/kitti/blob/master/pykitti/raw.py
 
-    ext = fileparts(oxts_file)[-1]
-    if ext == '.json':        # loading for nuScenes-to-KITTI data
-        with open(oxts_file, 'r') as file: 
-            imu_poses = json.load(file)
-            imu_poses = np.array(imu_poses)
+    # 原始数据格式，不是json
+    # ext = fileparts(oxts_file)[-1]
+    # if ext == '.json':        # loading for nuScenes-to-KITTI data
+    #     with open(oxts_file, 'r') as file: 
+    #         imu_poses = json.load(file)
+    #         imu_poses = np.array(imu_poses)
 
-        return imu_poses
+    #     return imu_poses
 
     # Extract the data from each OXTS packe per dataformat.txt
     from collections import namedtuple
@@ -183,3 +198,60 @@ def egomotion_compensation_ID(traj_id, calib, ego_rot_imu, ego_xyz_imu, left, ri
     traj_id_rect = calib.imu_to_rect(traj_id_imu)
 
     return traj_id_rect
+
+def load_oxts_packets_and_poses(oxts_files):
+    """Generator to read OXTS ground truth data.
+       Poses are given in an East-North-Up coordinate system 
+       whose origin is the first GPS position.
+    """
+    # Scale for Mercator projection (from first lat value)
+    scale = None
+    # Origin of the global coordinate system (first GPS position)
+    origin = None
+
+    oxts = []
+
+    for filename in oxts_files:
+        with open(filename, 'r') as f:
+            for line in f.readlines():
+                line = line.split()
+                # Last five entries are flags and counts
+                line[:-5] = [float(x) for x in line[:-5]]
+                line[-5:] = [int(float(x)) for x in line[-5:]]
+
+                packet = OxtsPacket(*line)
+
+                if scale is None:
+                    scale = np.cos(packet.lat * np.pi / 180.)
+
+                R, t = pose_from_oxts_packet(packet, scale)
+
+                if origin is None:
+                    origin = t
+
+                T_w_imu = transform_from_rot_trans(R, t - origin)
+
+                oxts.append(OxtsData(packet, T_w_imu))
+
+    return oxts
+
+def pose_from_oxts_packet(packet, scale):
+    """Helper method to compute a SE(3) pose matrix from an OXTS packet.
+    """
+    er = 6378137.  # earth radius (approx.) in meters
+
+    # Use a Mercator projection to get the translation vector
+    tx = scale * packet.lon * np.pi * er / 180.
+    ty = scale * er * \
+        np.log(np.tan((90. + packet.lat) * np.pi / 360.))
+    tz = packet.alt
+    t = np.array([tx, ty, tz])
+
+    # Use the Euler angles to get the rotation matrix
+    Rx = rotx(packet.roll)
+    Ry = roty(packet.pitch)
+    Rz = rotz(packet.yaw)
+    R = Rz.dot(Ry.dot(Rx))
+
+    # Combine the translation and rotation into a homogeneous transform
+    return R, t

@@ -58,6 +58,17 @@ def greedy_matching(cost_matrix):
 
     return np.asarray(matched_indices)
 
+def process_dets(self, dets):
+		# convert each detection into the class Box3D 
+		# inputs: 
+		# 	dets - a numpy array of detections in the format [[h,w,l,x,y,z,theta],...]
+
+	dets_new = []
+	for det in dets:
+		det_tmp = Box3D.array2bbox_raw(det)
+		dets_new.append(det_tmp)
+
+	return dets_new
 
 def data_association(dets, trks, metric, threshold, algm='greedy', \
 	trk_innovation_matrix=None, hypothesis=1):   
@@ -71,6 +82,8 @@ def data_association(dets, trks, metric, threshold, algm='greedy', \
     from https://github.com/xinshuoweng/AB3DMOT.git
 	"""
 
+	dets = process_dets(dets)
+	trks = process_dets(trks)
 	# if there is no item in either row/col, skip the association and return all as unmatched
 	aff_matrix = np.zeros((len(dets), len(trks)), dtype=np.float32)
 	if len(trks) == 0: 

@@ -139,11 +139,10 @@ def data_association(dets, trks, metric, threshold, algm='greedy', \
 	else: matches = np.concatenate(matches, axis=0)
 
 	return matches, np.array(unmatched_dets), np.array(unmatched_trks), cost, aff_matrix
-# TODO: 所有的时间错都没有设定
+
 def associate_Callback(trks, dets, args):
 	matches,unmatch_dets,unmatch_trks, cost, aff_matrix = data_association(dets, trks, "giou_3d", -0.2, algm='hungar')
 
-	# TODO：可能有问题，在回调函数中定义publisher，每次都会生成一个新的发布者，无法形成queue,
 	# 修复了一下
 	match_pub = args[0]
 	unmatch_trk_pub = args[1]

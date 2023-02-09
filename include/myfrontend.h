@@ -78,6 +78,11 @@ public:
 
     Vec6 PredictState(double time);
 
+    myFrame::Ptr GetLastfeame()
+    {
+        return last_frame_;
+    }
+
     // void SetObjSize(Vec3 size)
     // {
     //     obj_size_ = size;

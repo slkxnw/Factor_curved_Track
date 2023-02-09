@@ -6,15 +6,45 @@
 # include<message_filters/synchronizer.h>
 # include<message_filters/sync_policies/approximate_time.h>
 # include"include/mybackend.h"
-// # include"Factor_curved_track/Detection_list.h"
-// # include"Factor_curved_Track/Pairs.h"
-// # include"Factor_curved_Track/stampArray.h"
+# include"track_msgs/Detection_list.h"
+# include"track_msgs/Pairs.h"
+# include"track_msgs/StampArray.h"
 
-void processCallback(const Factor_curved_Track::Pairs &match_pair, const Factor_curved_Track::StampArray &unmatch_trk, 
-                    const Factor_curved_Track::StampArray &unmatch_det, const Factor_curved_Track::Detection_list &dets,
+void processCallback(const track_msgs::Pairs &match_pair, const track_msgs::StampArray &unmatch_trk, 
+                    const track_msgs::StampArray &unmatch_det, const track_msgs::Detection_list &dets,
                     mytrk::myBackend::Ptr backend)
 {
-    
+    double time = dets.header.stamp.sec * 0.01;
+    std::unordered_map<unsigned long, Vec7> matches;
+    std::vector<unsigned long> dead_ids;
+    std::vector<Vec7> od_res;
+    Vec7 det;
+    //更新匹配到的轨迹
+    for(int i = 0; i < match_pair.trk.data.size(); ++i)
+    {
+        det << dets.detecs[i].pos.x, dets.detecs[i].pos.y, dets.detecs[i].pos.z, 
+                dets.detecs[i].siz.x, dets.detecs[i].siz.y, dets.detecs[i].siz.z, dets.detecs[i].alp;
+        matches[match_pair.trk.data[i]] = det;
+    }
+    backend->UpdateObjState(matches, time);
+    //删除老旧轨迹
+    for(auto & id : unmatch_trk.ids.data)
+    {
+        if((time - backend->GetObjlist()[id]->GetLastfeame()->time_stamp_) > 0.15)
+            dead_ids.push_back(id);
+    }
+    backend->StopObj(dead_ids);
+    //初始化新轨迹
+    for(auto & id : unmatch_det.ids.data)
+    {
+        det << dets.detecs[id].pos.x, dets.detecs[id].pos.y, dets.detecs[id].pos.z, 
+                dets.detecs[id].siz.x, dets.detecs[id].siz.y, dets.detecs[id].siz.z, dets.detecs[id].alp;
+        od_res.push_back(det);
+    }
+    backend->InitObj(od_res, time);
+
+    //发布trk预测结果
+    //或者发布每个trk的状态
 }
 
 int main(int argc, char** argv)
@@ -26,17 +56,17 @@ int main(int argc, char** argv)
     mytrk::myBackend::Ptr backend_p = mytrk::myBackend::Ptr(new mytrk::myBackend);
 
 
-    auto matched_pair_sub = message_filters::Subscriber<Factor_curved_Track::Pairs>(nh, "/matched_pair", 10);
-    auto unmatched_trk_sub = message_filters::Subscriber<Factor_curved_Track::StampArray>(nh, "/unmatched_trk", 10);
-    auto unmatched_det_sub = message_filters::Subscriber<Factor_curved_Track::StampArray>(nh, "/unmatched_det", 10);
-    auto dets_sub = message_filters::Subscriber<Factor_curved_Track::Detection_list>(nh, "/detections", 10);
+    message_filters::Subscriber<track_msgs::Pairs> matched_pair_sub(nh, "/matched_pair", 10);
+    message_filters::Subscriber<track_msgs::StampArray> unmatched_trk_sub(nh, "/unmatched_trk", 10);
+    message_filters::Subscriber<track_msgs::StampArray> unmatched_det_sub(nh, "/unmatched_det", 10);
+    message_filters::Subscriber<track_msgs::Detection_list> dets_sub(nh, "/detections", 10);
 
-    typedef message_filters::sync_policies::ApproximateTime<Factor_curved_Track::Pairs, Factor_curved_Track::StampArray, 
-    Factor_curved_Track::StampArray, Factor_curved_Track::Detection_list> MySynPolicy;
+    typedef message_filters::sync_policies::ApproximateTime<track_msgs::Pairs, track_msgs::StampArray, 
+    track_msgs::StampArray, track_msgs::Detection_list> MySynPolicy;
     
     message_filters::Synchronizer<MySynPolicy> sync(matched_pair_sub, unmatched_trk_sub, unmatched_det_sub, dets_sub);
 
-    sync.registerCallback(boost::bind(&processCallback, _1, _2, _3, _4, backend_p));
+    sync.registerCallback(boost::bind(&processCallback, _1, _2, _3, _4, &backend_p));
 
     ros::spin();
 

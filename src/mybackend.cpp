@@ -5,6 +5,7 @@ namespace mytrk
 
 void myBackend::InitObj(std::vector<Vec7> &od_res, double time)
 {
+    std::unique_lock<std::mutex> lck(data_lck_);
     Vec3 measure;
     for (auto &od :od_res)
     {

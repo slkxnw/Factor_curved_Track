@@ -92,7 +92,7 @@ def detection_puber(args):
         rospy.loginfo("pub frame %d with %d detections", frame_id, det_list.infos.size())
         frame_id = frame_id + 1
 
-# TODO:设置退出，当遍历当前seq所有帧后，结束程序
+# TODO:需要设置退出，当遍历当前seq所有帧后，结束程序
 
 if __name__ == '__main__':
     args = parse_args()

@@ -40,10 +40,17 @@ public:
     //给出，给定时刻的目标位置预测结果
     PredictObjtype GetStatePrediction(double time);
 
+    Frontendtype GetObjlist()
+    {
+        std::unique_lock<std::mutex> lck(data_lck_);
+        return obj_list_;
+    }
+
 
 private:
 
     unsigned long num_of_obj = 0;
+    std::mutex data_lck_;
 
     Frontendtype obj_list_;
     TrkListType dead_obj_list;

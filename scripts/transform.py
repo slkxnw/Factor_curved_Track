@@ -12,7 +12,7 @@ import os
 from Factor_curved_Track.msg import Detection_list
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='transform')
+    parser = argparse.ArgumentParser(description='cord_transform')
     parser.add_argument('--datadir', type=str, default='/home/chenz/GD/dataset')
     parser.add_argument('--dataset', type=str, default='KITTI', help='KITTI, nuScenes')
     parser.add_argument('--split', type=str, default='val', help='train, val, test')
@@ -73,6 +73,7 @@ def transform_callback(dets, args):
     ego_trans = ego_Oxt.T_w_imu[0:3, 3]
     ego_rotZ = ego_Oxt.packet.yaw
     # 这里，将自车在全局坐标系下的roty和检测结果车辆在自车坐标系下的roty相加
+    # TODO 将结果调整到正副pi/2中
     for det in dets.detecs:
         det.pos = det.pos + ego_trans
         det.alp = det.alp + ego_rotZ

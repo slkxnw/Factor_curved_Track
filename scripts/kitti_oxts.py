@@ -1,5 +1,6 @@
 import numpy as np, json
 from numba import jit
+from collections import namedtuple
 # from xinshuo_io import fileparts
 
 # Per dataformat.txt
@@ -80,6 +81,7 @@ def poses_from_oxts(oxts_packets):
         Rx = rotx(packet.roll)
         Ry = roty(packet.pitch)
         Rz = rotz(packet.yaw)
+        # R = Rz
         R = Rz.dot(Ry.dot(Rx))
 
         # Combine the translation and rotation into a homogeneous transform
@@ -124,7 +126,7 @@ def load_oxts(oxts_file):
             oxts_packets.append(data)
 
     # Precompute the IMU poses in the world frame
-    imu_poses = _poses_from_oxts(oxts_packets)      # seq_frames x 4 x 4
+    imu_poses = poses_from_oxts(oxts_packets)      # seq_frames x 4 x 4
 
     return imu_poses
     
@@ -219,11 +221,15 @@ def load_oxts_packets_and_poses(oxts_files):
                 line[:-5] = [float(x) for x in line[:-5]]
                 line[-5:] = [int(float(x)) for x in line[-5:]]
 
+                # 将每一行oxt数据读入packet
                 packet = OxtsPacket(*line)
 
                 if scale is None:
                     scale = np.cos(packet.lat * np.pi / 180.)
 
+                #根据packet生成旋转矩阵和平移
+                # 确定一下是相对于那个坐标的
+                # 代码说明提出，其相对于初始时刻
                 R, t = pose_from_oxts_packet(packet, scale)
 
                 if origin is None:

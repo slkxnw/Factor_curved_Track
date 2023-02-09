@@ -51,12 +51,12 @@ def get_frame_det(dets_all, frame):
 def detection_puber(args):
     rospy.init_node('detection_puber', anonymous = True)
 
-    detection_res_pub = rospy.Publisher('/detections', Detection_list, queue_size = 10)
+    detection_res_pub = rospy.Publisher('/orin_detections', Detection_list, queue_size = 10)
 
     # TODO：数据关联接收来自两个节点的数据，为了不造成数据匹配的误差问题，将数据发布频率降低
     rate = rospy.Rate(10)
     
-    path = os.path.join(args.datadir, args.dataset, args.det_name + '_' + args.categ + '_' + args.val, args.seqs + '.txt');
+    path = os.path.join(args.datadir, args.dataset, args.det_name + '_' + args.categ + '_' + args.val, args.seqs + '.txt')
     
     dets, flg = load_detection(path)
     if not flg:
@@ -82,6 +82,11 @@ def detection_puber(args):
             det_.alp = det[7]
             det_list.detecs.append(det_)
             det_list.infos.append(inf)
+        
+        # TODO 这里将时间戳设为frameid，为了方便在数据关联的数据对齐中，使用ros的同步方法
+        det_list.header.stamp.sec = frame_id
+        det_list.header.stame.nsec = 0
+        
         detection_res_pub.publish(det_list)
         rospy.loginfo("pub frame %d with %d detections", frame_id, det_list.infos.size())
         frame_id = frame_id + 1

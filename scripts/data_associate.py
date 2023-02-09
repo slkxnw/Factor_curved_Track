@@ -139,13 +139,14 @@ def data_association(dets, trks, metric, threshold, algm='greedy', \
 
 	return matches, np.array(unmatched_dets), np.array(unmatched_trks), cost, aff_matrix
 # TODO: 所有的时间错都没有设定
-def associate_Callback(trks, dets):
+def associate_Callback(trks, dets, args):
 	matches,unmatch_dets,unmatch_trks, cost, aff_matrix = data_association(dets, trks, "giou_3d", -0.2, algm='hungar')
 
-	# TODO：可能有问题，在回调函数中定义publisher，每次都会生成一个新的发布者，无法形成queue
-	match_pub = rospy.Publisher("/matched_pair", Pairs, queue_size=10)
-	unmatch_trk_pub = rospy.Publisher("/unmatched_trk", Int8MultiArray, queue_size=10)
-	unmatch_det_pub = rospy.Publisher("/unmatched_det", Int8MultiArray, queue_size=10)
+	# TODO：可能有问题，在回调函数中定义publisher，每次都会生成一个新的发布者，无法形成queue,
+	# 修复了一下
+	match_pub = args[0]
+	unmatch_trk_pub = args[1]
+	unmatch_det_pub = args[2]
 	pub_match = Pairs()
 	pub_match.dets = matches[:, 0]
 	pub_match.trks = matches[:, 1]
@@ -165,16 +166,16 @@ def data_association():
     
     rospy.init_node('data_association_node', anonymous=True)
 
-    
-
-
+    match_pub = rospy.Publisher("/matched_pair", Pairs, queue_size=10)
+    unmatch_trk_pub = rospy.Publisher("/unmatched_trk", Int8MultiArray, queue_size=10)
+    unmatch_det_pub = rospy.Publisher("/unmatched_det", Int8MultiArray, queue_size=10)
 
     trks = message_filters.Subscriber("/tracks", Detection_list)
     dets = message_filters.Subscriber("/detections", Detection_list)
 
     ts = message_filters.ApproximateTimeSynchronizer([trks, dets], 10, 1, allow_headerless= True)
 
-    ts.registerCallback(associate_Callback)
+    ts.registerCallback(associate_Callback, (match_pub, unmatch_trk_pub,unmatch_det_pub))
 
     rospy.spin()
 

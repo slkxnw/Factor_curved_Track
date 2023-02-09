@@ -64,9 +64,38 @@ def get_ego_traj(imu_poses, frame, pref, futf, inverse=False, only_fut=False):
     else:
         return all_xyz, all_rot_list, left, right
 
+def transform_callback(dets, args):
+    imu_pose = args[0]
+    dets_puber = args[1]
+    # 检测结果帧对应的车辆位姿（以初始时刻的坐标为原点，坐标方向为正东）
+    # stamp使用frameid代替
+    ego_Oxt = imu_pose[dets.header.stamp.sec]
+    ego_trans = ego_Oxt.T_w_imu[0:3, 3]
+    ego_rotZ = ego_Oxt.packet.yaw
+    # 这里，将自车在全局坐标系下的roty和检测结果车辆在自车坐标系下的roty相加
+    for det in dets.detecs:
+        det.pos = det.pos + ego_trans
+        det.alp = det.alp + ego_rotZ
+    
+    dets_puber.publish(dets)
+
+
+
+
+
 def transform(args):
+    #TODO 添加接收来自slam的本车位置msg的功能
     oxt_path = os.path.join(args.datadir, args.dataset, "oxts" ,args.val, args.seqs + '.txt')
+    #返回的imupose是OxtsData的list，每个OxtsData包含一条原始的oxt数据，和变换后的，相较于起始帧位置的SE3矩阵
     imu_pose = load_oxts_packets_and_poses(oxt_path)
+    rospy.init_node('cord_transform', anonymous=True)
+    
+    dets_puber = rospy.Publisher('/detections', Detection_list, queue_size = 10)
+
+    rospy.Subscriber("/orin_detections", Detection_list, transform_callback, (imu_pose, dets_puber))
+
+    rospy.spin()
+
 
 
 if __name__ == '__main__':

@@ -1,5 +1,6 @@
 #!/home/chenz/anaconda3/envs/surroundCam_cap/bin/python
-# 用于接收检测结果和轨迹的状态，完成数据关联，输出匹配结果和为匹配观测/轨迹
+# -*- coding: utf-8 -*-
+# 用于接收检测结果和轨迹的状态，完成数据关联，输出匹配结果对和没有匹配观测/轨迹
 
 import rospy
 from std_msgs.msg import Int8MultiArray
@@ -11,7 +12,7 @@ from .dist_metrics import *
 #TODO :这里实际上不全是Detection的bbox，还有trk的，后续改一下名称
 from Factor_curved_Track.msg import Detection_list
 from Factor_curved_Track.msg import Pairs
-from Factor_curved_Track.msg import Information
+from Factor_curved_Track.msg import StampArray
 
 def compute_affinity(dets, trks, metric, trk_inv_inn_matrices=None):
 	# compute affinity matrix
@@ -147,19 +148,23 @@ def associate_Callback(trks, dets, args):
 	match_pub = args[0]
 	unmatch_trk_pub = args[1]
 	unmatch_det_pub = args[2]
+
 	pub_match = Pairs()
+	pub_match.header = dets.header
 	pub_match.dets = matches[:, 0]
 	pub_match.trks = matches[:, 1]
-	pub_undets = Int8MultiArray(unmatch_dets)
-	pub_untrks = Int8MultiArray(unmatch_trks)
 
+	pub_undets = StampArray()
+	pub_undets.header = dets.header
+	pub_undets.ids = unmatch_dets
+
+	pub_untrks = StampArray()
+	pub_untrks.header = dets.header
+	pub_untrks.ids = unmatch_trks
 
 	match_pub.publish(pub_match)
 	unmatch_det_pub.publish(pub_undets)
 	unmatch_trk_pub.publish(pub_untrks)
-
-
-
 
 
 def data_association():
@@ -167,8 +172,8 @@ def data_association():
     rospy.init_node('data_association_node', anonymous=True)
 
     match_pub = rospy.Publisher("/matched_pair", Pairs, queue_size=10)
-    unmatch_trk_pub = rospy.Publisher("/unmatched_trk", Int8MultiArray, queue_size=10)
-    unmatch_det_pub = rospy.Publisher("/unmatched_det", Int8MultiArray, queue_size=10)
+    unmatch_trk_pub = rospy.Publisher("/unmatched_trk", StampArray, queue_size=10)
+    unmatch_det_pub = rospy.Publisher("/unmatched_det", StampArray, queue_size=10)
 
     trks = message_filters.Subscriber("/tracks", Detection_list)
     dets = message_filters.Subscriber("/detections", Detection_list)

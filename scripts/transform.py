@@ -1,15 +1,15 @@
 #!/home/chenz/anaconda3/envs/surroundCam_cap/bin/python
+# -*- coding: utf-8 -*-
 # 将检测结果从当前帧坐标系转换到起始帧坐标系，目前是基于kitti官方的轨迹文件实现，后续改成可以接收来自slam算法的结果
 
 import rospy
 import numpy as np
 from .kitti_oxts import load_oxts_packets_and_poses
-import warnings
+
 import argparse
 import os
+
 from Factor_curved_Track.msg import Detection_list
-from Factor_curved_Track.msg import Pairs
-from Factor_curved_Track.msg import Information
 
 def parse_args():
     parser = argparse.ArgumentParser(description='transform')

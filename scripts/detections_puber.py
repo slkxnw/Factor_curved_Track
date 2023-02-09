@@ -1,4 +1,5 @@
 #!/home/chenz/anaconda3/envs/surroundCam_cap/bin/python
+# -*- coding: utf-8 -*-
 #读取某个轨迹检测结果序列文件，并按照帧率发布结果
 
 import rospy
@@ -6,7 +7,7 @@ import numpy as np
 import warnings
 import argparse
 import os
-from std_msgs.msg import Float64MultiArray
+
 from Factor_curved_Track.msg import Detection_list
 from Factor_curved_Track.msg import Detection
 from Factor_curved_Track.msg import Information

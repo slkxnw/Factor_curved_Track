@@ -1,5 +1,5 @@
-# include "myfrontend.h"
-# include "myg2o_simple_types.h"
+# include "factor_curved_track/myfrontend.h"
+# include "factor_curved_track/myg2o_simple_types.h"
 namespace mytrk
 {
 

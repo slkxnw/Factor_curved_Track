@@ -12,7 +12,7 @@
 
 void processCallback(const track_msgs::Pairs &match_pair, const track_msgs::StampArray &unmatch_trk, 
                     const track_msgs::StampArray &unmatch_det, const track_msgs::Detection_list &dets,
-                    mytrk::myBackend::Ptr backend)
+                    mytrk::myBackend::Ptr backend, const ros::Publisher &trk_predict_pub)
 {
     double time = dets.header.stamp.sec * 0.01;
     std::unordered_map<unsigned long, Vec7> matches;
@@ -43,8 +43,9 @@ void processCallback(const track_msgs::Pairs &match_pair, const track_msgs::Stam
     }
     backend->InitObj(od_res, time);
 
-    //发布trk预测结果
-    //或者发布每个trk的状态
+    //TODO：发布trk预测结果，问题在于
+    //按照常理，trk的预测应该是检测结果时刻的，但是在AB3DMOT中，检测的时刻是如何定义的，原始kitti数据中似乎没有给定时刻
+    //看一下ab3dmot的代码
 }
 
 int main(int argc, char** argv)
@@ -52,6 +53,8 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "factor_manager");
 
     ros::NodeHandle nh;
+
+    auto trk_predict_pub = nh.advertise<track_msgs::Detection_list>("/tracks", 10);
 
     mytrk::myBackend::Ptr backend_p = mytrk::myBackend::Ptr(new mytrk::myBackend);
 
@@ -66,7 +69,7 @@ int main(int argc, char** argv)
     
     message_filters::Synchronizer<MySynPolicy> sync(matched_pair_sub, unmatched_trk_sub, unmatched_det_sub, dets_sub);
 
-    sync.registerCallback(boost::bind(&processCallback, _1, _2, _3, _4, &backend_p));
+    sync.registerCallback(boost::bind(&processCallback, _1, _2, _3, _4, &backend_p, trk_predict_pub));
 
     ros::spin();
 

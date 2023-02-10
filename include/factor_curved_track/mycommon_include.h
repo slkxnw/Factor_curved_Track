@@ -94,17 +94,17 @@ typedef Eigen::Matrix<float, 9, 1> Vec9f;
 typedef Eigen::Matrix<float, Eigen::Dynamic, 1> VecXf;
 typedef Eigen::Matrix<float, 14, 1> Vec14f;
 
-//sophus
-#include <sophus/se3.h>
-#include <sophus/so3.h>
+// //sophus
+// #include <sophus/se3.h>
+// #include <sophus/so3.h>
 
-typedef Sophus::SE3 SE3;
-typedef Sophus::SO3 SO3;
+// typedef Sophus::SE3 SE3;
+// typedef Sophus::SO3 SO3;
 
-//cv
-#include <opencv2/core/core.hpp>
+// //cv
+// #include <opencv2/core/core.hpp>
 
-using cv::Mat;
+// using cv::Mat;
 
 //glog
 #include <glog/logging.h>

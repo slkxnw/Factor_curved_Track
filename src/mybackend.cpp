@@ -13,7 +13,9 @@ void myBackend::InitObj(std::vector<Vec7> &od_res, double time)
         //x,y,theta
         measure << od[0], od[1], od[6];
         new_frontend->BuildInitTrkList(measure, time, num_of_obj);
-        obj_list_.insert(make_pair(num_of_obj, new_frontend));
+        // TODO这里将插入pair改成常用的key-value插入方式
+        //这样也不对
+        obj_list_[num_of_obj] = new_frontend;
         Vec6 state;
         state << od[0], od[1], od[6], od[3], od[4], od[5];
         state_prediction_list_[num_of_obj] = od;

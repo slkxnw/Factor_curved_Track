@@ -12,9 +12,12 @@
 # include"track_msgs/Pairs.h"
 # include"track_msgs/StampArray.h"
 
-void processCallback(const track_msgs::Pairs &match_pair, const track_msgs::StampArray &unmatch_trk, 
-                    const track_msgs::StampArray &unmatch_det, const track_msgs::Detection_list &dets,
-                    const mytrk::myBackend::Ptr backend, const ros::Publisher &trk_predict_pub)
+void processCallback(const track_msgs::Pairs &match_pair, 
+                    const track_msgs::StampArray &unmatch_trk, 
+                    const track_msgs::Detection_list &dets, 
+                    const track_msgs::StampArray &unmatch_det, 
+                    const mytrk::myBackend::Ptr &backend, 
+                    const ros::Publisher &trk_predict_pub)
 {
     double time = dets.header.stamp.sec * 0.1;
     std::unordered_map<unsigned long, Vec7> matches;
@@ -36,7 +39,8 @@ void processCallback(const track_msgs::Pairs &match_pair, const track_msgs::Stam
     for(int i = 0; i < match_pair.trk.data.size(); ++i)
     {
         det << dets.detecs[i].pos.x, dets.detecs[i].pos.y, dets.detecs[i].pos.z, 
-                dets.detecs[i].siz.x, dets.detecs[i].siz.y, dets.detecs[i].siz.z, dets.detecs[i].alp;
+            dets.detecs[i].siz.x, dets.detecs[i].siz.y, dets.detecs[i].siz.z, double(dets.detecs[i].alp);
+
         backend_id = backend->GetObjIDlist()[int(match_pair.trk.data[i])];
         // auto hash_ptr = backend->GetObjlist().at(5);
         // hash_ptr
@@ -103,16 +107,20 @@ int main(int argc, char** argv)
     message_filters::Subscriber<track_msgs::StampArray> unmatched_det_sub(nh, "/unmatched_det", 10);
     message_filters::Subscriber<track_msgs::Detection_list> dets_sub(nh, "/detections", 10);
 
-    typedef message_filters::sync_policies::ApproximateTime<track_msgs::Pairs, track_msgs::StampArray, 
-    track_msgs::StampArray, track_msgs::Detection_list> MySynPolicy;
+    typedef message_filters::sync_policies::ApproximateTime<track_msgs::Pairs, 
+                                                            track_msgs::StampArray,
+                                                            track_msgs::Detection_list, 
+                                                            track_msgs::StampArray> MySynPolicy;
     
-    message_filters::Synchronizer<MySynPolicy> sync(matched_pair_sub, unmatched_trk_sub, unmatched_det_sub, dets_sub);
+    message_filters::Synchronizer<MySynPolicy> sync(MySynPolicy(10), 
+                                                    matched_pair_sub, 
+                                                    unmatched_trk_sub,  
+                                                    dets_sub, 
+                                                    unmatched_det_sub);
 
-    sync.registerCallback(boost::bind(&processCallback, _1, _2, _3, _4, &backend_p, trk_predict_pub));
+    sync.registerCallback(boost::bind(processCallback, _1, _2, _3, _4, backend_p, trk_predict_pub));
 
     ros::spin();
 
     return 0;
-
-
 }

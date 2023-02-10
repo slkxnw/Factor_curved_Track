@@ -22,6 +22,7 @@ public:
     unsigned long id_;
     bool is_measure_ = true;
     double time_stamp_;
+    //x,y,theta,v,a,omega
     Vec6 obj_state_;
 
     std::mutex data_lck_;

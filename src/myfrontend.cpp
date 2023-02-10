@@ -6,7 +6,7 @@ namespace mytrk
 myFrontend::myFrontend()
 {
     frontend_running_.store(true);
-    frontend_thread = std::thread(std::bind(FrontendLoop, this));
+    frontend_thread = std::thread(std::bind(&myFrontend::FrontendLoop, this));
 }
 
 
@@ -33,9 +33,11 @@ bool myFrontend::BuildInitTrkList(Vec3 measure, double time, unsigned int id)
 void myFrontend::ConcatTrklist(myTrkList::Ptr new_trk_list)
 {
     myTrkList::KeyframeType new_frames = new_trk_list->GetAllKeyframe();
+    Vec3 measure_fake;
     for(auto &kf : new_frames)
     {
-        myFrame::Ptr tmp = CreateMeasureFrame(kf.second->obj_state_, kf.second->time_stamp_, kf.second->is_measure_);
+        measure_fake << kf.second->obj_state_[0], kf.second->obj_state_[1], kf.second->obj_state_[2];
+        myFrame::Ptr tmp = CreateMeasureFrame(measure_fake, kf.second->time_stamp_, kf.second->is_measure_);
         trk_list_->InsertKeyframe(tmp);
     }
 }
@@ -47,7 +49,7 @@ void myFrontend::Stop()
     frontend_thread.join();
 }
 
-myFrame::Ptr myFrontend::CreateMeasureFrame(Vec3 measure, double time, bool is_measure = true)
+myFrame::Ptr myFrontend::CreateMeasureFrame(Vec3 measure, double time, bool is_measure)
 {
     
     myFrame::Ptr new_frame(new myFrame);

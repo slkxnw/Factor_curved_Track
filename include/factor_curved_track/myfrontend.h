@@ -17,7 +17,8 @@ class myFrontend
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-    typedef std::unique_ptr<myFrontend> Ptr;
+    //TODO 确定shared_ptr和unique_ptr的区别
+    typedef std::shared_ptr<myFrontend> Ptr;
     // typedef std::vector<myTrkList::Ptr> TrkListType;
 
     //构造函数中，启动循环，并且挂起

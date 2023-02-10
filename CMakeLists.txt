@@ -10,6 +10,10 @@ find_package(catkin REQUIRED COMPONENTS
   track_msgs
 )
 
+
+LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake) 
+# message(${PROJECT_SOURCE_DIR})
+
 #Eigen3
 find_package(Eigen3)
 include_directories(${EIGEN3_INCLUDE_DIRS})
@@ -17,6 +21,8 @@ include_directories(${EIGEN3_INCLUDE_DIRS})
 #Boost
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
+# message(${Boost_INCLUDE_DIRS})
+# message(${EIGEN3_INCLUDE_DIRS})
 
 #G2O
 find_package(G2O REQUIRED)
@@ -26,13 +32,28 @@ include_directories(${G2O_INCLUDE_DIRS})
 find_package(CSparse REQUIRED)
 include_directories(${CSPARSE_INCLUDE_DIR})
 
+# glog
+find_package(Glog REQUIRED)
+include_directories(${GLOG_INCLUDE_DIRS})
+
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES factor_curved_track
  CATKIN_DEPENDS geometry_msgs message_filters roscpp rospy std_msgs track_msgs
  DEPENDS Boost EIGEN3 G2O CSparse
 )
-
+# TODO这里直接给出eigen3的头文件路径，find_package失败
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  ${PROJECT_SOURCE_DIR}/include
+  "/usr/include/eigen3"
 )
+
+set(THIRD_PARTY_LIBS
+  ${G2O_CORE_LIBRARY}
+  ${G2O_STUFF_LIBRARY}
+  ${CSAPRSE_LIBRARY}
+  g2o_core g2o_stuff g2o_types_sba g2o_solver_csparse g2o_csparse_extension
+  ${GLOG_LIBRARIES})
+
+add_subdirectory(src)

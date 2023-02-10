@@ -9,8 +9,8 @@ void myTrkList::InsertKeyframe(myFrame::Ptr kf)
     cur_frame_ = kf;
     if(keyframes_.find(kf->id_) == keyframes_.end())
     {
-        keyframes_.insert(make_pair(kf->id_, kf));
-        active_keyframes_.insert(make_pair(kf->id_, kf));
+        keyframes_.insert(std::make_pair(kf->id_, kf));
+        active_keyframes_.insert(std::make_pair(kf->id_, kf));
     }
     else
     {

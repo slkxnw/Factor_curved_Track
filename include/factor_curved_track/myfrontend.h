@@ -79,6 +79,7 @@ public:
     Vec6 CalEdgeMeasure();
 
     //数据关联相关操作
+    //返回 x y theta
     Vec3 PredictPostion(double time);
 
     Vec6 PredictState(double time);

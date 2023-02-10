@@ -63,12 +63,23 @@ void processCallback(const track_msgs::Pairs &match_pair, const track_msgs::Stam
     auto trk_pred = backend->GetStatePrediction(time + 0.1);
 
     track_msgs::Detection trk_;
+    track_msgs::Detection_list trks;
+    //将预测结果按照顺序，生成trk并放入列表中
     for(auto &pair : trk_pred)
     {
-        trk
+        trk_.pos.x = pair.second[0];
+        trk_.pos.y = pair.second[1];
+        trk_.pos.z = pair.second[2];
+        trk_.siz.x = pair.second[3];
+        trk_.siz.y = pair.second[4];
+        trk_.siz.z = pair.second[5];
+        trk_.alp = pair.second[6];
+
+        trks.header.stamp.sec = dets.header.stamp.sec + 1;
+        trks.detecs.push_back(trk_);
     }
 
-
+    trk_predict_pub.publish(trks);
 }
 
 int main(int argc, char** argv)

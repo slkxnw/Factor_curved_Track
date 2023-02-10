@@ -16,7 +16,7 @@ void myBackend::InitObj(std::vector<Vec7> &od_res, double time)
         obj_list_.insert(make_pair(num_of_obj, new_frontend));
         Vec6 state;
         state << od[0], od[1], od[6], od[3], od[4], od[5];
-        state_prediction_list_[num_of_obj] = state;
+        state_prediction_list_[num_of_obj] = od;
         num_of_obj++;
     }
 }
@@ -46,13 +46,18 @@ void myBackend::StopObj(std::vector<unsigned long> dead_ids)
 }
        
 
+
 myBackend::PredictObjtype myBackend::GetStatePrediction(double time)
 {
     Vec3 position_prediction;
+    //TODO 需要更新目标的尺寸，现在假设目标尺寸没变动过
     for (auto &state_pair : state_prediction_list_)
     {
         position_prediction = obj_list_[state_pair.first]->PredictPostion(time);
-        state_pair.second.block<3, 1>(0, 0) = position_prediction;
+        // state_pair.second.block<2, 1>(0, 0) = position_prediction;
+        state_pair.second[0] = position_prediction[0];
+        state_pair.second[1] = position_prediction[1];
+        state_pair.second[6] = position_prediction[2];
     }
     return state_prediction_list_;
 }

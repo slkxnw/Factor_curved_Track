@@ -9,7 +9,7 @@ from .kitti_oxts import load_oxts_packets_and_poses
 import argparse
 import os
 
-from Factor_curved_Track.msg import Detection_list
+from track_msgs.msg import Detection_list
 
 def parse_args():
     parser = argparse.ArgumentParser(description='cord_transform')

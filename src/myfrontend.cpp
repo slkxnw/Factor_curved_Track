@@ -97,6 +97,9 @@ void myFrontend::UpdateTrkList()
     trk_list_update_.notify_one();
 }
 
+/**
+*返回 x y theta
+*/
 Vec3 myFrontend::PredictPostion(double time)
 {
     Vec3 cur_position;

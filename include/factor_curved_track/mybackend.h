@@ -17,7 +17,7 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
     typedef std::unique_ptr<myBackend> Ptr;
     typedef std::unordered_map<unsigned long, myFrontend::Ptr> Frontendtype;
-    typedef std::unordered_map<unsigned long, Vec6> PredictObjtype;
+    typedef std::unordered_map<unsigned long, Vec7> PredictObjtype;
     typedef std::unordered_map<unsigned long, myTrkList::Ptr> TrkListType;
 
     //和航迹管理有关

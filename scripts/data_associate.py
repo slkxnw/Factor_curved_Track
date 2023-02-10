@@ -83,6 +83,7 @@ def data_association(dets, trks, metric, threshold, algm='greedy', \
     from https://github.com/xinshuoweng/AB3DMOT.git
 	"""
 
+	
 	dets = process_dets(dets)
 	trks = process_dets(trks)
 	# if there is no item in either row/col, skip the association and return all as unmatched
@@ -141,7 +142,19 @@ def data_association(dets, trks, metric, threshold, algm='greedy', \
 	return matches, np.array(unmatched_dets), np.array(unmatched_trks), cost, aff_matrix
 
 def associate_Callback(trks, dets, args):
-	matches,unmatch_dets,unmatch_trks, cost, aff_matrix = data_association(dets, trks, "giou_3d", -0.2, algm='hungar')
+	
+	#TODO 将msg解包，变成data_association需要的格式
+
+	unpack_dets = []
+	unpack_trks = []
+	for det in dets.detecs:
+		unpack_dets.append([det.siz, det.pos, det.alp].reshape(1,7))
+	for trk in trks.detecs:
+		unpack_trks.append([trk.siz, trk.pos, trk.alp].reshape(1,7))
+	
+
+
+	matches,unmatch_dets,unmatch_trks, cost, aff_matrix = data_association(unpack_dets, unpack_trks, "giou_3d", -0.2, algm='hungar')
 
 	# 修复了一下
 	match_pub = args[0]
@@ -166,7 +179,7 @@ def associate_Callback(trks, dets, args):
 	unmatch_trk_pub.publish(pub_untrks)
 
 
-def data_association():
+def main():
     
     rospy.init_node('data_association_node', anonymous=True)
 
@@ -184,4 +197,4 @@ def data_association():
     rospy.spin()
 
 if __name__ == '__main__':
-	data_association()
+	main()

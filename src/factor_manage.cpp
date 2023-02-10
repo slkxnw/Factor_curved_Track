@@ -25,26 +25,30 @@ void processCallback(const track_msgs::Pairs &match_pair, const track_msgs::Stam
     //更新匹配到的轨迹
     //TODO 这里有问题：match_pair中trk的id是从0开始的，对应的是上一次发布的trkpred的顺序，不是对应的backend中的obj_id，已经修改了一下
     //需要修改一下,发布的trk信息的顺序，和后端当前的objlist中（obj_id, frontend_ptr）对的循序一致
-    //因此，首先获取后端当前的objlist，然后取match_pair中第i对匹配中，trk对应的id，取objlist中这个id对应的frontend_ptr，
-    //再从frontend-ptr获取它在后端中的分配到的objid
-    //实际上，objlist是哈希表，我们希望获取它的第i个k-v对，并得到他的key值
+    //因此，首先获取后端当前的objlist，然后得到match_pair中第i对匹配中，trk对应的id，用[]操作符取objlist中这个id对应的frontend_ptr，
+    //再从frontend-ptr获取它在后端中的分配到的obj_id
+    //不对，[]操作符是按照key取值
+    //最后还是在backend里维护一个objid列表，每次预测位置的时候更新这个列表
 
-    //
+
+    //TODO 使用检测结果单独更新目标的z和bbox信息
+    //TODO backend析构函数，将所有的轨迹信息存放起来
     for(int i = 0; i < match_pair.trk.data.size(); ++i)
     {
         det << dets.detecs[i].pos.x, dets.detecs[i].pos.y, dets.detecs[i].pos.z, 
                 dets.detecs[i].siz.x, dets.detecs[i].siz.y, dets.detecs[i].siz.z, dets.detecs[i].alp;
-        backend_id = backend->GetObjlist()[int(match_pair.trk.data[i])]->GetTrkId();
-        // auto hash_ptr = backend->GetObjlist().begin();
+        backend_id = backend->GetObjIDlist()[int(match_pair.trk.data[i])];
+        // auto hash_ptr = backend->GetObjlist().at(5);
         // hash_ptr
         matches[backend_id] = det;
     }
     backend->UpdateObjState(matches, time);
     //删除老旧轨迹
-    for(auto & id : unmatch_trk.ids.data)
+    for(int i= 0; i < unmatch_trk.ids.data.size(); ++i)
     {
-        if((time - backend->GetObjlist()[id]->GetLastfeame()->time_stamp_) > 0.15)
-            dead_ids.push_back(id);
+        backend_id = backend->GetObjIDlist()[int(unmatch_trk.ids.data[i])];
+        if((time - backend->GetObjlist()[backend_id]->GetLastfeame()->time_stamp_) > 1.5)
+            dead_ids.push_back(backend_id);
     }
     backend->StopObj(dead_ids);
     //初始化新轨迹
@@ -88,6 +92,7 @@ int main(int argc, char** argv)
 
     ros::NodeHandle nh;
 
+    //发布trks预测结果
     auto trk_predict_pub = nh.advertise<track_msgs::Detection_list>("/tracks", 10);
 
     mytrk::myBackend::Ptr backend_p = mytrk::myBackend::Ptr(new mytrk::myBackend);

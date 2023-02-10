@@ -50,6 +50,7 @@ void myBackend::StopObj(std::vector<unsigned long> dead_ids)
 myBackend::PredictObjtype myBackend::GetStatePrediction(double time)
 {
     Vec3 position_prediction;
+    obj_id_list.clear();
     //TODO 需要更新目标的尺寸，现在假设目标尺寸没变动过
     for (auto &state_pair : state_prediction_list_)
     {
@@ -58,6 +59,7 @@ myBackend::PredictObjtype myBackend::GetStatePrediction(double time)
         state_pair.second[0] = position_prediction[0];
         state_pair.second[1] = position_prediction[1];
         state_pair.second[6] = position_prediction[2];
+        obj_id_list.push_back(state_pair.first);
     }
     return state_prediction_list_;
 }

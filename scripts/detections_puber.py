@@ -57,7 +57,7 @@ def detection_puber(args):
     # TODO：数据关联接收来自两个节点的数据，为了不造成数据匹配的误差问题，将数据发布频率降低
     rate = rospy.Rate(10)
     
-    path = os.path.join(args.datadir, args.dataset, args.det_name + '_' + args.categ + '_' + args.val, args.seqs + '.txt')
+    path = os.path.join(args.datadir, args.dataset, 'trking', args.det_name + '_' + args.categ + '_' + args.val, args.seqs + '.txt')
     
     dets, flg = load_detection(path)
     if not flg:
@@ -91,9 +91,13 @@ def detection_puber(args):
         detection_res_pub.publish(det_list)
         rospy.loginfo("pub frame %d with %d detections", frame_id, det_list.infos.size())
         frame_id = frame_id + 1
+        if(frame_id == 447):
+            break
+        rate.sleep()
 
-# TODO:需要设置退出，当遍历当前seq所有帧后，结束程序
+# TODO:需要设置退出，当遍历当前seq所有帧后，结束程序,目前是按照val的0001序列设计的退出，它共有446帧，因此循环这些次
 
+# TODO:需要设置可视化，或者跟踪结果存储，后面这个可以在backend析构函数中实现
 if __name__ == '__main__':
     args = parse_args()
     try:

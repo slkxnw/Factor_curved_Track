@@ -47,6 +47,11 @@ public:
         trk_list_->SetObjID(id);
     }
 
+    int GetTrkId()
+    {
+        return trk_list_->GetObjID();
+    }
+
     //结束该线程
     void Stop();
 

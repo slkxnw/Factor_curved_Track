@@ -31,6 +31,12 @@ public:
         obj_id_ = id;
     }
 
+    int GetObjID()
+    {
+        std::unique_lock<std::mutex> lck(data_mutex_);
+        return obj_id_;
+    }
+
     //清空轨迹/删除轨迹,可能是合并两条轨迹后，把多的一条删了,实际上，把关键帧列表清空
     void CleanList()
     {

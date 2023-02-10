@@ -77,6 +77,11 @@ def transform_callback(dets, args):
     for det in dets.detecs:
         det.pos = det.pos + ego_trans
         det.alp = det.alp + ego_rotZ
+        while(det.alp > 3.14159 / 2):
+            det.alp -= 3.14159
+        while(det.alp < -3.14159 * 2):
+            det.alp += 3.14159
+            
     
     dets_puber.publish(dets)
 

@@ -8,9 +8,9 @@ import warnings
 import argparse
 import os
 
-from Factor_curved_Track.msg import Detection_list
-from Factor_curved_Track.msg import Detection
-from Factor_curved_Track.msg import Information
+from track_msgs.msg import Detection_list
+from track_msgs.msg import Detection
+from track_msgs.msg import Information
 
 
 def parse_args():

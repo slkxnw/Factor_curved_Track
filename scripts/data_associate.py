@@ -10,9 +10,9 @@ from numba import jit
 from scipy.optimize import linear_sum_assignment
 from .dist_metrics import *
 #TODO :这里实际上不全是Detection的bbox，还有trk的，后续改一下名称
-from Factor_curved_Track.msg import Detection_list
-from Factor_curved_Track.msg import Pairs
-from Factor_curved_Track.msg import StampArray
+from track_msgs.msg import Detection_list
+from track_msgs.msg import Pairs
+from track_msgs.msg import StampArray
 
 def compute_affinity(dets, trks, metric, trk_inv_inn_matrices=None):
 	# compute affinity matrix

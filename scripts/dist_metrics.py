@@ -162,7 +162,7 @@ def iou(box_a, box_b, metric='giou_3d'):
 			C_3D = C_2D * union_height
 			return I_3D / U_3D - (C_3D - U_3D) / C_3D
 	else:
-		assert False, '%s is not supported' % space
+		assert False, '%s is not supported' % metric
 
 def dist_ground(bbox1, bbox2):
 	# Compute distance of bottom center in 3D space, NOT considering the difference in height

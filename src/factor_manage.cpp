@@ -2,6 +2,8 @@
 * 这个节点管理backend，用于初始化节点和航迹管理
 */
 # include<ros/ros.h>
+# include<ros/subscriber.h>
+# include<ros/publisher.h>
 # include<std_msgs/UInt8MultiArray.h>
 # include<message_filters/subscriber.h>
 # include<message_filters/synchronizer.h>

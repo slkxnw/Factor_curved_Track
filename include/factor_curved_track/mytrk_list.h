@@ -22,7 +22,7 @@ public:
 
     //航迹管理相关的操作
     //构造函数
-    myTrkList();
+    myTrkList(unsigned long id) : obj_id_(id) {};
 
     //设置轨迹的id
     void SetObjID(unsigned long id)

@@ -21,9 +21,9 @@ bool myFrontend::BuildInitTrkList(Vec3 measure, double time, unsigned int id)
     last_state_ << 0.0, 0.0, 0.0, 14.0, 0.0, 0.0;
     CreateMeasureFrame(measure, time);
 
-    myTrkList::Ptr new_trk = myTrkList::Ptr(new myTrkList);
+    std::shared_ptr<myTrkList> new_trk = std::shared_ptr<myTrkList>(new myTrkList(id));
     
-    new_trk->SetObjID(id);
+    // new_trk->SetObjID(id);
     new_trk->InsertKeyframe(cur_frame_);
 
     trk_list_ = new_trk;

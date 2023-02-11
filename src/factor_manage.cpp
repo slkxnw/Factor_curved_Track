@@ -7,19 +7,25 @@
 # include<message_filters/synchronizer.h>
 # include<message_filters/sync_policies/approximate_time.h>
 # include"factor_curved_track/mybackend.h"
+# include"factor_curved_track/myframe.h"
+# include"factor_curved_track/myfrontend.h"
+# include"factor_curved_track/mytrk_list.h"
 # include"track_msgs/Detection_list.h"
 # include"track_msgs/Detection.h"
 # include"track_msgs/Pairs.h"
 # include"track_msgs/StampArray.h"
 
-void processCallback(const track_msgs::Pairs &match_pair, 
-                    const track_msgs::StampArray &unmatch_trk, 
-                    const track_msgs::Detection_list &dets, 
-                    const track_msgs::StampArray &unmatch_det, 
-                    const mytrk::myBackend::Ptr &backend, 
-                    const ros::Publisher &trk_predict_pub)
+// 一些全局变量，这样不用向回调函数传参
+ros::Publisher trk_predict_pub;
+mytrk::myBackend::Ptr backend;
+
+
+void callback(const track_msgs::PairsConstPtr &match_pair, 
+                    const track_msgs::StampArrayConstPtr &unmatch_trk, 
+                    const track_msgs::Detection_listConstPtr &dets, 
+                    const track_msgs::StampArrayConstPtr &unmatch_det)
 {
-    double time = dets.header.stamp.sec * 0.1;
+    double time = dets->header.stamp.sec * 0.1;
     std::unordered_map<unsigned long, Vec7> matches;
     std::vector<unsigned long> dead_ids;
     std::vector<Vec7> od_res;
@@ -36,30 +42,30 @@ void processCallback(const track_msgs::Pairs &match_pair,
 
     //TODO 使用检测结果单独更新目标的z和bbox信息
     //TODO backend析构函数，将所有的轨迹信息存放起来
-    for(int i = 0; i < match_pair.trk.data.size(); ++i)
+    for(int i = 0; i < match_pair->trk.data.size(); ++i)
     {
-        det << dets.detecs[i].pos.x, dets.detecs[i].pos.y, dets.detecs[i].pos.z, 
-            dets.detecs[i].siz.x, dets.detecs[i].siz.y, dets.detecs[i].siz.z, double(dets.detecs[i].alp);
+        det << dets->detecs[i].pos.x, dets->detecs[i].pos.y, dets->detecs[i].pos.z, 
+            dets->detecs[i].siz.x, dets->detecs[i].siz.y, dets->detecs[i].siz.z, double(dets->detecs[i].alp);
 
-        backend_id = backend->GetObjIDlist()[int(match_pair.trk.data[i])];
+        backend_id = backend->GetObjIDlist()[int(match_pair->trk.data[i])];
         // auto hash_ptr = backend->GetObjlist().at(5);
         // hash_ptr
         matches[backend_id] = det;
     }
     backend->UpdateObjState(matches, time);
     //删除老旧轨迹
-    for(int i= 0; i < unmatch_trk.ids.data.size(); ++i)
+    for(int i= 0; i < unmatch_trk->ids.data.size(); ++i)
     {
-        backend_id = backend->GetObjIDlist()[int(unmatch_trk.ids.data[i])];
+        backend_id = backend->GetObjIDlist()[int(unmatch_trk->ids.data[i])];
         if((time - backend->GetObjlist()[backend_id]->GetLastfeame()->time_stamp_) > 1.5)
             dead_ids.push_back(backend_id);
     }
     backend->StopObj(dead_ids);
     //初始化新轨迹
-    for(auto & id : unmatch_det.ids.data)
+    for(auto & id : unmatch_det->ids.data)
     {
-        det << dets.detecs[id].pos.x, dets.detecs[id].pos.y, dets.detecs[id].pos.z, 
-                dets.detecs[id].siz.x, dets.detecs[id].siz.y, dets.detecs[id].siz.z, dets.detecs[id].alp;
+        det << dets->detecs[id].pos.x, dets->detecs[id].pos.y, dets->detecs[id].pos.z, 
+                dets->detecs[id].siz.x, dets->detecs[id].siz.y, dets->detecs[id].siz.z, dets->detecs[id].alp;
         od_res.push_back(det);
     }
     backend->InitObj(od_res, time);
@@ -83,7 +89,7 @@ void processCallback(const track_msgs::Pairs &match_pair,
         trk_.siz.z = pair.second[5];
         trk_.alp = pair.second[6];
 
-        trks.header.stamp.sec = dets.header.stamp.sec + 1;
+        trks.header.stamp.sec = dets->header.stamp.sec + 1;
         trks.detecs.push_back(trk_);
     }
 
@@ -97,9 +103,9 @@ int main(int argc, char** argv)
     ros::NodeHandle nh;
 
     //发布trks预测结果
-    auto trk_predict_pub = nh.advertise<track_msgs::Detection_list>("/tracks", 10);
+    ros::Publisher trk_predict_pub = nh.advertise<track_msgs::Detection_list>("/tracks", 10);
 
-    mytrk::myBackend::Ptr backend_p = mytrk::myBackend::Ptr(new mytrk::myBackend);
+    mytrk::myBackend::Ptr backend = mytrk::myBackend::Ptr(new mytrk::myBackend);
 
 
     message_filters::Subscriber<track_msgs::Pairs> matched_pair_sub(nh, "/matched_pair", 10);
@@ -118,7 +124,7 @@ int main(int argc, char** argv)
                                                     dets_sub, 
                                                     unmatched_det_sub);
 
-    sync.registerCallback(boost::bind(processCallback, _1, _2, _3, _4, backend_p, trk_predict_pub));
+    sync.registerCallback(boost::bind(&callback, _1, _2, _3, _4));
 
     ros::spin();
 

@@ -5,6 +5,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <iostream>
+#include <iterator>
 #include <list>
 #include <map>
 #include <memory>

@@ -4,6 +4,7 @@
 
 #include "mycommon_include.h"
 #include "myfrontend.h"
+#include "mytrk_list.h"
 
 namespace mytrk
 {
@@ -16,9 +17,9 @@ class myBackend
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
     typedef std::shared_ptr<myBackend> Ptr;
-    typedef std::unordered_map<unsigned long, myFrontend::Ptr> Frontendtype;
+    typedef std::unordered_map<unsigned long, std::shared_ptr<myFrontend> > Frontendtype;
     typedef std::unordered_map<unsigned long, Vec7> PredictObjtype;
-    typedef std::unordered_map<unsigned long, myTrkList::Ptr> TrkListType;
+    typedef std::unordered_map<unsigned long, std::shared_ptr<myTrkList> > TrkListType;
 
     //和航迹管理有关
     //生成新航迹
@@ -26,7 +27,7 @@ public:
     //合并航迹
     void ConcatObj(unsigned long old_obj_id, unsigned long new_obj_id)
     {
-        myTrkList::Ptr new_trk_list = obj_list_[new_obj_id]->GetTrklist();
+        std::shared_ptr<myTrkList> new_trk_list = obj_list_[new_obj_id]->GetTrklist();
         obj_list_[old_obj_id]->ConcatTrklist(new_trk_list);
     }
     //删除航迹

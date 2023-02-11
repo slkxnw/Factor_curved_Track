@@ -30,7 +30,7 @@ bool myFrontend::BuildInitTrkList(Vec3 measure, double time, unsigned int id)
     return true;
 }
 
-void myFrontend::ConcatTrklist(myTrkList::Ptr new_trk_list)
+void myFrontend::ConcatTrklist(std::shared_ptr<myTrkList> new_trk_list)
 {
     myTrkList::KeyframeType new_frames = new_trk_list->GetAllKeyframe();
     Vec3 measure_fake;
@@ -194,6 +194,7 @@ void myFrontend::Optimize(myTrkList::KeyframeType &keyframes)
     optimizer.initializeOptimization();
     optimizer.optimize(10);
 
+    //TODO 
     for(auto &v : vertexs)
         keyframes.at(v.first)->SetObjState(v.second->estimate()); 
 }

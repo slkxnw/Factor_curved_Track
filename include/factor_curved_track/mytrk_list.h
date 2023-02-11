@@ -18,7 +18,7 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
     typedef std::shared_ptr<myTrkList> Ptr;
-    typedef std::unordered_map<unsigned long, myFrame::Ptr> KeyframeType;
+    typedef std::unordered_map<unsigned long, std::shared_ptr<myFrame> > KeyframeType;
 
     //航迹管理相关的操作
     //构造函数
@@ -51,7 +51,7 @@ public:
 
     //帧相关的操作
     //插入关键帧到跟踪目标状态列表
-    void InsertKeyframe(myFrame::Ptr kf);
+    void InsertKeyframe(std::shared_ptr<myFrame> kf);
 
     //返回所有的关键帧
     KeyframeType GetAllKeyframe()
@@ -81,7 +81,7 @@ private:
     KeyframeType keyframes_;
     KeyframeType active_keyframes_;
 
-    myFrame::Ptr cur_frame_ = nullptr;
+    std::shared_ptr<myFrame> cur_frame_ = nullptr;
 
     unsigned long obj_id_;
     int num_active_keyframes = 20;

@@ -4,7 +4,7 @@
 namespace mytrk
 {
 
-void myTrkList::InsertKeyframe(myFrame::Ptr kf)
+void myTrkList::InsertKeyframe(std::shared_ptr<myFrame> kf)
 {
     cur_frame_ = kf;
     if(keyframes_.find(kf->id_) == keyframes_.end())

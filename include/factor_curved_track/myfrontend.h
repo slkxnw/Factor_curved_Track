@@ -30,10 +30,10 @@ public:
     bool BuildInitTrkList(Vec3 measure, double time, unsigned int id);
 
     //合并两个轨迹
-    void ConcatTrklist(myTrkList::Ptr new_trk_list);
+    void ConcatTrklist(std::shared_ptr<myTrkList> new_trk_list);
 
     //提取出本frontend中的trklist
-    myTrkList::Ptr GetTrklist()
+    std::shared_ptr<myTrkList> GetTrklist()
     {
         std::unique_lock<std::mutex> lock(data_mutex_);
         return trk_list_;
@@ -128,7 +128,7 @@ private:
     myFrame::Ptr last_frame_ = nullptr;
     myFrame::Ptr cur_frame_ = nullptr;
 
-    myTrkList::Ptr trk_list_ = nullptr;
+    std::shared_ptr<myTrkList> trk_list_ = nullptr;
     unsigned long num_of_frames = 0;
 
 

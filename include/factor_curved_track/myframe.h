@@ -3,11 +3,13 @@
 #define MYTRK_FRAME_H
 
 #include "mycommon_include.h"
+#include "mytrk_list.h"
 
 namespace mytrk
 {
 
-struct myTrkList;
+class myTrkList;
+
 
 //这个结构里面存放每一帧上，某一个目标的状态，就是CTRA的六个数据
 //这个里面有函数，实现对目标状态的更新

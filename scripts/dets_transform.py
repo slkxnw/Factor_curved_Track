@@ -1,6 +1,6 @@
 #!/home/chenz/anaconda3/envs/surroundCam_cap/bin/python
 # -*- coding: utf-8 -*-
-# 将检测结果从当前帧坐标系转换到起始帧坐标系，目前是基于kitti官方的轨迹文件实现，后续改成可以接收来自slam算法的结果
+# 将检测结果从当前帧坐标系转换到起始帧坐标系，目前是基于读取的kitti官方的轨迹文件实现，后续改成基于来自slam算法定位信息实现
 
 import rospy
 import numpy as np
@@ -73,7 +73,6 @@ def transform_callback(dets, args):
     ego_trans = ego_Oxt.T_w_imu[0:3, 3]
     ego_rotZ = ego_Oxt.packet.yaw
     # 这里，将自车在全局坐标系下的roty和检测结果车辆在自车坐标系下的roty相加
-    # TODO 将结果调整到正副pi/2中
     for det in dets.detecs:
         det.pos = det.pos + ego_trans
         det.alp = det.alp + ego_rotZ
@@ -95,7 +94,7 @@ def transform(args):
     #返回的imupose是OxtsData的list，每个OxtsData包含一条原始的oxt数据，和变换后的，相较于起始帧位置的SE3矩阵
     #Poses are given in an East-North-Up coordinate system， whose origin is the first GPS position.
     imu_pose = load_oxts_packets_and_poses(oxt_path)
-    rospy.init_node('cord_transform', anonymous=True)
+    rospy.init_node('dets_transform', anonymous=True)
     
     dets_puber = rospy.Publisher('/detections', Detection_list, queue_size = 10)
 

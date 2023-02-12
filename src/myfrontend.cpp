@@ -18,7 +18,7 @@ bool myFrontend::BuildInitTrkList(Vec3 measure, double time, unsigned int id)
         return false;
     }
 
-    last_state_ << 0.0, 0.0, 0.0, 14.0, 0.0, 0.0;
+    last_state_ << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
     CreateMeasureFrame(measure, time);
 
     std::shared_ptr<myTrkList> new_trk = std::shared_ptr<myTrkList>(new myTrkList(id));
@@ -194,7 +194,6 @@ void myFrontend::Optimize(myTrkList::KeyframeType &keyframes)
     optimizer.initializeOptimization();
     optimizer.optimize(10);
 
-    //TODO 
     for(auto &v : vertexs)
         keyframes.at(v.first)->SetObjState(v.second->estimate()); 
 }

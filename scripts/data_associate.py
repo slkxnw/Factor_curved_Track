@@ -3,7 +3,6 @@
 # 用于接收检测结果和轨迹的状态，完成数据关联，输出匹配结果对和没有匹配观测/轨迹
 
 import rospy
-from std_msgs.msg import Int8MultiArray
 import numpy as np
 import message_filters
 from numba import jit
@@ -143,7 +142,7 @@ def data_association(dets, trks, metric, threshold, algm='greedy', \
 
 def associate_Callback(trks, dets, args):
 	
-	#TODO 将msg解包，变成data_association需要的格式
+	
 
 	unpack_dets = []
 	unpack_trks = []
@@ -187,7 +186,7 @@ def main():
     unmatch_trk_pub = rospy.Publisher("/unmatched_trk", StampArray, queue_size=10)
     unmatch_det_pub = rospy.Publisher("/unmatched_det", StampArray, queue_size=10)
 
-    trks = message_filters.Subscriber("/tracks", Detection_list)
+    trks = message_filters.Subscriber("/tracks_prediction", Detection_list)
     dets = message_filters.Subscriber("/detections", Detection_list)
 
     ts = message_filters.ApproximateTimeSynchronizer([trks, dets], 10, 1, allow_headerless= True)

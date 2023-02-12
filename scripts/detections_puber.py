@@ -40,11 +40,11 @@ def load_detection(file):
 def get_frame_det(dets_all, frame):
 	
 	# get irrelevant information associated with an object, not used for associationg
-	ori_array = dets_all[dets_all[:, 0] == frame, -1].reshape((-1, 1))		# orientation
-	other_array = dets_all[dets_all[:, 0] == frame, 1:7] 					# other information, e.g, 2D box, ...
+	ori_array = dets_all[dets_all[:, 0] == frame, -1].reshape((-1, 1))		# orientation alpha
+	other_array = dets_all[dets_all[:, 0] == frame, 1:7] 					# other information, e.g, typr + 2D box + score ...
 	additional_info = np.concatenate((ori_array, other_array), axis=1)		
 
-	# get 3D box
+	# get 3D box:3D BBOX (h, w, l, x, y, z, rot_y)
 	dets = dets_all[dets_all[:, 0] == frame, 7:14]		
 
 	return dets, additional_info
@@ -75,7 +75,7 @@ def detection_puber(args):
         for det,info in zip(dets_frame, infos_frame):
             inf = Information()
             inf.type = info[0]
-            inf.unknow = info[5]
+            inf.unknow = info[5]# 实际上是检测的score
             inf.orin = info[6]
             det_ = Detection()
             det_.siz = det[0:3]

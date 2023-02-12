@@ -19,7 +19,11 @@
 
 // 一些全局变量，这样不用向回调函数传参
 ros::Publisher trk_predict_pub;
+ros::Publisher trk_pos_pub;
+ros::Publisher trk_id_pub;
 mytrk::myBackend::Ptr backend;
+
+// TODO：添加puber，发布更新后的各个轨迹的绝对位置，以及轨迹的绝对ID，也就是Obj_id_list
 
 
 void callback(const track_msgs::PairsConstPtr &match_pair, 
@@ -34,7 +38,7 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
     Vec7 det;
     unsigned long backend_id;
     //更新匹配到的轨迹
-    //TODO 这里有问题：match_pair中trk的id是从0开始的，对应的是上一次发布的trkpred的顺序，不是对应的backend中的obj_id，已经修改了一下
+    
     //需要修改一下,发布的trk信息的顺序，和后端当前的objlist中（obj_id, frontend_ptr）对的循序一致
     //因此，首先获取后端当前的objlist，然后得到match_pair中第i对匹配中，trk对应的id，用[]操作符取objlist中这个id对应的frontend_ptr，
     //再从frontend-ptr获取它在后端中的分配到的obj_id
@@ -105,7 +109,10 @@ int main(int argc, char** argv)
     ros::NodeHandle nh;
 
     //发布trks预测结果
-    ros::Publisher trk_predict_pub = nh.advertise<track_msgs::Detection_list>("/tracks", 10);
+    ros::Publisher trk_predict_pub = nh.advertise<track_msgs::Detection_list>("/tracks_prediction", 10);
+    //发布trks当前状态
+    ros::Publisher trk_cur_pub = nh.advertise<track_msgs::Detection_list>("/tracks_cur_state", 10);
+    ros::Publisher trk_id_pub = nh.advertise<track_msgs::StampArray>("/tracks_ids", 10);
 
     mytrk::myBackend::Ptr backend = mytrk::myBackend::Ptr(new mytrk::myBackend);
 

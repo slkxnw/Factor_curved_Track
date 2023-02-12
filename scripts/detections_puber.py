@@ -72,6 +72,8 @@ def detection_puber(args):
         # 第一，在msg文件中设置了几个默认值，不知是否可行
         # 第二，不知道ros的数组在Python对应什么格式，目前是按照对应list来看的，
         # 因为，ROS的UInt16MultiArray Message在Python是一个类，其中self.data = []
+        # TODO 检测结果的包围框的朝向需要再确认，pointrcnn给出了roty和alpha，我们需要的是包围框（车辆）的横摆角w大小，w和roty和alpha有什么关系？
+        # 从kitti-devkit给的图来看，roty就是w
         for det,info in zip(dets_frame, infos_frame):
             inf = Information()
             inf.type = info[0]

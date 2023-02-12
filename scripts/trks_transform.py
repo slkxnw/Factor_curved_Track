@@ -57,13 +57,17 @@ def transform_callback(trks, trks_id, args):
     ego_rotZ = ego_Oxt.packet.yaw
     # 这里，将trk车辆在全局坐标系下的pos/roty减去自车在全局坐标系下的pos/roty
     # TODO：位置可以直接减，roty直接减的可行性需要分析一下
-    for trk in trks.detecs:
+    for [trk, id] in zip(trks.detecs, trks_id.ids):
         trk.pos = trk.pos - ego_trans
         trk.alp = trk.alp - ego_rotZ
         while(trk.alp > 3.14159 / 2):
             trk.alp -= 3.14159
         while(trk.alp < -3.14159 / 2):
             trk.alp += 3.14159
+        dim = trk.siz
+        pos = trk.pos
+        roty = trk.alp
+        # TODO 是否可以不输出alpha，就可以完成评估？
         
             
 

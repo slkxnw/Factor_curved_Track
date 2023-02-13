@@ -32,6 +32,7 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
                     const track_msgs::StampArrayConstPtr &unmatch_det)
 {
     double time = dets->header.stamp.sec * 0.1;
+    int delet_cnt = 0;
     std::unordered_map<unsigned long, Vec8> matches;
     std::vector<unsigned long> dead_ids;
     std::vector<Vec8> od_res;
@@ -54,7 +55,8 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
 
     //TODO 使用检测结果单独更新目标的z和bbox信息,以及将当前帧坐标系下的观测角
     //TODO 确认下面这些id匹配是否有问题
-    // TODO 确认坐标系，看了kittidevkit，z轴是向前的，和在因子图后端定义的不一样，那么我们需要的是x和z的坐标位置，交换一下位置，后面的发布也要交换
+    //TODO 确认坐标系，看了kittidevkit，z轴是向前的，和在因子图后端定义的不一样，因此
+    //根据det更新和初始化trk时，需要交换一下位置dets的y和z的位置，发布从后端trk获取到的位置时，也要交换y和z的位置
     for(int i = 0; i < match_pair->trk.data.size(); ++i)
     {
         det << dets->detecs[i].pos.x, dets->detecs[i].pos.z, dets->detecs[i].pos.y, 
@@ -72,6 +74,7 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
         backend_id = backend->GetObjIDlist()[int(unmatch_trk->ids.data[i])];
         if((time - backend->GetObjlist()[backend_id]->GetLastfeame()->time_stamp_) > 1.5)
             dead_ids.push_back(backend_id);
+       
     }
     backend->StopObj(dead_ids);
     //初始化新轨迹
@@ -140,10 +143,15 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
     for(auto &id : obj_ids)
         active_ids.ids.data.push_back(id);
     trk_id_pub.publish(active_ids);
+
+    if(int(dets->header.stamp.sec) % 5 == 0)
+        ROS_INFO("Frame %d optimization finished with %d trks updated, %d trks initialed, %d trks deleted",
+                int(dets->header.stamp.sec), matches.size(), od_res.size(), dead_ids.size());
 }
 
 int main(int argc, char** argv)
 {
+    //TODO 添加Log信息
     ros::init(argc, argv, "factor_manager");
 
     ros::NodeHandle nh;

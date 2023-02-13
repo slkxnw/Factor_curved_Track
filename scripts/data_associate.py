@@ -155,7 +155,6 @@ def associate_Callback(trks, dets, args):
 
 	matches,unmatch_dets,unmatch_trks, cost, aff_matrix = data_association(unpack_dets, unpack_trks, "giou_3d", -0.2, algm='hungar')
 
-	# 修复了一下
 	match_pub = args[0]
 	unmatch_trk_pub = args[1]
 	unmatch_det_pub = args[2]
@@ -176,6 +175,10 @@ def associate_Callback(trks, dets, args):
 	match_pub.publish(pub_match)
 	unmatch_det_pub.publish(pub_undets)
 	unmatch_trk_pub.publish(pub_untrks)
+
+	if(int(dets.header.stamp.sec) % 5 == 0):
+		rospy.loginfo("Data association of %d frame finished with %d matches, %d unmatched dets, %d unmatched trks ", 
+		int(dets.header.stamp.sec), pub_match.dets.size(), pub_undets.ids.size(), pub_untrks.ids.size())
 
 
 def main():

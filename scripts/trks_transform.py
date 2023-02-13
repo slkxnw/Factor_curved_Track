@@ -45,7 +45,7 @@ def save_results(res, save_trk_file, eval_file, frame, score_threshold):
 	if conf_tmp >= score_threshold:
 		str_to_srite = '%d %d %s 0 0 %f %f %f %f %f %f %f %f %f %f %f %f %f\n' % (frame, id_tmp, 
 			type_tmp, ori_tmp, bbox2d_tmp_trk[0], bbox2d_tmp_trk[1], bbox2d_tmp_trk[2], bbox2d_tmp_trk[3], 
-			bbox3d_size[0], bbox3d_size[1], bbox3d_size[2], bbox3d_pos[3], bbox3d_pos[4], bbox3d_pos[5], bbox3d_tmp[6], conf_tmp)
+			bbox3d_size[0], bbox3d_size[1], bbox3d_size[2], bbox3d_pos[3], bbox3d_pos[4], bbox3d_pos[5], roty[6], conf_tmp)
 		eval_file.write(str_to_srite)
 
 def transform_callback(trks, trks_id, args):
@@ -63,6 +63,7 @@ def transform_callback(trks, trks_id, args):
 
     # 这里，将trk车辆在全局坐标系下的pos/roty减去自车在全局坐标系下的pos/roty
     # TODO：位置可以直接减，roty直接减的可行性需要分析一下
+    # 根据官方的图，ry应该就是横摆角，他们的alpha角在示意图中不能直接画出来
     for [trk, info, id] in zip(trks.detecs, trks.infos, trks_id.ids):
         trk.pos = trk.pos - ego_trans
         trk.alp = trk.alp - ego_rotZ
@@ -78,6 +79,8 @@ def transform_callback(trks, trks_id, args):
         obsrv_conf = info.unknow
         res = [dim, pos, id, obsrv_agl, roty, obsrv_conf]
         save_results(res, vis_file, eval_file, frame_id, score_threshold = 0)
+    if(frame_id % 5 == 0):
+        rospy.loginfo("Transform cord of trks in frame %d and save them", frame_id)
         
             
 

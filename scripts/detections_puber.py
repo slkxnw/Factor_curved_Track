@@ -91,10 +91,11 @@ def detection_puber(args):
         det_list.header.stame.nsec = 0
         
         detection_res_pub.publish(det_list)
-        rospy.loginfo("pub frame %d with %d detections", frame_id, det_list.infos.size())
         frame_id = frame_id + 1
         if(frame_id == 447):
             break
+        if(frame_id % 5 == 0):
+            rospy.loginfo("Pub frame %d with %d detections", frame_id, det_list.infos.size())
         rate.sleep()
 
 # TODO:需要设置退出，当遍历当前seq所有帧后，结束程序,目前是按照val的0001序列设计的退出，它共有446帧，因此循环这些次

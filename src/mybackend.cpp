@@ -3,16 +3,24 @@
 namespace mytrk
 {
 
-void myBackend::InitObj(std::vector<Vec7> &od_res, double time)
+void myBackend::InitObj(std::vector<Vec8> &od_res, double time)
 {
     std::unique_lock<std::mutex> lck(data_lck_);
     Vec3 measure;
+    Vec3 box_size;
     for (auto &od :od_res)
     {
         myFrontend::Ptr new_frontend = myFrontend::Ptr(new myFrontend);
         //x,y,theta
         measure << od[0], od[1], od[6];
         new_frontend->BuildInitTrkList(measure, time, num_of_obj);
+        //size
+        box_size << od[3], od[4], od[5];
+        new_frontend->SetObjSize(box_size);
+        //Z
+        new_frontend->SetObjZ(od[2]);
+        //当前帧观测角
+        new_frontend->SetObjObsrvAgl(od[7]);
         
         //hashmap插入方式
         obj_list_[num_of_obj] = new_frontend;
@@ -23,15 +31,24 @@ void myBackend::InitObj(std::vector<Vec7> &od_res, double time)
     }
 }
 
-void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec7> &matches, double time)
+void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec8> &matches, double time)
 {
     Vec3 measure;
+    Vec3 box_size;
     for (auto &match :matches)
     {
         //检测结果为 x,y,z,w,h,l,theta
+        //观测数据，x,y,theta
         measure << match.second[0], match.second[1], match.second[6];
         obj_list_[match.first]->CreateMeasureFrame(measure, time);
         obj_list_[match.first]->InsertKeyFrame();
+        //检测框大小
+        box_size << match.second[3], match.second[4], match.second[5];
+        obj_list_[match.first]->SetObjSize(box_size);
+        //Z & 观测角
+        obj_list_[match.first]->SetObjZ(match.second[2]);
+        obj_list_[match.first]->SetObjObsrvAgl(match.second[7]);
+        //启动因子图优化
         obj_list_[match.first]->UpdateTrkList();
     }
 }
@@ -52,15 +69,27 @@ void myBackend::StopObj(std::vector<unsigned long> dead_ids)
 myBackend::PredictObjtype myBackend::GetStatePrediction(double time)
 {
     Vec3 position_prediction;
+    Vec3 obj_size;
     obj_id_list.clear();
     //TODO 需要更新目标的尺寸，现在假设目标尺寸没变动过
     for (auto &state_pair : state_prediction_list_)
     {
+        //x,y,theta
         position_prediction = obj_list_[state_pair.first]->PredictPostion(time);
         // state_pair.second.block<2, 1>(0, 0) = position_prediction;
         state_pair.second[0] = position_prediction[0];
         state_pair.second[1] = position_prediction[1];
         state_pair.second[6] = position_prediction[2];
+        //size
+        obj_size = obj_list_[state_pair.first]->GetObjSize();
+        state_pair.second[3] = obj_size[0];
+        state_pair.second[4] = obj_size[1];
+        state_pair.second[5] = obj_size[2];
+        //z & 观测角
+        state_pair.second[2] = obj_list_[state_pair.first]->GetObjZ();
+        state_pair.second[7] = obj_list_[state_pair.first]->GetObjObsrvAgl();
+
+
         obj_id_list.push_back(state_pair.first);
     }
     return state_prediction_list_;

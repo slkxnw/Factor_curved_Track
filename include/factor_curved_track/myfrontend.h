@@ -91,14 +91,31 @@ public:
         return last_frame_;
     }
 
-    // void SetObjSize(Vec3 size)
-    // {
-    //     obj_size_ = size;
-    // }
-    // Vec3 GetObjSize()
-    // {
-    //     return obj_size_;
-    // }
+    //不参与更新的目标参数，的初始化和更新
+    void SetObjSize(Vec3 size)
+    {
+        obj_size_ = size;
+    }
+    Vec3 GetObjSize()
+    {
+        return obj_size_;
+    }
+    void SetObjZ(double z)
+    {
+        z_ = z;
+    }
+    double GetObjZ()
+    {
+        return z_;
+    }
+    void SetObjObsrvAgl(double agl)
+    {
+        observ_agl= agl;
+    }
+    double GetObjObsrvAgl()
+    {
+        return observ_agl;
+    }
 
 
 private:
@@ -135,7 +152,10 @@ private:
 
     Vec6 last_state_;
     double last_timestamp_;
-    // Vec3 obj_size_;
+    //目标其他参数，不参与更新，使用观测给出的数据
+    Vec3 obj_size_;
+    double z_;
+    double observ_agl;
 
 };
 

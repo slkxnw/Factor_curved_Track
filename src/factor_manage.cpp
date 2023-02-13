@@ -32,11 +32,15 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
                     const track_msgs::StampArrayConstPtr &unmatch_det)
 {
     double time = dets->header.stamp.sec * 0.1;
-    std::unordered_map<unsigned long, Vec7> matches;
+    std::unordered_map<unsigned long, Vec8> matches;
     std::vector<unsigned long> dead_ids;
-    std::vector<Vec7> od_res;
-    Vec7 det;
+    std::vector<Vec8> od_res;
+    Vec8 det;
     unsigned long backend_id;
+    track_msgs::Detection trk_;
+    track_msgs::Information info_;
+    track_msgs::Detection_list trks;
+
     //更新匹配到的轨迹
     
     //需要修改一下,发布的trk信息的顺序，和后端当前的objlist中（obj_id, frontend_ptr）对的循序一致
@@ -46,13 +50,13 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
     //最后还是在backend里维护一个objid列表，每次预测位置的时候更新这个列表
 
 
-    //TODO 使用检测结果单独更新目标的z和bbox信息
-    //TODO backend析构函数，将所有的轨迹信息存放起来
+    //TODO 使用检测结果单独更新目标的z和bbox信息,以及将当前帧坐标系下的观测角
+    //TODO 确认下面这些id匹配是否有问题
     for(int i = 0; i < match_pair->trk.data.size(); ++i)
     {
         det << dets->detecs[i].pos.x, dets->detecs[i].pos.y, dets->detecs[i].pos.z, 
-            dets->detecs[i].siz.x, dets->detecs[i].siz.y, dets->detecs[i].siz.z, double(dets->detecs[i].alp);
-
+            dets->detecs[i].siz.x, dets->detecs[i].siz.y, dets->detecs[i].siz.z, 
+            double(dets->detecs[i].alp), dets->infos[i].orin;
         backend_id = backend->GetObjIDlist()[int(match_pair->trk.data[i])];
         // auto hash_ptr = backend->GetObjlist().at(5);
         // hash_ptr
@@ -71,7 +75,8 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
     for(auto & id : unmatch_det->ids.data)
     {
         det << dets->detecs[id].pos.x, dets->detecs[id].pos.y, dets->detecs[id].pos.z, 
-                dets->detecs[id].siz.x, dets->detecs[id].siz.y, dets->detecs[id].siz.z, dets->detecs[id].alp;
+                dets->detecs[id].siz.x, dets->detecs[id].siz.y, dets->detecs[id].siz.z, 
+                dets->detecs[id].alp, dets->infos[id].orin;
         od_res.push_back(det);
     }
     backend->InitObj(od_res, time);
@@ -82,9 +87,8 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
     //TODO :目前是测试代码，预测固定时间间隔后的trk状态，实际上要改成预测检测结果时刻的trk状态
     auto trk_pred = backend->GetStatePrediction(time + 0.1);
 
-    track_msgs::Detection trk_;
-    track_msgs::Detection_list trks;
     //将预测结果按照顺序，生成trk并放入列表中
+    //TODO 返回结果包含观测角和size等数据，目前没有包含2Dbbox以及检测分数，类型等数据，后续有需要可以加上
     for(auto &pair : trk_pred)
     {
         trk_.pos.x = pair.second[0];
@@ -97,6 +101,11 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
 
         trks.header.stamp.sec = dets->header.stamp.sec + 1;
         trks.detecs.push_back(trk_);
+        //这里是当前帧的观测角
+        info_.orin = pair.second[7];
+        info_.type = 0;
+        info_.unknow = 0;
+        trks.infos.push_back(info_);
     }
 
     trk_predict_pub.publish(trks);

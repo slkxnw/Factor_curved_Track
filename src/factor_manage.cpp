@@ -54,9 +54,10 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
 
     //TODO 使用检测结果单独更新目标的z和bbox信息,以及将当前帧坐标系下的观测角
     //TODO 确认下面这些id匹配是否有问题
+    // TODO 确认坐标系，看了kittidevkit，z轴是向前的，和在因子图后端定义的不一样，那么我们需要的是x和z的坐标位置，交换一下位置，后面的发布也要交换
     for(int i = 0; i < match_pair->trk.data.size(); ++i)
     {
-        det << dets->detecs[i].pos.x, dets->detecs[i].pos.y, dets->detecs[i].pos.z, 
+        det << dets->detecs[i].pos.x, dets->detecs[i].pos.z, dets->detecs[i].pos.y, 
             dets->detecs[i].siz.x, dets->detecs[i].siz.y, dets->detecs[i].siz.z, 
             double(dets->detecs[i].alp), dets->infos[i].orin;
         backend_id = backend->GetObjIDlist()[int(match_pair->trk.data[i])];
@@ -76,7 +77,7 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
     //初始化新轨迹
     for(auto & id : unmatch_det->ids.data)
     {
-        det << dets->detecs[id].pos.x, dets->detecs[id].pos.y, dets->detecs[id].pos.z, 
+        det << dets->detecs[id].pos.x, dets->detecs[id].pos.z, dets->detecs[id].pos.y, 
                 dets->detecs[id].siz.x, dets->detecs[id].siz.y, dets->detecs[id].siz.z, 
                 dets->detecs[id].alp, dets->infos[id].orin;
         od_res.push_back(det);
@@ -93,8 +94,9 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
     for(auto &pair : trk_state_pred)
     {
         trk_.pos.x = pair.second[0];
-        trk_.pos.y = pair.second[1];
-        trk_.pos.z = pair.second[2];
+        //因子图坐标系和kitti坐标系不一样
+        trk_.pos.z = pair.second[1];
+        trk_.pos.y = pair.second[2];
         trk_.siz.x = pair.second[3];
         trk_.siz.y = pair.second[4];
         trk_.siz.z = pair.second[5];
@@ -104,19 +106,20 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
         //这里是当前帧的观测角
         info_.orin = pair.second[7];
         info_.type = 0;
-        info_.unknow = 0;
+        info_.score = pair.second[8];
         trks_pred.infos.push_back(info_);
     }
     trk_predict_pub.publish(trks_pred);
 
     //发布轨迹当前状态，包括观测角/z等数据,这里的观测角/z和上面轨迹预测状态的是一样的，都使用最近的检测数据的参数
     auto trks_state_cur = backend->GetStateCur();
-    trks_cur.header.stamp.sec = dets->header.stamp.sec + 1;
+    trks_cur.header = dets->header;
     for(auto &pair : trks_state_cur)
     {
         trk_.pos.x = pair.second[0];
-        trk_.pos.y = pair.second[1];
-        trk_.pos.z = pair.second[2];
+        //因子图坐标系和kitti坐标系不一样
+        trk_.pos.z = pair.second[1];
+        trk_.pos.y = pair.second[2];
         trk_.siz.x = pair.second[3];
         trk_.siz.y = pair.second[4];
         trk_.siz.z = pair.second[5];
@@ -126,13 +129,14 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
         //这里是当前帧的观测角
         info_.orin = pair.second[7];
         info_.type = 0;
-        info_.unknow = 0;
+        info_.score = pair.second[8];
         trks_cur.infos.push_back(info_);
     }
     trk_cur_pub.publish(trks_cur);
 
     //发布活跃轨迹id
     auto obj_ids = backend->GetObjIDlist();
+    active_ids.header = dets->header;
     for(auto &id : obj_ids)
         active_ids.ids.data.push_back(id);
     trk_id_pub.publish(active_ids);

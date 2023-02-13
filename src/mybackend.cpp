@@ -86,10 +86,10 @@ myBackend::ObjInfotype myBackend::GetStatePrediction(double time)
         state_pair.second[3] = obj_size[0];
         state_pair.second[4] = obj_size[1];
         state_pair.second[5] = obj_size[2];
-        //z & 观测角
+        //z & 观测角 & 检测置信度
         state_pair.second[2] = obj_list_[state_pair.first]->GetObjZ();
         state_pair.second[7] = obj_list_[state_pair.first]->GetObjObsrvAgl();
-
+        state_pair.second[8] = obj_list_[state_pair.first]->GetObjObsrvConf();
 
         obj_id_list.push_back(state_pair.first);
     }
@@ -113,11 +113,10 @@ myBackend::ObjInfotype myBackend::GetStateCur()
         state_pair.second[3] = obj_size[0];
         state_pair.second[4] = obj_size[1];
         state_pair.second[5] = obj_size[2];
-        //z & 观测角
+        //z & 观测角 & 检测置信度
         state_pair.second[2] = obj_list_[state_pair.first]->GetObjZ();
         state_pair.second[7] = obj_list_[state_pair.first]->GetObjObsrvAgl();
-
-
+        state_pair.second[8] = obj_list_[state_pair.first]->GetObjObsrvConf();
     }
     return state_cur_list_;
 }

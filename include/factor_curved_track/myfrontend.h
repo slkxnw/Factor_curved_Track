@@ -117,6 +117,10 @@ public:
     {
         return observ_agl;
     }
+    double GetObjObsrvConf()
+    {
+        return observ_conf;
+    }
     Vec3 GetCurPosition();
 
 
@@ -161,6 +165,7 @@ private:
     Vec3 obj_size_;
     double z_;
     double observ_agl;
+    double observ_conf;
 
 };
 

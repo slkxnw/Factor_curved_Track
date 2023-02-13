@@ -18,7 +18,7 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
     typedef std::shared_ptr<myBackend> Ptr;
     typedef std::unordered_map<unsigned long, std::shared_ptr<myFrontend> > Frontendtype;
-    typedef std::unordered_map<unsigned long, Vec8> ObjInfotype;
+    typedef std::unordered_map<unsigned long, Vec9> ObjInfotype;
     typedef std::unordered_map<unsigned long, std::shared_ptr<myTrkList> > TrkListType;
 
     //和航迹管理有关

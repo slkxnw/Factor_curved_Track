@@ -57,7 +57,7 @@ def detection_puber(args):
     # TODO：数据关联接收来自两个节点的数据，为了不造成数据匹配的误差问题，将数据发布频率降低
     rate = rospy.Rate(10)
     
-    path = os.path.join(args.datadir, args.dataset, 'trking', args.det_name + '_' + args.categ + '_' + args.val, args.seqs + '.txt')
+    path = os.path.join(args.datadir, args.dataset, 'trking', args.det_name + '_' + args.categ + '_' + args.split, args.seqs + '.txt')
     
     dets, flg = load_detection(path)
     if not flg:
@@ -66,7 +66,7 @@ def detection_puber(args):
     frame_id = 0
 
     while not rospy.is_shutdown():
-        dets_frame,infos_frame = get_frame_det(dets, frame_id)
+        dets_frame, infos_frame = get_frame_det(dets, frame_id)
         det_list = Detection_list()
         # TODO：这里可能有问题，主要在于
         # 第一，在msg文件中设置了几个默认值，不知是否可行
@@ -76,26 +76,36 @@ def detection_puber(args):
         # 从kitti-devkit给的图来看，roty就是w
         for det,info in zip(dets_frame, infos_frame):
             inf = Information()
-            inf.type = info[0]
-            inf.score = info[5]# 实际上是检测的score
-            inf.orin = info[6]
+            inf.type = int(info[1])
+            inf.score = info[6]# 实际上是检测的score
+            inf.orin = info[0]
+            # print(inf)
             det_ = Detection()
-            det_.siz = det[0:3]
-            det_.pos = det[3:6]
-            det_.alp = det[7]
+            det_.siz.x  = det[0]
+            det_.siz.y  = det[1]
+            det_.siz.z  = det[2]
+
+            det_.pos.x = det[3]
+            det_.pos.y = det[4]
+            det_.pos.z = det[5]
+
+            det_.alp = det[6]
             det_list.detecs.append(det_)
             det_list.infos.append(inf)
         
         # TODO 这里将时间戳设为frameid，为了方便在数据关联的数据对齐中，使用ros的同步方法
-        det_list.header.stamp.sec = frame_id
-        det_list.header.stame.nsec = 0
+        # * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')
+        # * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')
+        det_list.header.stamp.secs = frame_id
+        det_list.header.stamp.nsecs = 0
         
         detection_res_pub.publish(det_list)
+        if(frame_id % 5 == 0):
+            rospy.loginfo("Pub frame %d with %d detections", frame_id, len(det_list.infos))
         frame_id = frame_id + 1
         if(frame_id == 447):
             break
-        if(frame_id % 5 == 0):
-            rospy.loginfo("Pub frame %d with %d detections", frame_id, det_list.infos.size())
+
         rate.sleep()
 
 # TODO:需要设置退出，当遍历当前seq所有帧后，结束程序,目前是按照val的0001序列设计的退出，它共有446帧，因此循环这些次

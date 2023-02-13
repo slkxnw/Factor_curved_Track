@@ -11,7 +11,7 @@ import std_msgs.msg
 import track_msgs.msg
 
 class Detection_list(genpy.Message):
-  _md5sum = "54e13f2e609d6259f7d104859318d7d5"
+  _md5sum = "e263fa72b504958b782f63ca17fa1fb8"
   _type = "track_msgs/Detection_list"
   _has_header = True  # flag to mark the presence of a Header object
   _full_text = """Header header
@@ -65,8 +65,9 @@ float32 ymin = 0.0
 float32 xmin = 0.0
 float32 ymax = 0.0
 float32 xmax = 0.0
-float32 unknow
-float32 orin"""
+float32 score
+float32 orin
+"""
   __slots__ = ['header','detecs','infos']
   _slot_types = ['std_msgs/Header','track_msgs/Detection[]','track_msgs/Information[]']
 
@@ -133,7 +134,7 @@ float32 orin"""
       buff.write(_struct_I.pack(length))
       for val1 in self.infos:
         _x = val1
-        buff.write(_get_struct_B2f().pack(_x.type, _x.unknow, _x.orin))
+        buff.write(_get_struct_B2f().pack(_x.type, _x.score, _x.orin))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -194,7 +195,7 @@ float32 orin"""
         _x = val1
         start = end
         end += 9
-        (_x.type, _x.unknow, _x.orin,) = _get_struct_B2f().unpack(str[start:end])
+        (_x.type, _x.score, _x.orin,) = _get_struct_B2f().unpack(str[start:end])
         self.infos.append(val1)
       return self
     except struct.error as e:
@@ -231,7 +232,7 @@ float32 orin"""
       buff.write(_struct_I.pack(length))
       for val1 in self.infos:
         _x = val1
-        buff.write(_get_struct_B2f().pack(_x.type, _x.unknow, _x.orin))
+        buff.write(_get_struct_B2f().pack(_x.type, _x.score, _x.orin))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -293,7 +294,7 @@ float32 orin"""
         _x = val1
         start = end
         end += 9
-        (_x.type, _x.unknow, _x.orin,) = _get_struct_B2f().unpack(str[start:end])
+        (_x.type, _x.score, _x.orin,) = _get_struct_B2f().unpack(str[start:end])
         self.infos.append(val1)
       return self
     except struct.error as e:

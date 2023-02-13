@@ -33,10 +33,10 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
 {
     double time = dets->header.stamp.sec * 0.1;
     int delet_cnt = 0;
-    std::unordered_map<unsigned long, Vec8> matches;
+    std::unordered_map<unsigned long, Vec9> matches;
     std::vector<unsigned long> dead_ids;
-    std::vector<Vec8> od_res;
-    Vec8 det;
+    std::vector<Vec9> od_res;
+    Vec9 det;
     unsigned long backend_id;
     track_msgs::Detection trk_;
     track_msgs::Information info_;
@@ -61,7 +61,7 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
     {
         det << dets->detecs[i].pos.x, dets->detecs[i].pos.z, dets->detecs[i].pos.y, 
             dets->detecs[i].siz.x, dets->detecs[i].siz.y, dets->detecs[i].siz.z, 
-            double(dets->detecs[i].alp), dets->infos[i].orin;
+            double(dets->detecs[i].alp), dets->infos[i].orin, dets->infos[i].score;
         backend_id = backend->GetObjIDlist()[int(match_pair->trk.data[i])];
         // auto hash_ptr = backend->GetObjlist().at(5);
         // hash_ptr
@@ -82,7 +82,7 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
     {
         det << dets->detecs[id].pos.x, dets->detecs[id].pos.z, dets->detecs[id].pos.y, 
                 dets->detecs[id].siz.x, dets->detecs[id].siz.y, dets->detecs[id].siz.z, 
-                dets->detecs[id].alp, dets->infos[id].orin;
+                dets->detecs[id].alp, dets->infos[id].orin, dets->infos[id].score;
         od_res.push_back(det);
     }
     backend->InitObj(od_res, time);
@@ -152,6 +152,7 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
 int main(int argc, char** argv)
 {
     //TODO 添加Log信息
+    // std::cout<<"test"<<std::endl;
     ros::init(argc, argv, "factor_manager");
 
     ros::NodeHandle nh;
@@ -164,7 +165,11 @@ int main(int argc, char** argv)
     ros::Publisher trk_id_pub = nh.advertise<track_msgs::StampArray>("/tracks_ids", 10);
 
     mytrk::myBackend::Ptr backend = mytrk::myBackend::Ptr(new mytrk::myBackend);
-
+    
+    track_msgs::Detection_list initial_predict_pub;
+    initial_predict_pub.header.stamp.sec = 0;
+    trk_predict_pub.publish(initial_predict_pub);
+    ROS_INFO("Pub empty trk_predictions to start track");
 
     message_filters::Subscriber<track_msgs::Pairs> matched_pair_sub(nh, "/matched_pair", 10);
     message_filters::Subscriber<track_msgs::StampArray> unmatched_trk_sub(nh, "/unmatched_trk", 10);

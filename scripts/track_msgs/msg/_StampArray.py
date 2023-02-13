@@ -9,10 +9,10 @@ import struct
 import std_msgs.msg
 
 class StampArray(genpy.Message):
-  _md5sum = "2cd536d3dc50ab516b840f28c39b2a25"
+  _md5sum = "072db47229de794c75033eae7851b078"
   _type = "track_msgs/StampArray"
-  _has_header = False  # flag to mark the presence of a Header object
-  _full_text = """Header head
+  _has_header = True  # flag to mark the presence of a Header object
+  _full_text = """Header header
 std_msgs/UInt8MultiArray ids
 
 ================================================================================
@@ -74,7 +74,7 @@ MSG: std_msgs/MultiArrayDimension
 string label   # label of given dimension
 uint32 size    # size of given dimension (in type units)
 uint32 stride  # stride of given dimension"""
-  __slots__ = ['head','ids']
+  __slots__ = ['header','ids']
   _slot_types = ['std_msgs/Header','std_msgs/UInt8MultiArray']
 
   def __init__(self, *args, **kwds):
@@ -85,7 +85,7 @@ uint32 stride  # stride of given dimension"""
     changes.  You cannot mix in-order arguments and keyword arguments.
 
     The available fields are:
-       head,ids
+       header,ids
 
     :param args: complete set of field values, in .msg order
     :param kwds: use keyword arguments corresponding to message field names
@@ -94,12 +94,12 @@ uint32 stride  # stride of given dimension"""
     if args or kwds:
       super(StampArray, self).__init__(*args, **kwds)
       # message fields cannot be None, assign default values for those that are
-      if self.head is None:
-        self.head = std_msgs.msg.Header()
+      if self.header is None:
+        self.header = std_msgs.msg.Header()
       if self.ids is None:
         self.ids = std_msgs.msg.UInt8MultiArray()
     else:
-      self.head = std_msgs.msg.Header()
+      self.header = std_msgs.msg.Header()
       self.ids = std_msgs.msg.UInt8MultiArray()
 
   def _get_types(self):
@@ -115,8 +115,8 @@ uint32 stride  # stride of given dimension"""
     """
     try:
       _x = self
-      buff.write(_get_struct_3I().pack(_x.head.seq, _x.head.stamp.secs, _x.head.stamp.nsecs))
-      _x = self.head.frame_id
+      buff.write(_get_struct_3I().pack(_x.header.seq, _x.header.stamp.secs, _x.header.stamp.nsecs))
+      _x = self.header.frame_id
       length = len(_x)
       if python3 or type(_x) == unicode:
         _x = _x.encode('utf-8')
@@ -153,24 +153,24 @@ uint32 stride  # stride of given dimension"""
     if python3:
       codecs.lookup_error("rosmsg").msg_type = self._type
     try:
-      if self.head is None:
-        self.head = std_msgs.msg.Header()
+      if self.header is None:
+        self.header = std_msgs.msg.Header()
       if self.ids is None:
         self.ids = std_msgs.msg.UInt8MultiArray()
       end = 0
       _x = self
       start = end
       end += 12
-      (_x.head.seq, _x.head.stamp.secs, _x.head.stamp.nsecs,) = _get_struct_3I().unpack(str[start:end])
+      (_x.header.seq, _x.header.stamp.secs, _x.header.stamp.nsecs,) = _get_struct_3I().unpack(str[start:end])
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
       start = end
       end += length
       if python3:
-        self.head.frame_id = str[start:end].decode('utf-8', 'rosmsg')
+        self.header.frame_id = str[start:end].decode('utf-8', 'rosmsg')
       else:
-        self.head.frame_id = str[start:end]
+        self.header.frame_id = str[start:end]
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
@@ -213,8 +213,8 @@ uint32 stride  # stride of given dimension"""
     """
     try:
       _x = self
-      buff.write(_get_struct_3I().pack(_x.head.seq, _x.head.stamp.secs, _x.head.stamp.nsecs))
-      _x = self.head.frame_id
+      buff.write(_get_struct_3I().pack(_x.header.seq, _x.header.stamp.secs, _x.header.stamp.nsecs))
+      _x = self.header.frame_id
       length = len(_x)
       if python3 or type(_x) == unicode:
         _x = _x.encode('utf-8')
@@ -252,24 +252,24 @@ uint32 stride  # stride of given dimension"""
     if python3:
       codecs.lookup_error("rosmsg").msg_type = self._type
     try:
-      if self.head is None:
-        self.head = std_msgs.msg.Header()
+      if self.header is None:
+        self.header = std_msgs.msg.Header()
       if self.ids is None:
         self.ids = std_msgs.msg.UInt8MultiArray()
       end = 0
       _x = self
       start = end
       end += 12
-      (_x.head.seq, _x.head.stamp.secs, _x.head.stamp.nsecs,) = _get_struct_3I().unpack(str[start:end])
+      (_x.header.seq, _x.header.stamp.secs, _x.header.stamp.nsecs,) = _get_struct_3I().unpack(str[start:end])
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
       start = end
       end += length
       if python3:
-        self.head.frame_id = str[start:end].decode('utf-8', 'rosmsg')
+        self.header.frame_id = str[start:end].decode('utf-8', 'rosmsg')
       else:
-        self.head.frame_id = str[start:end]
+        self.header.frame_id = str[start:end]
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])

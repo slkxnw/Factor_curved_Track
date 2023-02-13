@@ -72,4 +72,6 @@ set(THIRD_PARTY_LIBS
   g2o_core g2o_stuff g2o_types_sba g2o_solver_csparse g2o_csparse_extension
   ${GLOG_LIBRARIES})
 
+
 add_subdirectory(src)
+add_subdirectory(scripts)

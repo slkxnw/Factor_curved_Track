@@ -7,7 +7,7 @@ import numpy as np
 import message_filters
 from numba import jit
 from scipy.optimize import linear_sum_assignment
-from .dist_metrics import *
+from dist_metrics import *
 #TODO :这里实际上不全是Detection的bbox，还有trk的，后续改一下名称
 from track_msgs.msg import Detection_list
 from track_msgs.msg import Pairs
@@ -191,6 +191,8 @@ def main():
 
     trks = message_filters.Subscriber("/tracks_prediction", Detection_list)
     dets = message_filters.Subscriber("/detections", Detection_list)
+	
+    rospy.loginfo("Data association of trk_predict and dets")
 
     ts = message_filters.ApproximateTimeSynchronizer([trks, dets], 10, 1, allow_headerless= True)
 

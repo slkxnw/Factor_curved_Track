@@ -5,7 +5,7 @@
 import rospy
 import numpy as np
 import message_filters
-from .kitti_oxts import load_oxts_packets_and_poses
+from kitti_oxts import load_oxts_packets_and_poses
 
 import argparse
 import os
@@ -71,8 +71,8 @@ def transform_callback(trks, trks_id, args):
             trk.alp -= 3.14159
         while(trk.alp < -3.14159 / 2):
             trk.alp += 3.14159
-        dim = trk.siz
-        pos = trk.pos
+        dim = [trk.siz.x, trk.siz.y, trk.siz.z]
+        pos = [trk.pos.x, trk.pos.y, trk.pos.z]
         roty = trk.alp
         
         obsrv_agl = info.orin
@@ -91,7 +91,7 @@ def transform_callback(trks, trks_id, args):
 
 def transform(args):
     #TODO 添加接收来自slam的本车位置msg的功能
-    oxt_path = os.path.join(args.datadir, args.dataset, "oxts" ,args.val, args.seqs + '.txt')
+    oxt_path = [os.path.join(args.datadir, args.dataset, "oxts" ,args.split, args.seqs + '.txt')]
     #返回的imupose是OxtsData的list，每个OxtsData包含一条原始的oxt数据，和变换后的，相较于起始帧位置的SE3矩阵
     #Poses are given in an East-North-Up coordinate system， whose origin is the first GPS position.
     imu_pose = load_oxts_packets_and_poses(oxt_path)
@@ -99,8 +99,9 @@ def transform(args):
 
     trks = message_filters.Subscriber('/tracks_cur_state', Detection_list, queue_size = 10)
     
-    trk_ids = message_filters.Subscriber('/tracks_id', StampArray, queue_size = 10)
+    trk_ids = message_filters.Subscriber('/tracks_ids', StampArray, queue_size = 10)
 
+    rospy.loginfo("Transform cord of trks")
     
     ts = message_filters.ApproximateTimeSynchronizer([trks, trk_ids], 10, 1, allow_headerless= True)
 

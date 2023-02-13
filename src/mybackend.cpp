@@ -3,7 +3,7 @@
 namespace mytrk
 {
 
-void myBackend::InitObj(std::vector<Vec8> &od_res, double time)
+void myBackend::InitObj(std::vector<Vec9> &od_res, double time)
 {
     std::unique_lock<std::mutex> lck(data_lck_);
     Vec3 measure;
@@ -21,6 +21,8 @@ void myBackend::InitObj(std::vector<Vec8> &od_res, double time)
         new_frontend->SetObjZ(od[2]);
         //当前帧观测角
         new_frontend->SetObjObsrvAgl(od[7]);
+        //当前帧的置信度
+        new_frontend->SetObjObsrvConf(od[8]);
         
         //hashmap插入方式
         obj_list_[num_of_obj] = new_frontend;
@@ -32,7 +34,7 @@ void myBackend::InitObj(std::vector<Vec8> &od_res, double time)
     }
 }
 
-void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec8> &matches, double time)
+void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches, double time)
 {
     Vec3 measure;
     Vec3 box_size;
@@ -46,9 +48,11 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec8> &matches,
         //检测框大小
         box_size << match.second[3], match.second[4], match.second[5];
         obj_list_[match.first]->SetObjSize(box_size);
-        //Z & 观测角
+        //Z & 观测角 & 置信度
         obj_list_[match.first]->SetObjZ(match.second[2]);
         obj_list_[match.first]->SetObjObsrvAgl(match.second[7]);
+        obj_list_[match.first]->SetObjObsrvConf(match.second[8]);
+        
         //启动因子图优化
         obj_list_[match.first]->UpdateTrkList();
     }

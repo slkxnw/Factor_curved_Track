@@ -23,7 +23,7 @@ public:
 
     //和航迹管理有关
     //生成新航迹
-    void InitObj(std::vector<Vec8> &od_res, double time);
+    void InitObj(std::vector<Vec9> &od_res, double time);
     //合并航迹
     void ConcatObj(unsigned long old_obj_id, unsigned long new_obj_id)
     {
@@ -36,7 +36,7 @@ public:
 
     //和数据匹配结果相关
     //将检测结果添加到对应的frontend，并且更新
-    void UpdateObjState(std::unordered_map<unsigned long, Vec8> &matches, double time);
+    void UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches, double time);
 
     //给出，给定时刻的目标位置预测结果
     ObjInfotype GetStatePrediction(double time);

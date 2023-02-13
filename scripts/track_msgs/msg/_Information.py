@@ -8,7 +8,7 @@ import struct
 
 
 class Information(genpy.Message):
-  _md5sum = "cd4b3c9ab429f468d5d407c0b091110f"
+  _md5sum = "461d852de11ba6c796fcd36f6ce8a1b1"
   _type = "track_msgs/Information"
   _has_header = False  # flag to mark the presence of a Header object
   _full_text = """uint8 type
@@ -16,15 +16,16 @@ float32 ymin = 0.0
 float32 xmin = 0.0
 float32 ymax = 0.0
 float32 xmax = 0.0
-float32 unknow
-float32 orin"""
+float32 score
+float32 orin
+"""
   # Pseudo-constants
   ymin = 0.0
   xmin = 0.0
   ymax = 0.0
   xmax = 0.0
 
-  __slots__ = ['type','unknow','orin']
+  __slots__ = ['type','score','orin']
   _slot_types = ['uint8','float32','float32']
 
   def __init__(self, *args, **kwds):
@@ -35,7 +36,7 @@ float32 orin"""
     changes.  You cannot mix in-order arguments and keyword arguments.
 
     The available fields are:
-       type,unknow,orin
+       type,score,orin
 
     :param args: complete set of field values, in .msg order
     :param kwds: use keyword arguments corresponding to message field names
@@ -46,13 +47,13 @@ float32 orin"""
       # message fields cannot be None, assign default values for those that are
       if self.type is None:
         self.type = 0
-      if self.unknow is None:
-        self.unknow = 0.
+      if self.score is None:
+        self.score = 0.
       if self.orin is None:
         self.orin = 0.
     else:
       self.type = 0
-      self.unknow = 0.
+      self.score = 0.
       self.orin = 0.
 
   def _get_types(self):
@@ -68,7 +69,7 @@ float32 orin"""
     """
     try:
       _x = self
-      buff.write(_get_struct_B2f().pack(_x.type, _x.unknow, _x.orin))
+      buff.write(_get_struct_B2f().pack(_x.type, _x.score, _x.orin))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -84,7 +85,7 @@ float32 orin"""
       _x = self
       start = end
       end += 9
-      (_x.type, _x.unknow, _x.orin,) = _get_struct_B2f().unpack(str[start:end])
+      (_x.type, _x.score, _x.orin,) = _get_struct_B2f().unpack(str[start:end])
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e)  # most likely buffer underfill
@@ -98,7 +99,7 @@ float32 orin"""
     """
     try:
       _x = self
-      buff.write(_get_struct_B2f().pack(_x.type, _x.unknow, _x.orin))
+      buff.write(_get_struct_B2f().pack(_x.type, _x.score, _x.orin))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -115,7 +116,7 @@ float32 orin"""
       _x = self
       start = end
       end += 9
-      (_x.type, _x.unknow, _x.orin,) = _get_struct_B2f().unpack(str[start:end])
+      (_x.type, _x.score, _x.orin,) = _get_struct_B2f().unpack(str[start:end])
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e)  # most likely buffer underfill

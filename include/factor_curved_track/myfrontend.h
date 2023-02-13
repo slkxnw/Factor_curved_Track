@@ -117,6 +117,10 @@ public:
     {
         return observ_agl;
     }
+    void SetObjObsrvConf(double conf)
+    {
+        observ_conf= conf;
+    }
     double GetObjObsrvConf()
     {
         return observ_conf;

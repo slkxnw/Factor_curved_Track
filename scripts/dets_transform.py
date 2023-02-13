@@ -4,7 +4,7 @@
 
 import rospy
 import numpy as np
-from .kitti_oxts import load_oxts_packets_and_poses
+from kitti_oxts import load_oxts_packets_and_poses
 
 import argparse
 import os
@@ -69,40 +69,39 @@ def transform_callback(dets, args):
     dets_puber = args[1]
     # 检测结果帧对应的车辆位姿（以初始时刻的坐标为原点，坐标方向为正东）
     # stamp使用frameid代替
-    ego_Oxt = imu_pose[int(dets.header.stamp.sec)]
+    ego_Oxt = imu_pose[int(dets.header.stamp.secs)]
     ego_trans = ego_Oxt.T_w_imu[0:3, 3]
     ego_rotZ = ego_Oxt.packet.yaw
     # 这里，将自车在全局坐标系下的roty和检测结果车辆在自车坐标系下的roty相加
     for det in dets.detecs:
-        det.pos = det.pos + ego_trans
+        det.pos.x = det.pos.x + ego_trans[0]
+        det.pos.y = det.pos.y + ego_trans[1]
+        det.pos.z = det.pos.z + ego_trans[2]
+
         det.alp = det.alp + ego_rotZ
         while(det.alp > 3.14159 / 2):
             det.alp -= 3.14159
         while(det.alp < -3.14159 / 2):
             det.alp += 3.14159
             
-    if(int(dets.header.stamp.sec) % 5 == 0):
-        rospy.loginfo("Transform cord of dets in frame %d ", int(dets.header.stamp.sec))
     dets_puber.publish(dets)
-
-
-
-
+    if(int(dets.header.stamp.secs) % 5 == 0):
+        rospy.loginfo("Transform cord of dets in frame %d ", int(dets.header.stamp.secs))
 
 def transform(args):
     #TODO 添加接收来自slam的本车位置msg的功能
-    oxt_path = os.path.join(args.datadir, args.dataset, "oxts" ,args.val, args.seqs + '.txt')
+    oxt_path = [os.path.join(args.datadir, args.dataset, "oxts" ,args.split, args.seqs + '.txt')]
     #返回的imupose是OxtsData的list，每个OxtsData包含一条原始的oxt数据，和变换后的，相较于起始帧位置的SE3矩阵
     #Poses are given in an East-North-Up coordinate system， whose origin is the first GPS position.
     imu_pose = load_oxts_packets_and_poses(oxt_path)
     rospy.init_node('dets_transform', anonymous=True)
     
     dets_puber = rospy.Publisher('/detections', Detection_list, queue_size = 10)
+    rospy.loginfo("Transform cord of dets")
 
     rospy.Subscriber("/orin_detections", Detection_list, transform_callback, (imu_pose, dets_puber))
 
     rospy.spin()
-
 
 
 if __name__ == '__main__':

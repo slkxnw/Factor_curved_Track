@@ -18,7 +18,7 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
     typedef std::shared_ptr<myBackend> Ptr;
     typedef std::unordered_map<unsigned long, std::shared_ptr<myFrontend> > Frontendtype;
-    typedef std::unordered_map<unsigned long, Vec8> PredictObjtype;
+    typedef std::unordered_map<unsigned long, Vec8> ObjInfotype;
     typedef std::unordered_map<unsigned long, std::shared_ptr<myTrkList> > TrkListType;
 
     //和航迹管理有关
@@ -39,7 +39,9 @@ public:
     void UpdateObjState(std::unordered_map<unsigned long, Vec8> &matches, double time);
 
     //给出，给定时刻的目标位置预测结果
-    PredictObjtype GetStatePrediction(double time);
+    ObjInfotype GetStatePrediction(double time);
+    //获取更新后的轨迹当前状态，
+    ObjInfotype GetStateCur();
 
     std::vector<unsigned long> GetObjIDlist()
     {
@@ -60,7 +62,8 @@ private:
 
     Frontendtype obj_list_;
     TrkListType dead_obj_list;
-    PredictObjtype state_prediction_list_;
+    ObjInfotype state_prediction_list_;
+    ObjInfotype state_cur_list_;
     std::vector<unsigned long> obj_id_list;
 
 };

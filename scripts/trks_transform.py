@@ -69,7 +69,6 @@ def transform_callback(trks, trks_id, args):
         roty = trk.alp
         
         obsrv_agl = info.orin
-        # TODO 是否可以不输出alpha，就可以完成评估？
         
             
 

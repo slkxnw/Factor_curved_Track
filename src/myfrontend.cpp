@@ -18,7 +18,6 @@ bool myFrontend::BuildInitTrkList(Vec3 measure, double time, unsigned int id)
         return false;
     }
 
-    last_state_ << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
     CreateMeasureFrame(measure, time);
 
     std::shared_ptr<myTrkList> new_trk = std::shared_ptr<myTrkList>(new myTrkList(id));
@@ -51,7 +50,9 @@ void myFrontend::Stop()
 
 myFrame::Ptr myFrontend::CreateMeasureFrame(Vec3 measure, double time, bool is_measure)
 {
-    
+    //TODO 确认一下这里，插入当前帧后，之前的当前帧就变成了lastframe，然后更新last_frame数据
+    last_frame_ = cur_frame_;
+    GetLastFrameInfo();
     myFrame::Ptr new_frame(new myFrame);
     last_state_[3] += last_state_[4] * (time - last_timestamp_);
     Vec6 cur_state;
@@ -61,13 +62,17 @@ myFrame::Ptr myFrontend::CreateMeasureFrame(Vec3 measure, double time, bool is_m
     new_frame->time_stamp_ = time;
     new_frame->is_measure_ = is_measure;
     
-    last_frame_ = cur_frame_;
     cur_frame_ = new_frame;
+    
     return new_frame;
 }
 
 myFrame::Ptr myFrontend::CreateExtrpFrame(double time)
 {
+    //TODO 这里，如果连续出现外推帧，那么last_frame会是外推帧
+    last_frame_ = cur_frame_;
+    GetLastFrameInfo();
+    
     myFrame::Ptr new_frame(new myFrame);
     
     Vec6 cur_state = PredictState(time);
@@ -76,7 +81,7 @@ myFrame::Ptr myFrontend::CreateExtrpFrame(double time)
     new_frame->time_stamp_ = time;
     new_frame->is_measure_ = false;
         
-    last_frame_ = cur_frame_;
+
     cur_frame_ = new_frame;
     return new_frame;
 }
@@ -100,16 +105,18 @@ void myFrontend::UpdateTrkList()
 }
 
 /**
-*返回 x y theta
+*预测 x y theta,基于当前帧的状态，预测给定时刻的状态
 */
 Vec3 myFrontend::PredictPostion(double time)
 {
-    Vec3 cur_position;
-    double th = last_state_[2];
-    double v = last_state_[3];
-    double a = last_state_[4];
-    double w = last_state_[5];
-    double dt = time - last_timestamp_;
+    Vec3 pred_position;
+    Vec6 cur_state = cur_frame_->ObjState();
+    double cur_time = cur_frame_->ObjTimestamp();
+    double th = cur_state[2];
+    double v = cur_state[3];
+    double a = cur_state[4];
+    double w = cur_state[5];
+    double dt = time - cur_time;
         
     double dth = w * dt;
     double dv = a * dt;
@@ -120,8 +127,8 @@ Vec3 myFrontend::PredictPostion(double time)
     //[(−v(t)ω − aωT) cos(θ(t) + ωT)+a sin(θ(t) + ωT)+v(t)ω cos θ(t) − a sin θ(t)] / ω^2
     double dy = ((-v * w - a * dth) * cos(th + dth) + a * sin(th + dth)
          + v * w * cos(th) - a * sin(th)) / (w * w);
-    cur_position<<last_state_[0] + dx, last_state_[1] + dy, last_state_[2] + dth;
-    return cur_position;
+    pred_position<<cur_state[0] + dx, cur_state[1] + dy, cur_state[2] + dth;
+    return pred_position;
 }
 
 Vec6 myFrontend::PredictState(double time)
@@ -138,6 +145,14 @@ Vec6 myFrontend::PredictState(double time)
     cur_state << cur_position[0], cur_position[1], cur_position[2],
                  last_state_[3] + dv, last_state_[4], last_state_[5];
     return cur_state;
+}
+
+Vec3 myFrontend::GetCurPosition()
+{
+    Vec3 cur_position;
+    Vec6 cur_state = cur_frame_->ObjState();
+    cur_position<<cur_state[0], cur_state[1], cur_state[2];
+    return cur_position;
 }
 
 

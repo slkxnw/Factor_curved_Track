@@ -27,6 +27,7 @@ void myBackend::InitObj(std::vector<Vec8> &od_res, double time)
         Vec6 state;
         state << od[0], od[1], od[6], od[3], od[4], od[5];
         state_prediction_list_[num_of_obj] = od;
+        state_cur_list_[num_of_obj] = od;
         num_of_obj++;
     }
 }
@@ -61,17 +62,17 @@ void myBackend::StopObj(std::vector<unsigned long> dead_ids)
         obj_list_[id]->Stop();
         obj_list_.erase(id);
         state_prediction_list_.erase(id);
+        state_cur_list_.erase(id);
     }
 }
        
 
 
-myBackend::PredictObjtype myBackend::GetStatePrediction(double time)
+myBackend::ObjInfotype myBackend::GetStatePrediction(double time)
 {
     Vec3 position_prediction;
     Vec3 obj_size;
     obj_id_list.clear();
-    //TODO 需要更新目标的尺寸，现在假设目标尺寸没变动过
     for (auto &state_pair : state_prediction_list_)
     {
         //x,y,theta
@@ -94,6 +95,33 @@ myBackend::PredictObjtype myBackend::GetStatePrediction(double time)
     }
     return state_prediction_list_;
 }
+
+myBackend::ObjInfotype myBackend::GetStateCur()
+{
+    Vec3 cur_position;
+    Vec3 obj_size;
+    for (auto &state_pair : state_cur_list_)
+    {
+        //x,y,theta
+        cur_position = obj_list_[state_pair.first]->GetCurPosition();
+        // state_pair.second.block<2, 1>(0, 0) = position_prediction;
+        state_pair.second[0] = cur_position[0];
+        state_pair.second[1] = cur_position[1];
+        state_pair.second[6] = cur_position[2];
+        //size
+        obj_size = obj_list_[state_pair.first]->GetObjSize();
+        state_pair.second[3] = obj_size[0];
+        state_pair.second[4] = obj_size[1];
+        state_pair.second[5] = obj_size[2];
+        //z & 观测角
+        state_pair.second[2] = obj_list_[state_pair.first]->GetObjZ();
+        state_pair.second[7] = obj_list_[state_pair.first]->GetObjObsrvAgl();
+
+
+    }
+    return state_cur_list_;
+}
+
 
 
 } // namespace mytrk

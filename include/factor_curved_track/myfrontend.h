@@ -68,7 +68,7 @@ public:
     //基于观测和上一帧数据，确定帧状态,同时更新teklist的帧数量信息
     myFrame::Ptr CreateMeasureFrame(Vec3 measure, double time, bool is_measure = true);
 
-    //基于外推生成本帧状态,同时更新teklist的帧数量信息
+    //基于最近一次观测帧数据，外推生成本帧状态,同时更新teklist的帧数量信息
     myFrame::Ptr CreateExtrpFrame(double time);
     
     //优化相关的操作
@@ -81,16 +81,17 @@ public:
     Vec6 CalEdgeMeasure();
 
     //数据关联相关操作
-    //返回 x y theta
+    //返回预测时刻的 x y theta
     Vec3 PredictPostion(double time);
 
+    //
     Vec6 PredictState(double time);
 
     myFrame::Ptr GetLastfeame()
     {
         return last_frame_;
     }
-
+    //评估相关，将当前状态输出
     //不参与更新的目标参数，的初始化和更新
     void SetObjSize(Vec3 size)
     {
@@ -116,6 +117,7 @@ public:
     {
         return observ_agl;
     }
+    Vec3 GetCurPosition();
 
 
 private:
@@ -127,8 +129,10 @@ private:
     //获取上一帧状态
     void GetLastFrameInfo()
     {
-        last_state_ = last_frame_->ObjState();
-        last_timestamp_ = last_frame_->ObjTimestamp();
+        if(last_frame_ != nullptr){
+            last_state_ = last_frame_->ObjState();
+            last_timestamp_ = last_frame_->ObjTimestamp();
+        }
     };
 
     //TODO：在设置因子图的时候，从trklist中取measure-list的数据，赋给edge
@@ -150,8 +154,9 @@ private:
     unsigned long num_of_frames = 0;
 
 
-    Vec6 last_state_;
-    double last_timestamp_;
+    //这里是，上一次帧的数据，可能是观测帧，也可能是外推帧
+    Vec6 last_state_ = Vec6::Zero();
+    double last_timestamp_ = 0.0;
     //目标其他参数，不参与更新，使用观测给出的数据
     Vec3 obj_size_;
     double z_;

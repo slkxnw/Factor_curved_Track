@@ -19,7 +19,7 @@
 
 // 一些全局变量，这样不用向回调函数传参
 ros::Publisher trk_predict_pub;
-ros::Publisher trk_pos_pub;
+ros::Publisher trk_cur_pub;
 ros::Publisher trk_id_pub;
 mytrk::myBackend::Ptr backend;
 
@@ -39,7 +39,9 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
     unsigned long backend_id;
     track_msgs::Detection trk_;
     track_msgs::Information info_;
-    track_msgs::Detection_list trks;
+    track_msgs::Detection_list trks_pred;
+    track_msgs::Detection_list trks_cur;
+    track_msgs::StampArray active_ids;
 
     //更新匹配到的轨迹
     
@@ -85,11 +87,10 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
     //按照常理，trk的预测应该是检测结果时刻的，但是在AB3DMOT中，检测的时刻是如何定义的，原始kitti数据中似乎没有给定时刻
     //看一下ab3dmot的代码：按照kitti的10Hz频率搞的
     //TODO :目前是测试代码，预测固定时间间隔后的trk状态，实际上要改成预测检测结果时刻的trk状态
-    auto trk_pred = backend->GetStatePrediction(time + 0.1);
-
+    auto trk_state_pred = backend->GetStatePrediction(time + 0.1);
     //将预测结果按照顺序，生成trk并放入列表中
-    //TODO 返回结果包含观测角和size等数据，目前没有包含2Dbbox以及检测分数，类型等数据，后续有需要可以加上
-    for(auto &pair : trk_pred)
+    trks_pred.header.stamp.sec = dets->header.stamp.sec + 1;
+    for(auto &pair : trk_state_pred)
     {
         trk_.pos.x = pair.second[0];
         trk_.pos.y = pair.second[1];
@@ -99,16 +100,42 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
         trk_.siz.z = pair.second[5];
         trk_.alp = pair.second[6];
 
-        trks.header.stamp.sec = dets->header.stamp.sec + 1;
-        trks.detecs.push_back(trk_);
+        trks_pred.detecs.push_back(trk_);
         //这里是当前帧的观测角
         info_.orin = pair.second[7];
         info_.type = 0;
         info_.unknow = 0;
-        trks.infos.push_back(info_);
+        trks_pred.infos.push_back(info_);
     }
+    trk_predict_pub.publish(trks_pred);
 
-    trk_predict_pub.publish(trks);
+    //发布轨迹当前状态，包括观测角/z等数据,这里的观测角/z和上面轨迹预测状态的是一样的，都使用最近的检测数据的参数
+    auto trks_state_cur = backend->GetStateCur();
+    trks_cur.header.stamp.sec = dets->header.stamp.sec + 1;
+    for(auto &pair : trks_state_cur)
+    {
+        trk_.pos.x = pair.second[0];
+        trk_.pos.y = pair.second[1];
+        trk_.pos.z = pair.second[2];
+        trk_.siz.x = pair.second[3];
+        trk_.siz.y = pair.second[4];
+        trk_.siz.z = pair.second[5];
+        trk_.alp = pair.second[6];
+
+        trks_cur.detecs.push_back(trk_);
+        //这里是当前帧的观测角
+        info_.orin = pair.second[7];
+        info_.type = 0;
+        info_.unknow = 0;
+        trks_cur.infos.push_back(info_);
+    }
+    trk_cur_pub.publish(trks_cur);
+
+    //发布活跃轨迹id
+    auto obj_ids = backend->GetObjIDlist();
+    for(auto &id : obj_ids)
+        active_ids.ids.data.push_back(id);
+    trk_id_pub.publish(active_ids);
 }
 
 int main(int argc, char** argv)
@@ -121,6 +148,7 @@ int main(int argc, char** argv)
     ros::Publisher trk_predict_pub = nh.advertise<track_msgs::Detection_list>("/tracks_prediction", 10);
     //发布trks当前状态
     ros::Publisher trk_cur_pub = nh.advertise<track_msgs::Detection_list>("/tracks_cur_state", 10);
+    //发布trks的id
     ros::Publisher trk_id_pub = nh.advertise<track_msgs::StampArray>("/tracks_ids", 10);
 
     mytrk::myBackend::Ptr backend = mytrk::myBackend::Ptr(new mytrk::myBackend);

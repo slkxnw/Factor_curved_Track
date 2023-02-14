@@ -150,6 +150,11 @@ void callback(const track_msgs::PairsConstPtr &match_pair,
                 int(dets->header.stamp.sec), matches.size(), od_res.size(), dead_ids.size());
 }
 
+bool predict_callback()
+{
+    
+}
+
 int main(int argc, char** argv)
 {
     //TODO 添加Log信息

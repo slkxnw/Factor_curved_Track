@@ -12,6 +12,10 @@ from dist_metrics import *
 from track_msgs.msg import Detection_list
 from track_msgs.msg import Pairs
 from track_msgs.msg import StampArray
+from track_msgs.srv import Trk_pred
+from track_msgs.srv import Trk_update
+
+
 
 match_pub = rospy.Publisher("/matched_pair", Pairs, queue_size=10)
 unmatch_trk_pub = rospy.Publisher("/unmatched_trk", StampArray, queue_size=10)
@@ -144,15 +148,20 @@ def data_association(dets, trks, metric, threshold, algm='greedy', \
 
 	return matches, np.array(unmatched_dets), np.array(unmatched_trks), cost, aff_matrix
 
-def associate_Callback(trks, dets, args):
+def associate_Callback(dets):
 	
 	rospy.loginfo("Data association Into callback")
 
 	unpack_dets = []
-	unpack_trks = []
-	# TODO 解包格式错误
 	for det in dets.detecs:
 		unpack_dets.append([det.siz.x, det.siz.y, det.siz.z, det.pos.x, det.pos.y, det.pos.z, det.alp].reshape(1,7))
+	try:
+		get_trk_preds = rospy.ServiceProxy('/trk_predict', Trk_pred)
+		trks = get_trk_preds(dets.header.stamp.secs / 10)
+	except rospy.ServiceException as e:
+		rospy.logwarn(e)
+	
+	unpack_trks = []
 	for trk in trks.detecs:
 		unpack_trks.append([trk.siz.x, trk.siz.y, trk.siz.z, trk.pos.x, trk.pos.y, trk.pos.z, trk.alp].reshape(1,7))
 	
@@ -160,9 +169,6 @@ def associate_Callback(trks, dets, args):
 
 	matches,unmatch_dets,unmatch_trks, cost, aff_matrix = data_association(unpack_dets, unpack_trks, "giou_3d", -0.2, algm='hungar')
 
-	match_pub = args[0]
-	unmatch_trk_pub = args[1]
-	unmatch_det_pub = args[2]
 
 	pub_match = Pairs()
 	pub_match.header = dets.header
@@ -177,28 +183,33 @@ def associate_Callback(trks, dets, args):
 	pub_untrks.header = dets.header
 	pub_untrks.ids = unmatch_trks
 
-	match_pub.publish(pub_match)
-	unmatch_det_pub.publish(pub_undets)
-	unmatch_trk_pub.publish(pub_untrks)
-
-	if(int(dets.header.stamp.sec) % 5 == 0):
-		rospy.loginfo("Data association of %d frame finished with %d matches, %d unmatched dets, %d unmatched trks ", 
-		int(dets.header.stamp.sec), pub_match.dets.size(), pub_undets.ids.size(), pub_untrks.ids.size())
+	try:
+		process_trk_update = rospy.ServiceProxy('/trk_update', Trk_update)
+		success = process_trk_update(pub_match, pub_undets, pub_untrks)
+	except rospy.ServiceException as e:
+		rospy.logwarn(e)
+	# match_pub.publish(pub_match)
+	# unmatch_det_pub.publish(pub_undets)
+	# unmatch_trk_pub.publish(pub_untrks)
+	
+	if(int(dets.header.stamp.secs) % 1 == 0):
+		state = 'Fail!'
+		if success:
+			state = 'Success!'
+		rospy.loginfo("Data association of %d frame finished with %d matches, %d unmatched dets, %d unmatched trks, and updation of trks %s ", 
+		int(dets.header.stamp.secs), pub_match.dets.size(), pub_undets.ids.size(), pub_untrks.ids.size(), state)
 
 
 def main():
     
     rospy.init_node('data_association_node', anonymous=True)
 
+    rospy.wait_for_service('/trk_predict')
+    rospy.wait_for_service('/trk_update')
+    rospy.Subscriber("/detections", Detection_list, associate_Callback)
 
-    dets = message_filters.Subscriber("/detections", Detection_list, buff_size = 10)
-
-	
     rospy.loginfo("Data association of trk_predict and dets")
 
-    ts = message_filters.ApproximateTimeSynchronizer([trks, dets],10, 1)
-
-    ts.registerCallback(associate_Callback)
 
     rospy.spin()
 if __name__ == '__main__':

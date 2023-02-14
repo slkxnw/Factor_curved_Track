@@ -6,16 +6,18 @@ python3 = True if sys.hexversion > 0x03000000 else False
 import genpy
 import struct
 
+import geometry_msgs.msg
 import std_msgs.msg
 import track_msgs.msg
 
 class Trk_updateRequest(genpy.Message):
-  _md5sum = "b328f0052aad34a71b1997e21d3f6c66"
+  _md5sum = "4648a59c4a2ec2854e2421af9f54ed43"
   _type = "track_msgs/Trk_updateRequest"
   _has_header = False  # flag to mark the presence of a Header object
   _full_text = """Pairs matches
 StampArray unmatch_dets
 StampArray unmatch_trks
+Detection_list dets
 
 ================================================================================
 MSG: track_msgs/Pairs
@@ -86,9 +88,49 @@ uint32 stride  # stride of given dimension
 MSG: track_msgs/StampArray
 Header header
 std_msgs/UInt8MultiArray ids
+
+================================================================================
+MSG: track_msgs/Detection_list
+Header header
+Detection[] detecs
+Information[] infos
+================================================================================
+MSG: track_msgs/Detection
+geometry_msgs/Vector3 siz
+geometry_msgs/Point pos
+float32 alp
+
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space. 
+# It is only meant to represent a direction. Therefore, it does not
+# make sense to apply a translation to it (e.g., when applying a 
+# generic rigid transformation to a Vector3, tf2 will only apply the
+# rotation). If you want your data to be translatable too, use the
+# geometry_msgs/Point message instead.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+
+================================================================================
+MSG: track_msgs/Information
+uint8 type
+float32 ymin = 0.0
+float32 xmin = 0.0
+float32 ymax = 0.0
+float32 xmax = 0.0
+float32 score
+float32 orin
 """
-  __slots__ = ['matches','unmatch_dets','unmatch_trks']
-  _slot_types = ['track_msgs/Pairs','track_msgs/StampArray','track_msgs/StampArray']
+  __slots__ = ['matches','unmatch_dets','unmatch_trks','dets']
+  _slot_types = ['track_msgs/Pairs','track_msgs/StampArray','track_msgs/StampArray','track_msgs/Detection_list']
 
   def __init__(self, *args, **kwds):
     """
@@ -98,7 +140,7 @@ std_msgs/UInt8MultiArray ids
     changes.  You cannot mix in-order arguments and keyword arguments.
 
     The available fields are:
-       matches,unmatch_dets,unmatch_trks
+       matches,unmatch_dets,unmatch_trks,dets
 
     :param args: complete set of field values, in .msg order
     :param kwds: use keyword arguments corresponding to message field names
@@ -113,10 +155,13 @@ std_msgs/UInt8MultiArray ids
         self.unmatch_dets = track_msgs.msg.StampArray()
       if self.unmatch_trks is None:
         self.unmatch_trks = track_msgs.msg.StampArray()
+      if self.dets is None:
+        self.dets = track_msgs.msg.Detection_list()
     else:
       self.matches = track_msgs.msg.Pairs()
       self.unmatch_dets = track_msgs.msg.StampArray()
       self.unmatch_trks = track_msgs.msg.StampArray()
+      self.dets = track_msgs.msg.Detection_list()
 
   def _get_types(self):
     """
@@ -234,6 +279,30 @@ std_msgs/UInt8MultiArray ids
         buff.write(struct.Struct('<I%sB'%length).pack(length, *_x))
       else:
         buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      _x = self
+      buff.write(_get_struct_3I().pack(_x.dets.header.seq, _x.dets.header.stamp.secs, _x.dets.header.stamp.nsecs))
+      _x = self.dets.header.frame_id
+      length = len(_x)
+      if python3 or type(_x) == unicode:
+        _x = _x.encode('utf-8')
+        length = len(_x)
+      buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      length = len(self.dets.detecs)
+      buff.write(_struct_I.pack(length))
+      for val1 in self.dets.detecs:
+        _v1 = val1.siz
+        _x = _v1
+        buff.write(_get_struct_3d().pack(_x.x, _x.y, _x.z))
+        _v2 = val1.pos
+        _x = _v2
+        buff.write(_get_struct_3d().pack(_x.x, _x.y, _x.z))
+        _x = val1.alp
+        buff.write(_get_struct_f().pack(_x))
+      length = len(self.dets.infos)
+      buff.write(_struct_I.pack(length))
+      for val1 in self.dets.infos:
+        _x = val1
+        buff.write(_get_struct_B2f().pack(_x.type, _x.score, _x.orin))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -251,6 +320,8 @@ std_msgs/UInt8MultiArray ids
         self.unmatch_dets = track_msgs.msg.StampArray()
       if self.unmatch_trks is None:
         self.unmatch_trks = track_msgs.msg.StampArray()
+      if self.dets is None:
+        self.dets = track_msgs.msg.Detection_list()
       end = 0
       _x = self
       start = end
@@ -407,6 +478,50 @@ std_msgs/UInt8MultiArray ids
       start = end
       end += length
       self.unmatch_trks.ids.data = str[start:end]
+      _x = self
+      start = end
+      end += 12
+      (_x.dets.header.seq, _x.dets.header.stamp.secs, _x.dets.header.stamp.nsecs,) = _get_struct_3I().unpack(str[start:end])
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      start = end
+      end += length
+      if python3:
+        self.dets.header.frame_id = str[start:end].decode('utf-8', 'rosmsg')
+      else:
+        self.dets.header.frame_id = str[start:end]
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      self.dets.detecs = []
+      for i in range(0, length):
+        val1 = track_msgs.msg.Detection()
+        _v3 = val1.siz
+        _x = _v3
+        start = end
+        end += 24
+        (_x.x, _x.y, _x.z,) = _get_struct_3d().unpack(str[start:end])
+        _v4 = val1.pos
+        _x = _v4
+        start = end
+        end += 24
+        (_x.x, _x.y, _x.z,) = _get_struct_3d().unpack(str[start:end])
+        start = end
+        end += 4
+        (val1.alp,) = _get_struct_f().unpack(str[start:end])
+        self.dets.detecs.append(val1)
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      self.dets.infos = []
+      for i in range(0, length):
+        val1 = track_msgs.msg.Information()
+        _x = val1
+        start = end
+        end += 9
+        (_x.type, _x.score, _x.orin,) = _get_struct_B2f().unpack(str[start:end])
+        self.dets.infos.append(val1)
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e)  # most likely buffer underfill
@@ -523,6 +638,30 @@ std_msgs/UInt8MultiArray ids
         buff.write(struct.Struct('<I%sB'%length).pack(length, *_x))
       else:
         buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      _x = self
+      buff.write(_get_struct_3I().pack(_x.dets.header.seq, _x.dets.header.stamp.secs, _x.dets.header.stamp.nsecs))
+      _x = self.dets.header.frame_id
+      length = len(_x)
+      if python3 or type(_x) == unicode:
+        _x = _x.encode('utf-8')
+        length = len(_x)
+      buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      length = len(self.dets.detecs)
+      buff.write(_struct_I.pack(length))
+      for val1 in self.dets.detecs:
+        _v5 = val1.siz
+        _x = _v5
+        buff.write(_get_struct_3d().pack(_x.x, _x.y, _x.z))
+        _v6 = val1.pos
+        _x = _v6
+        buff.write(_get_struct_3d().pack(_x.x, _x.y, _x.z))
+        _x = val1.alp
+        buff.write(_get_struct_f().pack(_x))
+      length = len(self.dets.infos)
+      buff.write(_struct_I.pack(length))
+      for val1 in self.dets.infos:
+        _x = val1
+        buff.write(_get_struct_B2f().pack(_x.type, _x.score, _x.orin))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -541,6 +680,8 @@ std_msgs/UInt8MultiArray ids
         self.unmatch_dets = track_msgs.msg.StampArray()
       if self.unmatch_trks is None:
         self.unmatch_trks = track_msgs.msg.StampArray()
+      if self.dets is None:
+        self.dets = track_msgs.msg.Detection_list()
       end = 0
       _x = self
       start = end
@@ -697,6 +838,50 @@ std_msgs/UInt8MultiArray ids
       start = end
       end += length
       self.unmatch_trks.ids.data = str[start:end]
+      _x = self
+      start = end
+      end += 12
+      (_x.dets.header.seq, _x.dets.header.stamp.secs, _x.dets.header.stamp.nsecs,) = _get_struct_3I().unpack(str[start:end])
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      start = end
+      end += length
+      if python3:
+        self.dets.header.frame_id = str[start:end].decode('utf-8', 'rosmsg')
+      else:
+        self.dets.header.frame_id = str[start:end]
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      self.dets.detecs = []
+      for i in range(0, length):
+        val1 = track_msgs.msg.Detection()
+        _v7 = val1.siz
+        _x = _v7
+        start = end
+        end += 24
+        (_x.x, _x.y, _x.z,) = _get_struct_3d().unpack(str[start:end])
+        _v8 = val1.pos
+        _x = _v8
+        start = end
+        end += 24
+        (_x.x, _x.y, _x.z,) = _get_struct_3d().unpack(str[start:end])
+        start = end
+        end += 4
+        (val1.alp,) = _get_struct_f().unpack(str[start:end])
+        self.dets.detecs.append(val1)
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      self.dets.infos = []
+      for i in range(0, length):
+        val1 = track_msgs.msg.Information()
+        _x = val1
+        start = end
+        end += 9
+        (_x.type, _x.score, _x.orin,) = _get_struct_B2f().unpack(str[start:end])
+        self.dets.infos.append(val1)
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e)  # most likely buffer underfill
@@ -717,6 +902,24 @@ def _get_struct_3I():
     if _struct_3I is None:
         _struct_3I = struct.Struct("<3I")
     return _struct_3I
+_struct_3d = None
+def _get_struct_3d():
+    global _struct_3d
+    if _struct_3d is None:
+        _struct_3d = struct.Struct("<3d")
+    return _struct_3d
+_struct_B2f = None
+def _get_struct_B2f():
+    global _struct_B2f
+    if _struct_B2f is None:
+        _struct_B2f = struct.Struct("<B2f")
+    return _struct_B2f
+_struct_f = None
+def _get_struct_f():
+    global _struct_f
+    if _struct_f is None:
+        _struct_f = struct.Struct("<f")
+    return _struct_f
 # This Python file uses the following encoding: utf-8
 """autogenerated by genpy from track_msgs/Trk_updateResponse.msg. Do not edit."""
 import codecs
@@ -731,6 +934,7 @@ class Trk_updateResponse(genpy.Message):
   _type = "track_msgs/Trk_updateResponse"
   _has_header = False  # flag to mark the presence of a Header object
   _full_text = """bool success
+
 """
   __slots__ = ['success']
   _slot_types = ['bool']
@@ -834,6 +1038,6 @@ def _get_struct_B():
     return _struct_B
 class Trk_update(object):
   _type          = 'track_msgs/Trk_update'
-  _md5sum = 'd29367e97f6337820c0f9bb18ef8a7d6'
+  _md5sum = 'b2def9d4192f1fc13b3d705f1378cc0b'
   _request_class  = Trk_updateRequest
   _response_class = Trk_updateResponse

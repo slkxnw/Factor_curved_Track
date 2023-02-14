@@ -19,12 +19,14 @@
 # include"track_msgs/StampArray.h"
 # include"track_msgs/Trk_pred.h"
 # include"track_msgs/Trk_update.h"
+# include"track_msgs/Trk_state_store.h"
 
 // 一些全局变量，这样不用向回调函数传参
 ros::Publisher trk_predict_pub;
 ros::Publisher trk_cur_pub;
 ros::Publisher trk_id_pub;
 mytrk::myBackend::Ptr backend;
+ros::ServiceClient trk_store;
 
 // TODO：添加puber，发布更新后的各个轨迹的绝对位置，以及轨迹的绝对ID，也就是Obj_id_list
 
@@ -247,6 +249,44 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     }
     backend->InitObj(od_res, time);
     
+
+    //发布轨迹当前状态，包括观测角/z等数据,这里的观测角/z和上面轨迹预测状态的是一样的，都使用最近的检测数据的参数
+    auto trks_state_cur = backend->GetStateCur();
+    trks_cur.header = request.dets.header;
+    for(auto &pair : trks_state_cur)
+    {
+        trk_.pos.x = pair.second[0];
+        //因子图坐标系和kitti坐标系不一样
+        trk_.pos.z = pair.second[1];
+        trk_.pos.y = pair.second[2];
+        trk_.siz.x = pair.second[3];
+        trk_.siz.y = pair.second[4];
+        trk_.siz.z = pair.second[5];
+        trk_.alp = pair.second[6];
+
+        trks_cur.detecs.push_back(trk_);
+        //这里是当前帧的观测角
+        info_.orin = pair.second[7];
+        info_.type = 0;
+        info_.score = pair.second[8];
+        trks_cur.infos.push_back(info_);
+    }
+
+    //发布活跃轨迹id
+    auto obj_ids = backend->GetObjIDlist();
+    active_ids.header = request.dets.header;
+    for(auto &id : obj_ids)
+        active_ids.ids.data.push_back(id);
+    
+    track_msgs::Trk_state_store srv;
+    srv.request.detecs = trks_cur.detecs;
+    srv.request.infos = trks_cur.infos;
+    srv.request.header = trks_cur.header;
+    srv.request.ids = active_ids.ids;
+
+    trk_store.call(srv);
+
+
 }
 
 int main(int argc, char** argv)
@@ -257,6 +297,15 @@ int main(int argc, char** argv)
 
     ros::NodeHandle nh;
 
+    ros::service::waitForService("/trk_state_store");
+    ros::ServiceClient trk_store = nh.serviceClient<track_msgs::Trk_state_store>("/trk_state_store");
+    //轨迹预测服务
+    ros::ServiceServer trk_predict = nh.advertiseService("/trk_predict", predict_callback);
+    //轨迹更新服务
+    ros::ServiceServer trk_update = nh.advertiseService("/trk_update", update_callback);
+    //因子管理后端
+    mytrk::myBackend::Ptr backend = mytrk::myBackend::Ptr(new mytrk::myBackend);
+
     //发布trks预测结果
     ros::Publisher trk_predict_pub = nh.advertise<track_msgs::Detection_list>("/tracks_prediction", 10);
     //发布trks当前状态
@@ -264,37 +313,8 @@ int main(int argc, char** argv)
     //发布trks的id
     ros::Publisher trk_id_pub = nh.advertise<track_msgs::StampArray>("/tracks_ids", 10);
 
-    mytrk::myBackend::Ptr backend = mytrk::myBackend::Ptr(new mytrk::myBackend);
     
-    track_msgs::Detection_list initial_predict_pub;
-    initial_predict_pub.header.stamp.sec = 0;
-    initial_predict_pub.header.stamp.nsec = 0;
-    auto rate = ros::Rate(10);
-    for(int i = 0; i < 3; ++i)
-    {
-        trk_predict_pub.publish(initial_predict_pub);
-        ROS_INFO("Pub empty trk_predictions to start track");
-        rate.sleep();
-    }
 
-
-    message_filters::Subscriber<track_msgs::Pairs> matched_pair_sub(nh, "/matched_pair", 10);
-    message_filters::Subscriber<track_msgs::StampArray> unmatched_trk_sub(nh, "/unmatched_trk", 10);
-    message_filters::Subscriber<track_msgs::StampArray> unmatched_det_sub(nh, "/unmatched_det", 10);
-    message_filters::Subscriber<track_msgs::Detection_list> dets_sub(nh, "/detections", 10);
-
-    typedef message_filters::sync_policies::ApproximateTime<track_msgs::Pairs, 
-                                                            track_msgs::StampArray,
-                                                            track_msgs::Detection_list, 
-                                                            track_msgs::StampArray> MySynPolicy;
-    
-    message_filters::Synchronizer<MySynPolicy> sync(MySynPolicy(10), 
-                                                    matched_pair_sub, 
-                                                    unmatched_trk_sub,  
-                                                    dets_sub, 
-                                                    unmatched_det_sub);
-
-    sync.registerCallback(boost::bind(&callback, _1, _2, _3, _4));
 
     ros::spin();
 

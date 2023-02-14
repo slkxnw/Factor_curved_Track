@@ -190,8 +190,9 @@ def main():
     
     rospy.init_node('data_association_node', anonymous=True)
 
-    trks = message_filters.Subscriber("/tracks_prediction", Detection_list, buff_size = 10 )
+
     dets = message_filters.Subscriber("/detections", Detection_list, buff_size = 10)
+
 	
     rospy.loginfo("Data association of trk_predict and dets")
 

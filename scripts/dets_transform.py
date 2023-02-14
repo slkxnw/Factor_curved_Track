@@ -10,6 +10,7 @@ import argparse
 import os
 
 from track_msgs.msg import Detection_list
+from track_msgs.srv import Det_pub
 
 # TODO :设置两种模式，跑数据集，使用服务获取原始检测结果，跑试车，订阅topic
 
@@ -99,13 +100,28 @@ def transform(args):
     #Poses are given in an East-North-Up coordinate system， whose origin is the first GPS position.
     imu_pose = load_oxts_packets_and_poses(oxt_path)
     rospy.init_node('dets_transform', anonymous=True)
-    
+
     dets_puber = rospy.Publisher('/detections', Detection_list, queue_size = 10)
-    rospy.loginfo("Transform cord of dets")
 
-    rospy.Subscriber("/orin_detections", Detection_list, transform_callback, (imu_pose, dets_puber))
+    rate = rospy.Rate(1)
+    rospy.wait_for_service('/det_pub')
+    frame = 0
+    while frame < 447:
+        try:
+            get_dets_orin = rospy.ServiceProxy('/det_pub', Det_pub)
+            dets = get_dets_orin(frame)
+        except rospy.ServiceException as e:
+            rospy.logwarn(e)
+        transform_callback(dets,(imu_pose, dets_puber))
 
-    rospy.spin()
+        rate.sleep()
+        frame = frame + 1 
+    # 
+    # rospy.loginfo("Transform cord of dets")
+
+    # rospy.Subscriber("/orin_detections", Detection_list, transform_callback, (imu_pose, dets_puber))
+
+    # rospy.spin()
 
 
 if __name__ == '__main__':

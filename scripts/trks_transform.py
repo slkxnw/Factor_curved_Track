@@ -12,6 +12,7 @@ import os
 
 from track_msgs.msg import Detection_list
 from track_msgs.msg import StampArray
+from track_msgs.srv import Trk_state_store
 
 def parse_args():
     parser = argparse.ArgumentParser(description='cord_transform')
@@ -50,11 +51,11 @@ def save_results(res, save_trk_file, eval_file, frame, score_threshold):
 			bbox3d_size[0], bbox3d_size[1], bbox3d_size[2], bbox3d_pos[3], bbox3d_pos[4], bbox3d_pos[5], roty[6], conf_tmp)
 		eval_file.write(str_to_srite)
 
-def transform_callback(trks, trks_id, args):
+def transform_callback(req):
     imu_pose = args[0]
     # 检测结果帧对应的车辆位姿（以初始时刻的坐标为原点，坐标方向为正东）
     # stamp使用frameid代替
-    frame_id = int(trks.header.stamp.sec)
+    frame_id = int(req.header.stamp.sec)
     ego_Oxt = imu_pose[frame_id]
     ego_trans = ego_Oxt.T_w_imu[0:3, 3]
     ego_rotZ = ego_Oxt.packet.yaw
@@ -66,7 +67,10 @@ def transform_callback(trks, trks_id, args):
     # 这里，将trk车辆在全局坐标系下的pos/roty减去自车在全局坐标系下的pos/roty
     # TODO：位置可以直接减，roty直接减的可行性需要分析一下
     # 根据官方的图，ry应该就是横摆角，他们的alpha角在示意图中不能直接画出来
-    for [trk, info, id] in zip(trks.detecs, trks.infos, trks_id.ids):
+    trk_state = req.detecs
+    trk_info = req.infos
+    trk_ids = req.ids
+    for [trk, info, id] in zip(trk_state, trk_info, trk_ids):
         trk.pos = trk.pos - ego_trans
         trk.alp = trk.alp - ego_rotZ
         while(trk.alp > 3.14159 / 2):
@@ -99,15 +103,7 @@ def transform(args):
     imu_pose = load_oxts_packets_and_poses(oxt_path)
     rospy.init_node('trks_transform', anonymous=True)
 
-    trks = message_filters.Subscriber('/tracks_cur_state', Detection_list, queue_size = 10)
-    
-    trk_ids = message_filters.Subscriber('/tracks_ids', StampArray, queue_size = 10)
-
-    rospy.loginfo("Transform cord of trks")
-    
-    ts = message_filters.ApproximateTimeSynchronizer([trks, trk_ids], 10, 1, allow_headerless= True)
-
-    ts.registerCallback(transform_callback, (imu_pose))
+    s = rospy.Service('/trk_state_store', Trk_state_store, transform_callback)
 
     rospy.spin()
 

@@ -286,6 +286,9 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
 
     trk_store.call(srv);
 
+    if(int(request.dets.header.stamp.sec) % 5 == 0)
+        ROS_INFO("Frame %d optimization finished with %d trks updated, %d trks initialed, %d trks deleted, and state save %d",
+                int(request.dets.header.stamp.sec), matches.size(), od_res.size(), dead_ids.size(), int(srv.response.success));
 
 }
 

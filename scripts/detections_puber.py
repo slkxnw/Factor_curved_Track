@@ -21,6 +21,8 @@ def parse_args():
     parser.add_argument('--det_name', type=str, default='pointrcnn', help='pointrcnn')
     parser.add_argument('--categ', type=str, default='Car',help='Car, Cyclist, Pedestrain')
     parser.add_argument('--seqs', type=str, default='0001')
+    parser.add_argument('__name', type=str)
+    parser.add_argument('__log', type=str)
     args = parser.parse_args()
     return args
 
@@ -55,7 +57,7 @@ def detection_puber(args):
     detection_res_pub = rospy.Publisher('/orin_detections', Detection_list, queue_size = 10)
 
     # TODO：数据关联接收来自两个节点的数据，为了不造成数据匹配的误差问题，将数据发布频率降低
-    rate = rospy.Rate(10)
+    rate = rospy.Rate(1)
     
     path = os.path.join(args.datadir, args.dataset, 'trking', args.det_name + '_' + args.categ + '_' + args.split, args.seqs + '.txt')
     

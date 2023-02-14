@@ -8,6 +8,7 @@
 # include<message_filters/subscriber.h>
 # include<message_filters/synchronizer.h>
 # include<message_filters/sync_policies/approximate_time.h>
+# include<message_filters/sync_policies/exact_time.h>
 # include"factor_curved_track/mybackend.h"
 # include"factor_curved_track/myframe.h"
 # include"factor_curved_track/myfrontend.h"
@@ -25,7 +26,7 @@ mytrk::myBackend::Ptr backend;
 
 // TODO：添加puber，发布更新后的各个轨迹的绝对位置，以及轨迹的绝对ID，也就是Obj_id_list
 
-
+//TODO 将1，3，4结合到一起
 void callback(const track_msgs::PairsConstPtr &match_pair, 
                     const track_msgs::StampArrayConstPtr &unmatch_trk, 
                     const track_msgs::Detection_listConstPtr &dets, 
@@ -168,8 +169,15 @@ int main(int argc, char** argv)
     
     track_msgs::Detection_list initial_predict_pub;
     initial_predict_pub.header.stamp.sec = 0;
-    trk_predict_pub.publish(initial_predict_pub);
-    ROS_INFO("Pub empty trk_predictions to start track");
+    initial_predict_pub.header.stamp.nsec = 0;
+    auto rate = ros::Rate(10);
+    for(int i = 0; i < 3; ++i)
+    {
+        trk_predict_pub.publish(initial_predict_pub);
+        ROS_INFO("Pub empty trk_predictions to start track");
+        rate.sleep();
+    }
+
 
     message_filters::Subscriber<track_msgs::Pairs> matched_pair_sub(nh, "/matched_pair", 10);
     message_filters::Subscriber<track_msgs::StampArray> unmatched_trk_sub(nh, "/unmatched_trk", 10);

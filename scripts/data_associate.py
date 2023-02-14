@@ -13,6 +13,10 @@ from track_msgs.msg import Detection_list
 from track_msgs.msg import Pairs
 from track_msgs.msg import StampArray
 
+match_pub = rospy.Publisher("/matched_pair", Pairs, queue_size=10)
+unmatch_trk_pub = rospy.Publisher("/unmatched_trk", StampArray, queue_size=10)
+unmatch_det_pub = rospy.Publisher("/unmatched_det", StampArray, queue_size=10)
+
 def compute_affinity(dets, trks, metric, trk_inv_inn_matrices=None):
 	# compute affinity matrix
 
@@ -142,14 +146,15 @@ def data_association(dets, trks, metric, threshold, algm='greedy', \
 
 def associate_Callback(trks, dets, args):
 	
-	
+	rospy.loginfo("Data association Into callback")
 
 	unpack_dets = []
 	unpack_trks = []
+	# TODO 解包格式错误
 	for det in dets.detecs:
-		unpack_dets.append([det.siz, det.pos, det.alp].reshape(1,7))
+		unpack_dets.append([det.siz.x, det.siz.y, det.siz.z, det.pos.x, det.pos.y, det.pos.z, det.alp].reshape(1,7))
 	for trk in trks.detecs:
-		unpack_trks.append([trk.siz, trk.pos, trk.alp].reshape(1,7))
+		unpack_trks.append([trk.siz.x, trk.siz.y, trk.siz.z, trk.pos.x, trk.pos.y, trk.pos.z, trk.alp].reshape(1,7))
 	
 
 
@@ -185,20 +190,15 @@ def main():
     
     rospy.init_node('data_association_node', anonymous=True)
 
-    match_pub = rospy.Publisher("/matched_pair", Pairs, queue_size=10)
-    unmatch_trk_pub = rospy.Publisher("/unmatched_trk", StampArray, queue_size=10)
-    unmatch_det_pub = rospy.Publisher("/unmatched_det", StampArray, queue_size=10)
-
-    trks = message_filters.Subscriber("/tracks_prediction", Detection_list)
-    dets = message_filters.Subscriber("/detections", Detection_list)
+    trks = message_filters.Subscriber("/tracks_prediction", Detection_list, buff_size = 10 )
+    dets = message_filters.Subscriber("/detections", Detection_list, buff_size = 10)
 	
     rospy.loginfo("Data association of trk_predict and dets")
 
-    ts = message_filters.ApproximateTimeSynchronizer([trks, dets], 10, 1, allow_headerless= True)
+    ts = message_filters.ApproximateTimeSynchronizer([trks, dets],10, 1)
 
-    ts.registerCallback(associate_Callback, (match_pub, unmatch_trk_pub,unmatch_det_pub))
+    ts.registerCallback(associate_Callback)
 
     rospy.spin()
-
 if __name__ == '__main__':
 	main()

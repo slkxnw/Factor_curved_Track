@@ -11,6 +11,8 @@ import os
 
 from track_msgs.msg import Detection_list
 
+# TODO :设置两种模式，跑数据集，使用服务获取原始检测结果，跑试车，订阅topic
+
 def parse_args():
     parser = argparse.ArgumentParser(description='cord_transform')
     parser.add_argument('--datadir', type=str, default='/home/chenz/GD/dataset')

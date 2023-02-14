@@ -11,6 +11,7 @@ import os
 from track_msgs.msg import Detection_list
 from track_msgs.msg import Detection
 from track_msgs.msg import Information
+from track_msgs.srv import Det_pub,Det_pubResponse
 
 
 def parse_args():
@@ -51,64 +52,57 @@ def get_frame_det(dets_all, frame):
 
 	return dets, additional_info
 
-def detection_puber(args):
-    rospy.init_node('detection_puber', anonymous = True)
-
-    detection_res_pub = rospy.Publisher('/orin_detections', Detection_list, queue_size = 10)
-
-    # TODO：数据关联接收来自两个节点的数据，为了不造成数据匹配的误差问题，将数据发布频率降低
-    rate = rospy.Rate(1)
-    
-    path = os.path.join(args.datadir, args.dataset, 'trking', args.det_name + '_' + args.categ + '_' + args.split, args.seqs + '.txt')
-    
-    dets, flg = load_detection(path)
-    if not flg:
-        rospy.INFO('No Detections in %s', args.seqs)
-    
-    frame_id = 0
-
-    while not rospy.is_shutdown():
-        dets_frame, infos_frame = get_frame_det(dets, frame_id)
-        det_list = Detection_list()
+def pub_callback(req):
+    dets_frame, infos_frame = get_frame_det(dets_read, req.frame_id)
+    det_list = Detection_list()
         # TODO：这里可能有问题，主要在于
         # 第一，在msg文件中设置了几个默认值，不知是否可行
         # 第二，不知道ros的数组在Python对应什么格式，目前是按照对应list来看的，
         # 因为，ROS的UInt16MultiArray Message在Python是一个类，其中self.data = []
         # TODO 确认坐标系，看了kittidevkit，z轴是向前的，那么我们需要的是x和z的坐标位置
         # 从kitti-devkit给的图来看，roty就是w
-        for det,info in zip(dets_frame, infos_frame):
-            inf = Information()
-            inf.type = int(info[1])
-            inf.score = info[6]# 实际上是检测的score
-            inf.orin = info[0]
+    for det,info in zip(dets_frame, infos_frame):
+        inf = Information()
+        inf.type = int(info[1])
+        inf.score = info[6]# 实际上是检测的score
+        inf.orin = info[0]
             # print(inf)
-            det_ = Detection()
-            det_.siz.x  = det[0]
-            det_.siz.y  = det[1]
-            det_.siz.z  = det[2]
+        det_ = Detection()
+        det_.siz.x  = det[0]
+        det_.siz.y  = det[1]
+        det_.siz.z  = det[2]
 
-            det_.pos.x = det[3]
-            det_.pos.y = det[4]
-            det_.pos.z = det[5]
+        det_.pos.x = det[3]
+        det_.pos.y = det[4]
+        det_.pos.z = det[5]
 
-            det_.alp = det[6]
-            det_list.detecs.append(det_)
-            det_list.infos.append(inf)
+        det_.alp = det[6]
+        det_list.detecs.append(det_)
+        det_list.infos.append(inf)
         
         # TODO 这里将时间戳设为frameid，为了方便在数据关联的数据对齐中，使用ros的同步方法
         # * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')
         # * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')
-        det_list.header.stamp.secs = frame_id
-        det_list.header.stamp.nsecs = 0
-        
-        detection_res_pub.publish(det_list)
-        if(frame_id % 5 == 0):
-            rospy.loginfo("Pub frame %d with %d detections", frame_id, len(det_list.infos))
-        frame_id = frame_id + 1
-        if(frame_id == 447):
-            break
+    det_list.header.stamp.secs = req.frame_id
+    det_list.header.stamp.nsecs = 0
 
-        rate.sleep()
+    res = Det_pubResponse()
+    res.dets = det_list
+    return res
+
+def detection_puber(args):
+    rospy.init_node('detection_puber', anonymous = True)
+
+    global dets_read
+
+    path = os.path.join(args.datadir, args.dataset, 'trking', args.det_name + '_' + args.categ + '_' + args.split, args.seqs + '.txt')   
+    dets_read, flg = load_detection(path)
+    if not flg:
+        rospy.INFO('No Detections in %s', args.seqs)
+    
+
+    s = rospy.Service('/det_pub', Det_pub, pub_callback)
+    rospy.spin()
 
 # TODO:需要设置退出，当遍历当前seq所有帧后，结束程序,目前是按照val的0001序列设计的退出，它共有446帧，因此循环这些次
 

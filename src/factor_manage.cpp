@@ -219,6 +219,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     //TODO 确认下面这些id匹配是否有问题
     //TODO 确认坐标系，看了kittidevkit，z轴是向前的，和在因子图后端定义的不一样，因此
     //根据det更新和初始化trk时，需要交换一下位置dets的y和z的位置，发布从后端trk获取到的位置时，也要交换y和z的位置
+    //是否会出现，还没有更新完，就发布的情况
     for(int i = 0; i < request.matches.trk.data.size(); ++i)
     {
         det << request.dets.detecs[i].pos.x, request.dets.detecs[i].pos.z, request.dets.detecs[i].pos.y, 

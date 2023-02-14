@@ -185,7 +185,7 @@ def associate_Callback(dets):
 
 	try:
 		process_trk_update = rospy.ServiceProxy('/trk_update', Trk_update)
-		success = process_trk_update(pub_match, pub_undets, pub_untrks)
+		success = process_trk_update(pub_match, pub_undets, pub_untrks, dets)
 	except rospy.ServiceException as e:
 		rospy.logwarn(e)
 	# match_pub.publish(pub_match)

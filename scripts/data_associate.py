@@ -14,6 +14,7 @@ from track_msgs.msg import Pairs
 from track_msgs.msg import StampArray
 from track_msgs.srv import Trk_pred
 from track_msgs.srv import Trk_update
+from track_msgs.srv import Data_association, Data_associationResponse
 
 
 
@@ -200,13 +201,73 @@ def associate_Callback(dets):
 		int(dets.header.stamp.secs), pub_match.dets.size(), pub_undets.ids.size(), pub_untrks.ids.size(), state)
 
 
+def srv_associate_Callback(req):
+	
+	rospy.loginfo("Data association Into callback")
+
+	dets = req.dets
+	unpack_dets = []
+	for det in dets.detecs:
+		unpack_dets.append([det.siz.x, det.siz.y, det.siz.z, det.pos.x, det.pos.y, det.pos.z, det.alp].reshape(1,7))
+	
+	try:
+		get_trk_preds = rospy.ServiceProxy('/trk_predict', Trk_pred)
+		pred_res = get_trk_preds(dets.header.stamp.secs / 10)
+	except rospy.ServiceException as e:
+		rospy.logwarn(e)
+	trks = pred_res.trk_predicts
+	unpack_trks = []
+	for trk in trks.detecs:
+		unpack_trks.append([trk.siz.x, trk.siz.y, trk.siz.z, trk.pos.x, trk.pos.y, trk.pos.z, trk.alp].reshape(1,7))
+	
+
+
+	matches,unmatch_dets,unmatch_trks, cost, aff_matrix = data_association(unpack_dets, unpack_trks, "giou_3d", -0.2, algm='hungar')
+
+
+	pub_match = Pairs()
+	pub_match.header = dets.header
+	pub_match.dets = matches[:, 0]
+	pub_match.trks = matches[:, 1]
+
+	pub_undets = StampArray()
+	pub_undets.header = dets.header
+	pub_undets.ids = unmatch_dets
+
+	pub_untrks = StampArray()
+	pub_untrks.header = dets.header
+	pub_untrks.ids = unmatch_trks
+
+	try:
+		process_trk_update = rospy.ServiceProxy('/trk_update', Trk_update)
+		update_res = process_trk_update(pub_match, pub_undets, pub_untrks, dets)
+	except rospy.ServiceException as e:
+		rospy.logwarn(e)
+	# match_pub.publish(pub_match)
+	# unmatch_det_pub.publish(pub_undets)
+	# unmatch_trk_pub.publish(pub_untrks)
+	
+	if(int(dets.header.stamp.secs) % 1 == 0):
+		state = 'Fail!'
+		if update_res.success:
+			state = 'Success!'
+		rospy.loginfo("Data association of %d frame finished with %d matches, %d unmatched dets, %d unmatched trks, and updation of trks %s ", 
+		int(dets.header.stamp.secs), pub_match.dets.size(), pub_undets.ids.size(), pub_untrks.ids.size(), state)
+	
+	res = Data_associationResponse()
+	res.success =True
+	return res
+
 def main():
     
     rospy.init_node('data_association_node', anonymous=True)
 
     rospy.wait_for_service('/trk_predict')
     rospy.wait_for_service('/trk_update')
-    rospy.Subscriber("/detections", Detection_list, associate_Callback)
+
+    s = rospy.Service('/data_association', Data_association, srv_associate_Callback)
+	
+    # rospy.Subscriber("/detections", Detection_list, associate_Callback)
 
     rospy.loginfo("Data association of trk_predict and dets")
 

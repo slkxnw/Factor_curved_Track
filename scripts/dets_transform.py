@@ -11,6 +11,7 @@ import os
 
 from track_msgs.msg import Detection_list
 from track_msgs.srv import Det_pub
+from track_msgs.srv import Data_association
 
 # TODO :设置两种模式，跑数据集，使用服务获取原始检测结果，跑试车，订阅topic
 
@@ -69,9 +70,9 @@ def get_ego_traj(imu_poses, frame, pref, futf, inverse=False, only_fut=False):
     else:
         return all_xyz, all_rot_list, left, right
 
-def transform_callback(dets, args):
-    imu_pose = args[0]
-    dets_puber = args[1]
+def transform_callback(dets):
+    # imu_pose = args[0]
+    # dets_puber = args[1]
     # 检测结果帧对应的车辆位姿（以初始时刻的坐标为原点，坐标方向为正东）
     # stamp使用frameid代替
     ego_Oxt = imu_pose[int(dets.header.stamp.secs)]
@@ -89,15 +90,23 @@ def transform_callback(dets, args):
         while(det.alp < -3.14159 / 2):
             det.alp += 3.14159
             
-    dets_puber.publish(dets)
+    # dets_puber.publish(dets)
+    try:
+        process_asso = rospy.ServiceProxy('/data_association', Data_association)
+        res = process_asso(dets)
+    except rospy.ServiceException as e:
+        rospy.logwarn(e)
+    
     if(int(dets.header.stamp.secs) % 5 == 0):
-        rospy.loginfo("Transform cord of dets in frame %d ", int(dets.header.stamp.secs))
+        rospy.loginfo("Transform cord of dets in frame %d, and start association with state %d",
+         int(dets.header.stamp.secs), res.success)
 
 def transform(args):
     #TODO 添加接收来自slam的本车位置msg的功能
     oxt_path = [os.path.join(args.datadir, args.dataset, "oxts" ,args.split, args.seqs + '.txt')]
     #返回的imupose是OxtsData的list，每个OxtsData包含一条原始的oxt数据，和变换后的，相较于起始帧位置的SE3矩阵
     #Poses are given in an East-North-Up coordinate system， whose origin is the first GPS position.
+    global imu_pose
     imu_pose = load_oxts_packets_and_poses(oxt_path)
     rospy.init_node('dets_transform', anonymous=True)
 
@@ -105,15 +114,16 @@ def transform(args):
 
     rate = rospy.Rate(1)
     rospy.wait_for_service('/det_pub')
+    rospy.wait_for_service('/data_association')
     frame = 0
     while frame < 447:
         try:
             get_dets_orin = rospy.ServiceProxy('/det_pub', Det_pub)
-            dets = get_dets_orin(frame)
+            res = get_dets_orin(frame)
         except rospy.ServiceException as e:
             rospy.logwarn(e)
-        transform_callback(dets,(imu_pose, dets_puber))
-
+        # transform_callback(dets,(imu_pose, dets_puber))
+        transform_callback(res.dets)
         rate.sleep()
         frame = frame + 1 
     # 

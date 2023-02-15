@@ -12,7 +12,7 @@ import os
 
 from track_msgs.msg import Detection_list
 from track_msgs.msg import StampArray
-from track_msgs.srv import Trk_state_store
+from track_msgs.srv import Trk_state_store, Trk_predResponse
 
 def parse_args():
     parser = argparse.ArgumentParser(description='cord_transform')
@@ -20,8 +20,8 @@ def parse_args():
     parser.add_argument('--dataset', type=str, default='KITTI', help='KITTI, nuScenes')
     parser.add_argument('--split', type=str, default='training', help='training, testing')
     parser.add_argument('--seqs', type=str, default='0001')
-    parser.add_argument('__name', type=str)
-    parser.add_argument('__log', type=str)
+    # parser.add_argument('__name', type=str)
+    # parser.add_argument('__log', type=str)
     args = parser.parse_args()
     return args
 
@@ -54,7 +54,8 @@ def save_results(res, save_trk_file, eval_file, frame, score_threshold):
 def transform_callback(req):
     # 检测结果帧对应的车辆位姿（以初始时刻的坐标为原点，坐标方向为正东）
     # stamp使用frameid代替
-    frame_id = int(req.header.stamp.sec)
+    frame_id = int(req.header.stamp.secs)
+    rospy.loginfo("Transform cord of trks in frame %d and save them", frame_id)
     ego_Oxt = imu_pose[frame_id]
     ego_trans = ego_Oxt.T_w_imu[0:3, 3]
     ego_rotZ = ego_Oxt.packet.yaw
@@ -86,6 +87,10 @@ def transform_callback(req):
         save_results(res, vis_file, eval_file, frame_id, score_threshold = 0)
     if(frame_id % 1 == 0):
         rospy.loginfo("Transform cord of trks in frame %d and save them", frame_id)
+    
+    res = Trk_predResponse()
+    res.success = True
+    return res
         
             
 
@@ -102,7 +107,7 @@ def transform(args):
     global imu_pose
     imu_pose = load_oxts_packets_and_poses(oxt_path)
     rospy.init_node('trks_transform', anonymous=True)
-
+    rospy.loginfo("Transform cord of trksand save them")
     s = rospy.Service('/trk_state_store', Trk_state_store, transform_callback)
 
     rospy.spin()

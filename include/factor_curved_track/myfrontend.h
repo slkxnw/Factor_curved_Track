@@ -92,6 +92,10 @@ public:
     {
         return last_frame_;
     }
+    double GetLaststamp()
+    {
+        return last_timestamp_;
+    }
     //评估相关，将当前状态输出
     //不参与更新的目标参数，的初始化和更新
     void SetObjSize(Vec3 size)

@@ -147,7 +147,7 @@ bool predict_callback(track_msgs::Trk_pred::Request &request, track_msgs::Trk_pr
     track_msgs::Detection trk_;
     track_msgs::Information info_;
     auto trk_state_pred = backend.GetStatePrediction(request.pred_time);
-    ROS_INFO("there is %d trks", trk_state_pred.size());
+    ROS_INFO("There is %d trks in Frame %d", trk_state_pred.size(), int(request.pred_time * 10));
     //将预测结果按照顺序，生成trk并放入列表中
     trks_pred.header.stamp.sec = request.pred_time * 10;
     for(auto &pair : trk_state_pred)
@@ -195,6 +195,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     track_msgs::StampArray active_ids;
 
     //更新匹配到的轨迹
+    ROS_INFO("Update starts!");
     
     //需要修改一下,发布的trk信息的顺序，和后端当前的objlist中（obj_id, frontend_ptr）对的循序一致
     //在backend里维护一个objid列表，每次预测位置的时候更新这个列表
@@ -211,15 +212,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
         matches[backend_id] = det;
     }
     backend.UpdateObjState(matches, time);
-    //删除老旧轨迹
-    for(int i= 0; i < request.unmatch_trks.ids.data.size(); ++i)
-    {
-        backend_id = backend.GetObjIDlist()[int(request.unmatch_trks.ids.data[i])];
-        if((time - backend.GetObjlist()[backend_id]->GetLastfeame()->time_stamp_) > 1.5)
-            dead_ids.push_back(backend_id);
-       
-    }
-    backend.StopObj(dead_ids);
+    ROS_INFO("Update success!, Init starts!");
     //初始化新轨迹
     for(auto & id : request.unmatch_dets.ids.data)
     {
@@ -229,7 +222,23 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
         od_res.push_back(det);
     }
     backend.InitObj(od_res, time);
-    ROS_INFO("Update success!");
+    ROS_INFO("Init success! Delete starts!");
+    //删除老旧轨迹
+    //TODO 这个删除有问题，会报错
+    // for(int i = 0; i < int(request.unmatch_trks.ids.data.size()); ++i)
+    ROS_INFO("threr is %d unmatched trks", request.unmatch_trks.ids.data.size());
+    for (auto &id : request.unmatch_trks.ids.data)
+    {
+        backend_id = backend.GetObjIDlist()[id];
+        double last_time = backend.GetObjlist()[backend_id]->GetLaststamp();
+        // ROS_INFO("time delay = %f",time - backend.GetObjlist()[backend_id]->GetLastfeame()->time_stamp_);
+        if((time - last_time) > 1.5)
+            dead_ids.push_back(backend_id);
+        // ROS_INFO("its id is : %d", id);
+    }
+    backend.StopObj(dead_ids);
+    ROS_INFO("Delete success!");
+
 
     //发布轨迹当前状态，包括观测角/z等数据,这里的观测角/z和上面轨迹预测状态的是一样的，都使用最近的检测数据的参数
     auto trks_state_cur = backend.GetStateCur();
@@ -271,6 +280,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
         ROS_INFO("Frame %d optimization finished with %d trks updated, %d trks initialed, %d trks deleted, and state save %d",
                 int(request.dets.header.stamp.sec), matches.size(), od_res.size(), dead_ids.size(), int(srv.response.success));
 
+    response.success = true;
     return true;
 }
 

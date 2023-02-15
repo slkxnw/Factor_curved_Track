@@ -90,11 +90,10 @@ def transform_callback(dets):
         while(det.alp < -3.14159 / 2):
             det.alp += 3.14159
     if(int(dets.header.stamp.secs) % 1 == 0):
-        rospy.loginfo("Transform cord of dets in frame %d",
-         int(dets.header.stamp.secs))
+        rospy.loginfo("Transform cord of dets in frame %d", int(dets.header.stamp.secs))
     # dets_puber.publish(dets)
     res = process_asso(dets)
-    rospy.loginfo("start association with state %d", res.success)
+    rospy.loginfo("Frame %d association state is %d", int(dets.header.stamp.secs),res.success)
     
 
 

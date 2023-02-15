@@ -273,9 +273,10 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     srv.request.infos = trks_cur.infos;
     srv.request.header = trks_cur.header;
     srv.request.ids = active_ids.ids;
+    ros::service::waitForService("/trk_state_store");
     ROS_INFO("Call service to store trk info");
-    trk_store.call(srv);    
-    ROS_INFO("Call service to store trk info state: %d", int(srv.response.success));
+    bool ret = trk_store.call(srv);    
+    ROS_INFO("Call service to store trk info state: %d", int(ret));
     if(int(request.dets.header.stamp.sec) % 1 == 0)
         ROS_INFO("Frame %d optimization finished with %d trks updated, %d trks initialed, %d trks deleted, and state save %d",
                 int(request.dets.header.stamp.sec), matches.size(), od_res.size(), dead_ids.size(), int(srv.response.success));

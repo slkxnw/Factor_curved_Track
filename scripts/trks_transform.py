@@ -4,14 +4,9 @@
 
 import rospy
 import numpy as np
-import message_filters
 from kitti_oxts import load_oxts_packets_and_poses
-
 import argparse
 import os
-
-from track_msgs.msg import Detection_list
-from track_msgs.msg import StampArray
 from track_msgs.srv import Trk_state_store, Trk_predResponse
 
 def parse_args():
@@ -20,8 +15,8 @@ def parse_args():
     parser.add_argument('--dataset', type=str, default='KITTI', help='KITTI, nuScenes')
     parser.add_argument('--split', type=str, default='training', help='training, testing')
     parser.add_argument('--seqs', type=str, default='0001')
-    # parser.add_argument('__name', type=str)
-    # parser.add_argument('__log', type=str)
+    parser.add_argument('__name', type=str)
+    parser.add_argument('__log', type=str)
     args = parser.parse_args()
     return args
 
@@ -92,11 +87,6 @@ def transform_callback(req):
     res.success = True
     return res
         
-            
-
-
-
-
 
 
 def transform(args):
@@ -116,7 +106,4 @@ def transform(args):
 
 if __name__ == '__main__':
     args = parse_args()
-    try:
-        transform(args)
-    except rospy.ROSInterruptException:
-        pass
+    transform(args)

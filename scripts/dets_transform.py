@@ -91,15 +91,12 @@ def transform_callback(dets):
             det.alp += 3.14159
             
     # dets_puber.publish(dets)
-    try:
-        process_asso = rospy.ServiceProxy('/data_association', Data_association)
-        res = process_asso(dets)
-    except rospy.ServiceException as e:
-        rospy.logwarn(e)
+    res = process_asso(dets)
+    rospy.loginfo("start association with state %d", res.success)
     
-    if(int(dets.header.stamp.secs) % 5 == 0):
-        rospy.loginfo("Transform cord of dets in frame %d, and start association with state %d",
-         int(dets.header.stamp.secs), res.success)
+    if(int(dets.header.stamp.secs) % 1 == 0):
+        rospy.loginfo("Transform cord of dets in frame %d",
+         int(dets.header.stamp.secs))
 
 def transform(args):
     #TODO 添加接收来自slam的本车位置msg的功能
@@ -115,13 +112,18 @@ def transform(args):
     rate = rospy.Rate(1)
     rospy.wait_for_service('/det_pub')
     rospy.wait_for_service('/data_association')
+    try:
+        get_dets_orin = rospy.ServiceProxy('/det_pub', Det_pub)
+    except rospy.ServiceException as e:
+        rospy.logwarn(e)
+    global process_asso
+    try:
+        process_asso = rospy.ServiceProxy('/data_association', Data_association)
+    except rospy.ServiceException as e:
+        rospy.logwarn(e)
     frame = 0
-    while frame < 447:
-        try:
-            get_dets_orin = rospy.ServiceProxy('/det_pub', Det_pub)
-            res = get_dets_orin(frame)
-        except rospy.ServiceException as e:
-            rospy.logwarn(e)
+    while frame < 10:
+        res = get_dets_orin(frame)
         # transform_callback(dets,(imu_pose, dets_puber))
         transform_callback(res.dets)
         rate.sleep()

@@ -52,7 +52,6 @@ def save_results(res, save_trk_file, eval_file, frame, score_threshold):
 		eval_file.write(str_to_srite)
 
 def transform_callback(req):
-    imu_pose = args[0]
     # 检测结果帧对应的车辆位姿（以初始时刻的坐标为原点，坐标方向为正东）
     # stamp使用frameid代替
     frame_id = int(req.header.stamp.sec)
@@ -69,7 +68,7 @@ def transform_callback(req):
     # 根据官方的图，ry应该就是横摆角，他们的alpha角在示意图中不能直接画出来
     trk_state = req.detecs
     trk_info = req.infos
-    trk_ids = req.ids
+    trk_ids = req.ids.data
     for [trk, info, id] in zip(trk_state, trk_info, trk_ids):
         trk.pos = trk.pos - ego_trans
         trk.alp = trk.alp - ego_rotZ
@@ -85,7 +84,7 @@ def transform_callback(req):
         obsrv_conf = info.unknow
         res = [dim, pos, id, obsrv_agl, roty, obsrv_conf]
         save_results(res, vis_file, eval_file, frame_id, score_threshold = 0)
-    if(frame_id % 5 == 0):
+    if(frame_id % 1 == 0):
         rospy.loginfo("Transform cord of trks in frame %d and save them", frame_id)
         
             
@@ -100,6 +99,7 @@ def transform(args):
     oxt_path = [os.path.join(args.datadir, args.dataset, "oxts" ,args.split, args.seqs + '.txt')]
     #返回的imupose是OxtsData的list，每个OxtsData包含一条原始的oxt数据，和变换后的，相较于起始帧位置的SE3矩阵
     #Poses are given in an East-North-Up coordinate system， whose origin is the first GPS position.
+    global imu_pose
     imu_pose = load_oxts_packets_and_poses(oxt_path)
     rospy.init_node('trks_transform', anonymous=True)
 

@@ -7,6 +7,8 @@ myFrontend::myFrontend()
 {
     frontend_running_.store(true);
     frontend_thread = std::thread(std::bind(&myFrontend::FrontendLoop, this));
+    last_state_ = Vec6::Zero();
+    last_timestamp_ = 0;
 }
 
 
@@ -23,6 +25,7 @@ bool myFrontend::BuildInitTrkList(Vec3 measure, double time, unsigned int id)
     std::shared_ptr<myTrkList> new_trk = std::shared_ptr<myTrkList>(new myTrkList(id));
     
     // new_trk->SetObjID(id);
+    
     new_trk->InsertKeyframe(cur_frame_);
 
     trk_list_ = new_trk;
@@ -56,6 +59,7 @@ myFrame::Ptr myFrontend::CreateMeasureFrame(Vec3 measure, double time, bool is_m
     myFrame::Ptr new_frame(new myFrame);
     last_state_[3] += last_state_[4] * (time - last_timestamp_);
     Vec6 cur_state;
+    //x,y,theta,v,a,w
     cur_state << measure[0], measure[1], measure[2], last_state_[3], last_state_[4], last_state_[5];
     new_frame->id_ = num_of_frames++;
     new_frame->obj_state_ = cur_state;
@@ -124,10 +128,11 @@ Vec3 myFrontend::PredictPostion(double time)
 
     //[(v(t)ω + aωT) sin(θ(t) + ωT)+a cos(θ(t) + ωT)−v(t)ω sin θ(t) − a cos θ(t)] / ω^2
     double dx = ((v * w + a * dth) * sin(th + dth) + a * cos(th + dth)
-         - v * w * sin(th) - a * cos(th)) / (w * w);
+         - v * w * sin(th) - a * cos(th)) / ((w + 1e-9) * (w + 1e-9));
     //[(−v(t)ω − aωT) cos(θ(t) + ωT)+a sin(θ(t) + ωT)+v(t)ω cos θ(t) − a sin θ(t)] / ω^2
     double dy = ((-v * w - a * dth) * cos(th + dth) + a * sin(th + dth)
-         + v * w * cos(th) - a * sin(th)) / (w * w);
+         + v * w * cos(th) - a * sin(th)) / ((w + 1e-9) * (w + 1e-9));
+    // std::cout<<dt<<' '<<dv<<' '<<dth<<' '<<dx<<' '<<dy<<std::endl;
     pred_position<<cur_state[0] + dx, cur_state[1] + dy, cur_state[2] + dth;
     return pred_position;
 }
@@ -143,7 +148,7 @@ Vec6 myFrontend::PredictState(double time)
     double dv = a * dt;
     Vec3 cur_position = PredictPostion(time);
     
-    cur_state << cur_position[0], cur_position[1], cur_position[2],
+    cur_state << cur_position[0], cur_position[1], cur_position[2] + dth,
                  last_state_[3] + dv, last_state_[4], last_state_[5];
     return cur_state;
 }

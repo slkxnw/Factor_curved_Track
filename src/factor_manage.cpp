@@ -25,7 +25,7 @@
 ros::Publisher trk_predict_pub;
 ros::Publisher trk_cur_pub;
 ros::Publisher trk_id_pub;
-mytrk::myBackend::Ptr backend;
+mytrk::myBackend backend;
 ros::ServiceClient trk_store;
 
 //可以将1，3，4结合到一起
@@ -146,7 +146,8 @@ bool predict_callback(track_msgs::Trk_pred::Request &request, track_msgs::Trk_pr
     track_msgs::Detection_list trks_pred;
     track_msgs::Detection trk_;
     track_msgs::Information info_;
-    auto trk_state_pred = backend->GetStatePrediction(request.pred_time);
+    auto trk_state_pred = backend.GetStatePrediction(request.pred_time);
+    ROS_INFO("there is %d trks", trk_state_pred.size());
     //将预测结果按照顺序，生成trk并放入列表中
     trks_pred.header.stamp.sec = request.pred_time * 10;
     for(auto &pair : trk_state_pred)
@@ -206,19 +207,19 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
         det << request.dets.detecs[i].pos.x, request.dets.detecs[i].pos.z, request.dets.detecs[i].pos.y, 
             request.dets.detecs[i].siz.x, request.dets.detecs[i].siz.y, request.dets.detecs[i].siz.z, 
             double(request.dets.detecs[i].alp), request.dets.infos[i].orin, request.dets.infos[i].score;
-        backend_id = backend->GetObjIDlist()[int(request.matches.trk.data[i])];
+        backend_id = backend.GetObjIDlist()[int(request.matches.trk.data[i])];
         matches[backend_id] = det;
     }
-    backend->UpdateObjState(matches, time);
+    backend.UpdateObjState(matches, time);
     //删除老旧轨迹
     for(int i= 0; i < request.unmatch_trks.ids.data.size(); ++i)
     {
-        backend_id = backend->GetObjIDlist()[int(request.unmatch_trks.ids.data[i])];
-        if((time - backend->GetObjlist()[backend_id]->GetLastfeame()->time_stamp_) > 1.5)
+        backend_id = backend.GetObjIDlist()[int(request.unmatch_trks.ids.data[i])];
+        if((time - backend.GetObjlist()[backend_id]->GetLastfeame()->time_stamp_) > 1.5)
             dead_ids.push_back(backend_id);
        
     }
-    backend->StopObj(dead_ids);
+    backend.StopObj(dead_ids);
     //初始化新轨迹
     for(auto & id : request.unmatch_dets.ids.data)
     {
@@ -227,11 +228,11 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
             double(request.dets.detecs[id].alp), request.dets.infos[id].orin, request.dets.infos[id].score;
         od_res.push_back(det);
     }
-    backend->InitObj(od_res, time);
+    backend.InitObj(od_res, time);
     
 
     //发布轨迹当前状态，包括观测角/z等数据,这里的观测角/z和上面轨迹预测状态的是一样的，都使用最近的检测数据的参数
-    auto trks_state_cur = backend->GetStateCur();
+    auto trks_state_cur = backend.GetStateCur();
     trks_cur.header = request.dets.header;
     for(auto &pair : trks_state_cur)
     {
@@ -253,7 +254,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     }
 
     //发布活跃轨迹id
-    auto obj_ids = backend->GetObjIDlist();
+    auto obj_ids = backend.GetObjIDlist();
     active_ids.header = request.dets.header;
     for(auto &id : obj_ids)
         active_ids.ids.data.push_back(id);
@@ -270,6 +271,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
         ROS_INFO("Frame %d optimization finished with %d trks updated, %d trks initialed, %d trks deleted, and state save %d",
                 int(request.dets.header.stamp.sec), matches.size(), od_res.size(), dead_ids.size(), int(srv.response.success));
 
+    return true;
 }
 
 int main(int argc, char** argv)
@@ -279,6 +281,8 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "factor_manager");
 
     ros::NodeHandle nh;
+    std::vector<Vec9> init_bd;
+    mytrk::myBackend backend;
 
     ros::service::waitForService("/trk_state_store");
     ros::ServiceClient trk_store = nh.serviceClient<track_msgs::Trk_state_store>("/trk_state_store");
@@ -287,14 +291,16 @@ int main(int argc, char** argv)
     //轨迹更新服务
     ros::ServiceServer trk_update = nh.advertiseService("/trk_update", update_callback);
     //因子管理后端
-    mytrk::myBackend::Ptr backend = mytrk::myBackend::Ptr(new mytrk::myBackend);
+    // init_bd.push_back(Vec9::Zero());
+    
+    // backend->InitObj(init_bd, 0);
 
-    //发布trks预测结果
-    ros::Publisher trk_predict_pub = nh.advertise<track_msgs::Detection_list>("/tracks_prediction", 10);
-    //发布trks当前状态
-    ros::Publisher trk_cur_pub = nh.advertise<track_msgs::Detection_list>("/tracks_cur_state", 10);
-    //发布trks的id
-    ros::Publisher trk_id_pub = nh.advertise<track_msgs::StampArray>("/tracks_ids", 10);
+    // //发布trks预测结果
+    // ros::Publisher trk_predict_pub = nh.advertise<track_msgs::Detection_list>("/tracks_prediction", 10);
+    // //发布trks当前状态
+    // ros::Publisher trk_cur_pub = nh.advertise<track_msgs::Detection_list>("/tracks_cur_state", 10);
+    // //发布trks的id
+    // ros::Publisher trk_id_pub = nh.advertise<track_msgs::StampArray>("/tracks_ids", 10);
 
     
 

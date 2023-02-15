@@ -26,8 +26,8 @@ void myBackend::InitObj(std::vector<Vec9> &od_res, double time)
         
         //hashmap插入方式
         obj_list_[num_of_obj] = new_frontend;
-        Vec6 state;
-        state << od[0], od[1], od[6], od[3], od[4], od[5];
+        // Vec6 state;
+        // state << od[0], od[1], od[6], od[3], od[4], od[5];
         state_prediction_list_[num_of_obj] = od;
         state_cur_list_[num_of_obj] = od;
         num_of_obj++;
@@ -53,8 +53,9 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches,
         obj_list_[match.first]->SetObjObsrvAgl(match.second[7]);
         obj_list_[match.first]->SetObjObsrvConf(match.second[8]);
         
-        //启动因子图优化
-        obj_list_[match.first]->UpdateTrkList();
+        //至少有5帧数据时，启动因子图优化
+        if(obj_list_[match.first]->GetTrklist()->GetKeyframeNum() > 5)
+            obj_list_[match.first]->UpdateTrkList();
     }
 }
 

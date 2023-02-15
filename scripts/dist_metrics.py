@@ -145,6 +145,8 @@ def iou(box_a, box_b, metric='giou_3d'):
 
 	# only needed for GIoU
 	if 'giou' in metric:
+		# print(boxa_bot)
+		# print(boxb_bot)
 		C_2D = convex_area(boxa_bot, boxb_bot)
 
 	if '2d' in metric:		 	# return 2D IoU/GIoU

@@ -66,6 +66,11 @@ public:
         std::unique_lock<std::mutex> lck(data_mutex_);
         return active_keyframes_;
     }
+    int GetKeyframeNum()
+    {
+        std::unique_lock<std::mutex> lck(data_mutex_);
+        return active_keyframes_.size();
+    }
  
 
 private:

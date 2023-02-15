@@ -63,6 +63,7 @@ public:
     bool InsertKeyFrame()
     {
         trk_list_->InsertKeyframe(cur_frame_);
+        return true;
     }
 
     //基于观测和上一帧数据，确定帧状态,同时更新teklist的帧数量信息
@@ -162,8 +163,8 @@ private:
     unsigned long num_of_frames = 0;
 
 
-    Vec6 last_state_ = Vec6::Zero();
-    double last_timestamp_ = 0.0;
+    Vec6 last_state_;
+    double last_timestamp_;
     //目标其他参数，不参与更新，使用观测给出的数据
     Vec3 obj_size_;
     double z_;

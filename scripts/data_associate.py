@@ -67,7 +67,7 @@ def greedy_matching(cost_matrix):
 
     return np.asarray(matched_indices)
 
-def process_dets(self, dets):
+def process_dets(dets):
 		# convert each detection into the class Box3D 
 		# inputs: 
 		# 	dets - a numpy array of detections in the format [[h,w,l,x,y,z,theta],...]
@@ -97,9 +97,9 @@ def data_association(dets, trks, metric, threshold, algm='greedy', \
 	# if there is no item in either row/col, skip the association and return all as unmatched
 	aff_matrix = np.zeros((len(dets), len(trks)), dtype=np.float32)
 	if len(trks) == 0: 
-		return np.empty((0, 2), dtype=int), np.arange(len(dets)), [], 0, aff_matrix
+		return np.empty((0, 2), dtype=int), np.arange(len(dets)), np.array([]), 0, aff_matrix
 	if len(dets) == 0: 
-		return np.empty((0, 2), dtype=int), [], np.arange(len(trks)), 0, aff_matrix		
+		return np.empty((0, 2), dtype=int), np.array([]), np.arange(len(trks)), 0, aff_matrix		
 	
 	# prepare inverse innovation matrix for m_dis
 	if metric == 'm_dis':
@@ -149,101 +149,42 @@ def data_association(dets, trks, metric, threshold, algm='greedy', \
 
 	return matches, np.array(unmatched_dets), np.array(unmatched_trks), cost, aff_matrix
 
-def associate_Callback(dets):
-	
-	rospy.loginfo("Data association Into callback")
-
-	unpack_dets = []
-	for det in dets.detecs:
-		unpack_dets.append([det.siz.x, det.siz.y, det.siz.z, det.pos.x, det.pos.y, det.pos.z, det.alp].reshape(1,7))
-	try:
-		get_trk_preds = rospy.ServiceProxy('/trk_predict', Trk_pred)
-		trks = get_trk_preds(dets.header.stamp.secs / 10)
-	except rospy.ServiceException as e:
-		rospy.logwarn(e)
-	
-	unpack_trks = []
-	for trk in trks.detecs:
-		unpack_trks.append([trk.siz.x, trk.siz.y, trk.siz.z, trk.pos.x, trk.pos.y, trk.pos.z, trk.alp].reshape(1,7))
-	
-
-
-	matches,unmatch_dets,unmatch_trks, cost, aff_matrix = data_association(unpack_dets, unpack_trks, "giou_3d", -0.2, algm='hungar')
-
-
-	pub_match = Pairs()
-	pub_match.header = dets.header
-	pub_match.dets = matches[:, 0]
-	pub_match.trks = matches[:, 1]
-
-	pub_undets = StampArray()
-	pub_undets.header = dets.header
-	pub_undets.ids = unmatch_dets
-
-	pub_untrks = StampArray()
-	pub_untrks.header = dets.header
-	pub_untrks.ids = unmatch_trks
-
-	try:
-		process_trk_update = rospy.ServiceProxy('/trk_update', Trk_update)
-		success = process_trk_update(pub_match, pub_undets, pub_untrks, dets)
-	except rospy.ServiceException as e:
-		rospy.logwarn(e)
-	# match_pub.publish(pub_match)
-	# unmatch_det_pub.publish(pub_undets)
-	# unmatch_trk_pub.publish(pub_untrks)
-	
-	if(int(dets.header.stamp.secs) % 1 == 0):
-		state = 'Fail!'
-		if success:
-			state = 'Success!'
-		rospy.loginfo("Data association of %d frame finished with %d matches, %d unmatched dets, %d unmatched trks, and updation of trks %s ", 
-		int(dets.header.stamp.secs), pub_match.dets.size(), pub_undets.ids.size(), pub_untrks.ids.size(), state)
-
-
 def srv_associate_Callback(req):
 	
-	rospy.loginfo("Data association Into callback")
+	# rospy.loginfo("Data association Into callback")
 
 	dets = req.dets
 	unpack_dets = []
 	for det in dets.detecs:
-		unpack_dets.append([det.siz.x, det.siz.y, det.siz.z, det.pos.x, det.pos.y, det.pos.z, det.alp].reshape(1,7))
-	
-	try:
-		get_trk_preds = rospy.ServiceProxy('/trk_predict', Trk_pred)
-		pred_res = get_trk_preds(dets.header.stamp.secs / 10)
-	except rospy.ServiceException as e:
-		rospy.logwarn(e)
+		unpack_dets.append(np.array([det.siz.x, det.siz.y, det.siz.z, det.pos.x, det.pos.y, det.pos.z, det.alp]))
+
+	pred_res = get_trk_preds(dets.header.stamp.secs / 10)
 		
 	trks = pred_res.trk_predicts
 	unpack_trks = []
 	for trk in trks.detecs:
-		unpack_trks.append([trk.siz.x, trk.siz.y, trk.siz.z, trk.pos.x, trk.pos.y, trk.pos.z, trk.alp].reshape(1,7))
+		unpack_trks.append(np.array([trk.siz.x, trk.siz.y, trk.siz.z, trk.pos.x, trk.pos.y, trk.pos.z, trk.alp]))
+		print(np.array([trk.siz.x, trk.siz.y, trk.siz.z, trk.pos.x, trk.pos.y, trk.pos.z, trk.alp]))
 	
-
-
 	matches,unmatch_dets,unmatch_trks, cost, aff_matrix = data_association(unpack_dets, unpack_trks, "giou_3d", -0.2, algm='hungar')
 
-
+	# rospy.loginfo(str(type(matches)) + ' ' + str(type(unmatch_trks))+ ' ' + str(type(unmatch_dets)))
 	pub_match = Pairs()
 	pub_match.header = dets.header
-	pub_match.dets = matches[:, 0]
-	pub_match.trks = matches[:, 1]
+	pub_match.dets.data = matches[:, 0].tolist()
+	pub_match.trk.data = matches[:, 1].tolist()
 
 	pub_undets = StampArray()
 	pub_undets.header = dets.header
-	pub_undets.ids = unmatch_dets
+	pub_undets.ids.data = unmatch_dets.tolist()
 
 	pub_untrks = StampArray()
 	pub_untrks.header = dets.header
-	pub_untrks.ids = unmatch_trks
+	pub_untrks.ids.data = unmatch_trks.tolist()
 
-	try:
-		process_trk_update = rospy.ServiceProxy('/trk_update', Trk_update)
-		update_res = process_trk_update(pub_match, pub_undets, pub_untrks, dets)
-	except rospy.ServiceException as e:
-		rospy.logwarn(e)
+
+	update_res = process_trk_update(pub_match, pub_undets, pub_untrks, dets)
+
 	# match_pub.publish(pub_match)
 	# unmatch_det_pub.publish(pub_undets)
 	# unmatch_trk_pub.publish(pub_untrks)
@@ -253,7 +194,7 @@ def srv_associate_Callback(req):
 		if update_res.success:
 			state = 'Success!'
 		rospy.loginfo("Data association of %d frame finished with %d matches, %d unmatched dets, %d unmatched trks, and updation of trks %s ", 
-		int(dets.header.stamp.secs), pub_match.dets.size(), pub_undets.ids.size(), pub_untrks.ids.size(), state)
+		int(dets.header.stamp.secs), len(pub_match.dets.data), len(pub_undets.ids.data), len(pub_untrks.ids.data), state)
 	
 	res = Data_associationResponse()
 	res.success =True
@@ -261,18 +202,27 @@ def srv_associate_Callback(req):
 
 def main():
     
-    rospy.init_node('data_association_node', anonymous=True)
+	rospy.init_node('data_association_node', anonymous=True)
 
-    rospy.wait_for_service('/trk_predict')
-    rospy.wait_for_service('/trk_update')
+	rospy.wait_for_service('/trk_predict')
+	rospy.wait_for_service('/trk_update')
+	global process_trk_update,get_trk_preds
+	try:
+		process_trk_update = rospy.ServiceProxy('/trk_update', Trk_update)
+	except rospy.ServiceException as e:
+		rospy.logwarn(e)
+	try:
+		get_trk_preds = rospy.ServiceProxy('/trk_predict', Trk_pred)
+	except rospy.ServiceException as e:
+		rospy.logwarn(e)
 
-    s = rospy.Service('/data_association', Data_association, srv_associate_Callback)
+	s = rospy.Service('/data_association', Data_association, srv_associate_Callback)
 	
     # rospy.Subscriber("/detections", Detection_list, associate_Callback)
 
-    rospy.loginfo("Data association of trk_predict and dets")
+	rospy.loginfo("Data association of trk_predict and dets")
 
 
-    rospy.spin()
+	rospy.spin()
 if __name__ == '__main__':
 	main()

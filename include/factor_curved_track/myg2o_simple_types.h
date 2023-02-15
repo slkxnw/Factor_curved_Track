@@ -74,10 +74,10 @@ public:
         //TODO:可以把下面的计算作为measurement，在外部计算，把上一时刻的状态在外部保存就可以了
         //[(v(t)ω + aωT) sin(θ(t) + ωT)+a cos(θ(t) + ωT)−v(t)ω sin θ(t) − a cos θ(t)] / ω^2
         double dx = ((v * w + a * dth) * sin(th + dth) + a * cos(th + dth)
-         - v * w * sin(th) - a * cos(th)) / (w * w);
+         - v * w * sin(th) - a * cos(th)) / ((w + 1e-9) * (w + 1e-9));
         //[(−v(t)ω − aωT) cos(θ(t) + ωT)+a sin(θ(t) + ωT)+v(t)ω cos θ(t) − a sin θ(t)] / ω^2
         double dy = ((-v * w - a * dth) * cos(th + dth) + a * sin(th + dth)
-         + v * w * cos(th) - a * sin(th)) / (w * w);
+         + v * w * cos(th) - a * sin(th)) / ((w + 1e-9) * (w + 1e-9));
 
         _error<<dx - (state_last[0] - state_cur[0]), 
                 dy - (state_last[1] - state_cur[1]),

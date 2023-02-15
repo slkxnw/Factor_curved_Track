@@ -229,7 +229,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
         od_res.push_back(det);
     }
     backend.InitObj(od_res, time);
-    
+    ROS_INFO("Update success!");
 
     //发布轨迹当前状态，包括观测角/z等数据,这里的观测角/z和上面轨迹预测状态的是一样的，都使用最近的检测数据的参数
     auto trks_state_cur = backend.GetStateCur();
@@ -267,7 +267,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
 
     trk_store.call(srv);
 
-    if(int(request.dets.header.stamp.sec) % 5 == 0)
+    if(int(request.dets.header.stamp.sec) % 1 == 0)
         ROS_INFO("Frame %d optimization finished with %d trks updated, %d trks initialed, %d trks deleted, and state save %d",
                 int(request.dets.header.stamp.sec), matches.size(), od_res.size(), dead_ids.size(), int(srv.response.success));
 

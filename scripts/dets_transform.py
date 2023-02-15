@@ -89,14 +89,14 @@ def transform_callback(dets):
             det.alp -= 3.14159
         while(det.alp < -3.14159 / 2):
             det.alp += 3.14159
-            
+    if(int(dets.header.stamp.secs) % 1 == 0):
+        rospy.loginfo("Transform cord of dets in frame %d",
+         int(dets.header.stamp.secs))
     # dets_puber.publish(dets)
     res = process_asso(dets)
     rospy.loginfo("start association with state %d", res.success)
     
-    if(int(dets.header.stamp.secs) % 1 == 0):
-        rospy.loginfo("Transform cord of dets in frame %d",
-         int(dets.header.stamp.secs))
+
 
 def transform(args):
     #TODO 添加接收来自slam的本车位置msg的功能

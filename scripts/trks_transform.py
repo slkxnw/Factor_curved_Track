@@ -36,7 +36,7 @@ def save_results(res, save_trk_file, eval_file, frame, score_threshold):
 	# save in detection format with track ID, can be used for dection evaluation and tracking visualization
 	str_to_srite = '%s -1 -1 %f %f %f %f %f %f %f %f %f %f %f %f %f %d\n' % (type_tmp, ori_tmp,
 		bbox2d_tmp_trk[0], bbox2d_tmp_trk[1], bbox2d_tmp_trk[2], bbox2d_tmp_trk[3], 
-		bbox3d_size[0], bbox3d_size[1], bbox3d_size[2], bbox3d_pos[3], bbox3d_pos[4], bbox3d_pos[5], roty[6], conf_tmp, id_tmp)
+		bbox3d_size[0], bbox3d_size[1], bbox3d_size[2], bbox3d_pos[0], bbox3d_pos[1], bbox3d_pos[2], roty, conf_tmp, id_tmp)
 	save_trk_file.write(str_to_srite)
 
 	# save in tracking format, for 3D MOT evaluation
@@ -48,7 +48,7 @@ def save_results(res, save_trk_file, eval_file, frame, score_threshold):
 	if conf_tmp >= score_threshold:
 		str_to_srite = '%d %d %s 0 0 %f %f %f %f %f %f %f %f %f %f %f %f %f\n' % (frame, id_tmp, 
 			type_tmp, ori_tmp, bbox2d_tmp_trk[0], bbox2d_tmp_trk[1], bbox2d_tmp_trk[2], bbox2d_tmp_trk[3], 
-			bbox3d_size[0], bbox3d_size[1], bbox3d_size[2], bbox3d_pos[3], bbox3d_pos[4], bbox3d_pos[5], roty[6], conf_tmp)
+			bbox3d_size[0], bbox3d_size[1], bbox3d_size[2], bbox3d_pos[0], bbox3d_pos[1], bbox3d_pos[2], roty, conf_tmp)
 		eval_file.write(str_to_srite)
 
 def transform_callback(req):
@@ -82,7 +82,7 @@ def transform_callback(req):
         
         obsrv_agl = info.orin
         obsrv_conf = info.unknow
-        res = [dim, pos, id, obsrv_agl, roty, obsrv_conf]
+        res = [dim, pos, roty, id, obsrv_agl, obsrv_conf]
         save_results(res, vis_file, eval_file, frame_id, score_threshold = 0)
     if(frame_id % 1 == 0):
         rospy.loginfo("Transform cord of trks in frame %d and save them", frame_id)

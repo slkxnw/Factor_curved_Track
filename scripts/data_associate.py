@@ -164,7 +164,7 @@ def srv_associate_Callback(req):
 	unpack_trks = []
 	for trk in trks.detecs:
 		unpack_trks.append(np.array([trk.siz.x, trk.siz.y, trk.siz.z, trk.pos.x, trk.pos.y, trk.pos.z, trk.alp]))
-		print(np.array([trk.siz.x, trk.siz.y, trk.siz.z, trk.pos.x, trk.pos.y, trk.pos.z, trk.alp]))
+		# print(np.array([trk.siz.x, trk.siz.y, trk.siz.z, trk.pos.x, trk.pos.y, trk.pos.z, trk.alp]))
 	
 	matches,unmatch_dets,unmatch_trks, cost, aff_matrix = data_association(unpack_dets, unpack_trks, "giou_3d", -0.2, algm='hungar')
 

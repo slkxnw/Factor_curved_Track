@@ -110,7 +110,7 @@ def transform(args):
     imu_pose = load_oxts_packets_and_poses(oxt_path)
     rospy.init_node('dets_transform', anonymous=True)
 
-    dets_puber = rospy.Publisher('/detections', Detection_list, queue_size = 10)
+    # dets_puber = rospy.Publisher('/detections', Detection_list, queue_size = 10)
 
     rate = rospy.Rate(1)
     rospy.wait_for_service('/det_pub')

@@ -106,7 +106,7 @@ def detection_puber(args):
 
 # TODO:需要设置退出，当遍历当前seq所有帧后，结束程序,目前是按照val的0001序列设计的退出，它共有446帧，因此循环这些次
 
-# TODO:需要设置可视化，或者跟踪结果存储，后面这个可以在backend析构函数中实现
+# TODO 将和dets-trans的服务的客户端改到这里，符合后续实车实验要求
 if __name__ == '__main__':
     args = parse_args()
     try:

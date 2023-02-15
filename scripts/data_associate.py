@@ -215,6 +215,7 @@ def srv_associate_Callback(req):
 		pred_res = get_trk_preds(dets.header.stamp.secs / 10)
 	except rospy.ServiceException as e:
 		rospy.logwarn(e)
+		
 	trks = pred_res.trk_predicts
 	unpack_trks = []
 	for trk in trks.detecs:

@@ -66,7 +66,8 @@ myFrame::Ptr myFrontend::CreateMeasureFrame(Vec3 measure, double time, bool is_m
     
     return new_frame;
 }
-
+//这个函数没有用到，可以认为不存在
+//TODO 后续再确定，外推帧是否可以作为cur_frame_
 myFrame::Ptr myFrontend::CreateExtrpFrame(double time)
 {
     //TODO 这里，如果连续出现外推帧，那么last_frame会是外推帧

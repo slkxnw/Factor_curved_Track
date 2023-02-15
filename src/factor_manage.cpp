@@ -28,9 +28,7 @@ ros::Publisher trk_id_pub;
 mytrk::myBackend::Ptr backend;
 ros::ServiceClient trk_store;
 
-// TODO：添加puber，发布更新后的各个轨迹的绝对位置，以及轨迹的绝对ID，也就是Obj_id_list
-
-//TODO 将1，3，4结合到一起
+//可以将1，3，4结合到一起
 // void callback(const track_msgs::PairsConstPtr &match_pair, 
 //                     const track_msgs::StampArrayConstPtr &unmatch_trk, 
 //                     const track_msgs::Detection_listConstPtr &dets, 
@@ -177,13 +175,13 @@ bool predict_callback(track_msgs::Trk_pred::Request &request, track_msgs::Trk_pr
 bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_update::Response& response)
 {
     //TODO 服务传入的请求信息好像不能是指针，因此下面的赋值会很消耗时间和空间，两个想法，一个是不赋值了，一个是取指针，但是原始指针
-    track_msgs::Pairs match_pair = request.matches;
-    track_msgs::StampArray unmatch_dets = request.unmatch_dets;
-    track_msgs::StampArray unmatch_trks = request.unmatch_trks;
-    track_msgs::Detection_list dets = request.dets;
+    //目前使用不赋值
+    // track_msgs::Pairs match_pair = request.matches;
+    // track_msgs::StampArray unmatch_dets = request.unmatch_dets;
+    // track_msgs::StampArray unmatch_trks = request.unmatch_trks;
+    // track_msgs::Detection_list dets = request.dets;
 
     double time = request.dets.header.stamp.sec * 0.1;
-    int delet_cnt = 0;
     std::unordered_map<unsigned long, Vec9> matches;
     std::vector<unsigned long> dead_ids;
     std::vector<Vec9> od_res;
@@ -198,12 +196,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     //更新匹配到的轨迹
     
     //需要修改一下,发布的trk信息的顺序，和后端当前的objlist中（obj_id, frontend_ptr）对的循序一致
-    //因此，首先获取后端当前的objlist，然后得到match_pair中第i对匹配中，trk对应的id，用[]操作符取objlist中这个id对应的frontend_ptr，
-    //再从frontend-ptr获取它在后端中的分配到的obj_id
-    //不对，[]操作符是按照key取值
-    //最后还是在backend里维护一个objid列表，每次预测位置的时候更新这个列表
-
-
+    //在backend里维护一个objid列表，每次预测位置的时候更新这个列表
     //TODO 确认下面这些id匹配是否有问题
     //TODO 确认坐标系，看了kittidevkit，z轴是向前的，和在因子图后端定义的不一样，因此
     //根据det更新和初始化trk时，需要交换一下位置dets的y和z的位置，发布从后端trk获取到的位置时，也要交换y和z的位置
@@ -214,8 +207,6 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
             request.dets.detecs[i].siz.x, request.dets.detecs[i].siz.y, request.dets.detecs[i].siz.z, 
             double(request.dets.detecs[i].alp), request.dets.infos[i].orin, request.dets.infos[i].score;
         backend_id = backend->GetObjIDlist()[int(request.matches.trk.data[i])];
-        // auto hash_ptr = backend->GetObjlist().at(5);
-        // hash_ptr
         matches[backend_id] = det;
     }
     backend->UpdateObjState(matches, time);

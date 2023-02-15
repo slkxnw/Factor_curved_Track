@@ -162,7 +162,6 @@ private:
     unsigned long num_of_frames = 0;
 
 
-    //这里是，上一次帧的数据，可能是观测帧，也可能是外推帧
     Vec6 last_state_ = Vec6::Zero();
     double last_timestamp_ = 0.0;
     //目标其他参数，不参与更新，使用观测给出的数据

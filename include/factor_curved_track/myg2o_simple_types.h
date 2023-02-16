@@ -99,7 +99,7 @@ public:
         double th = state_last[2];
         double v = state_last[3];
         double a = state_last[4];
-        double w = state_last[5];
+        double w = state_last[5] + 1e-9;
 
         double dth = w * _dt;
         double dv = a * _dt;

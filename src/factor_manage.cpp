@@ -287,7 +287,6 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
 
 int main(int argc, char** argv)
 {
-    //TODO 添加Log信息
     // std::cout<<"test"<<std::endl;
     ros::init(argc, argv, "factor_manager");
 

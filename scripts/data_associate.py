@@ -15,6 +15,7 @@ from track_msgs.msg import StampArray
 from track_msgs.srv import Trk_pred
 from track_msgs.srv import Trk_update
 from track_msgs.srv import Data_association, Data_associationResponse
+from track_msgs.srv import Trk_state_store
 
 
 
@@ -185,13 +186,15 @@ def srv_associate_Callback(req):
 
 	update_res = process_trk_update(pub_match, pub_undets, pub_untrks, dets)
 
+	store_res = trk_store(dets.header, update_res.detecs, update_res.infos, update_res.ids);
+
 	# match_pub.publish(pub_match)
 	# unmatch_det_pub.publish(pub_undets)
 	# unmatch_trk_pub.publish(pub_untrks)
 	
 	if(int(dets.header.stamp.secs) % 1 == 0):
 		state = 'Fail!'
-		if update_res.success:
+		if update_res.success & store_res.success:
 			state = 'Success!'
 		rospy.loginfo("Data association of %d frame finished with %d matches, %d unmatched dets, %d unmatched trks, and updation of trks %s ", 
 		int(dets.header.stamp.secs), len(pub_match.dets.data), len(pub_undets.ids.data), len(pub_untrks.ids.data), state)
@@ -206,13 +209,18 @@ def main():
 
 	rospy.wait_for_service('/trk_predict')
 	rospy.wait_for_service('/trk_update')
-	global process_trk_update,get_trk_preds
+	rospy.wait_for_service('//trk_state_store')
+	global process_trk_update, get_trk_preds, trk_store
 	try:
 		process_trk_update = rospy.ServiceProxy('/trk_update', Trk_update)
 	except rospy.ServiceException as e:
 		rospy.logwarn(e)
 	try:
 		get_trk_preds = rospy.ServiceProxy('/trk_predict', Trk_pred)
+	except rospy.ServiceException as e:
+		rospy.logwarn(e)
+	try:
+		trk_store = rospy.ServiceProxy('/trk_state_store', Trk_state_store)
 	except rospy.ServiceException as e:
 		rospy.logwarn(e)
 

@@ -1,3 +1,4 @@
+# include<ros/ros.h>
 # include "factor_curved_track/myfrontend.h"
 # include "factor_curved_track/myg2o_simple_types.h"
 namespace mytrk
@@ -165,6 +166,7 @@ Vec3 myFrontend::GetCurPosition()
 void myFrontend::Optimize(myTrkList::KeyframeType &keyframes)
 {
     //TODO:确定huber鲁棒核函数参数如何设计
+    
     double chi2_th = 5.991;  // robust kernel 阈值
     
     typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 6>> BlockSolverType;
@@ -211,7 +213,7 @@ void myFrontend::Optimize(myTrkList::KeyframeType &keyframes)
         last_id = kf_pair.first;
         last_time = kf->time_stamp_;
     }
-
+    // ROS_INFO("Trere is %d kf", keyframes.size());
     optimizer.initializeOptimization();
     optimizer.optimize(10);
 

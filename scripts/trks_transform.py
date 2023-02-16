@@ -7,7 +7,7 @@ import numpy as np
 from kitti_oxts import load_oxts_packets_and_poses
 import argparse
 import os
-from track_msgs.srv import Trk_state_store, Trk_predResponse
+from track_msgs.srv import Trk_state_store, Trk_state_storeResponse
 
 def parse_args():
     parser = argparse.ArgumentParser(description='cord_transform')
@@ -66,7 +66,9 @@ def transform_callback(req):
     trk_info = req.infos
     trk_ids = req.ids.data
     for [trk, info, id] in zip(trk_state, trk_info, trk_ids):
-        trk.pos = trk.pos - ego_trans
+        trk.pos.x = trk.pos.x - ego_trans[0]
+        trk.pos.y = trk.pos.y - ego_trans[1]
+        trk.pos.z = trk.pos.z - ego_trans[2]
         trk.alp = trk.alp - ego_rotZ
         while(trk.alp > 3.14159 / 2):
             trk.alp -= 3.14159
@@ -77,13 +79,13 @@ def transform_callback(req):
         roty = trk.alp
         
         obsrv_agl = info.orin
-        obsrv_conf = info.unknow
+        obsrv_conf = info.score
         res = [dim, pos, roty, id, obsrv_agl, obsrv_conf]
         save_results(res, vis_file, eval_file, frame_id, score_threshold = 0)
     if(frame_id % 1 == 0):
         rospy.loginfo("Transform cord of trks in frame %d and save them", frame_id)
     
-    res = Trk_predResponse()
+    res = Trk_state_storeResponse()
     res.success = True
     return res
         

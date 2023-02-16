@@ -1,3 +1,4 @@
+# include<ros/ros.h>
 #include "factor_curved_track/mybackend.h"
 
 namespace mytrk
@@ -38,6 +39,7 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches,
 {
     Vec3 measure;
     Vec3 box_size;
+    ros::Rate hold_on(20);
     for (auto &match :matches)
     {
         //检测结果为 x,y,z,w,h,l,theta
@@ -53,10 +55,19 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches,
         obj_list_[match.first]->SetObjObsrvAgl(match.second[7]);
         obj_list_[match.first]->SetObjObsrvConf(match.second[8]);
         
-        //至少有5帧数据时，启动因子图优化
-        if(obj_list_[match.first]->GetTrklist()->GetKeyframeNum() > 5)
+        //至少有3帧数据时，启动因子图优化
+        int num_of_kf = obj_list_[match.first]->GetTrklist()->GetKeyframeNum();
+        ROS_INFO("Trere is %d kf", num_of_kf);
+        if(num_of_kf > 2)
+        {
             obj_list_[match.first]->UpdateTrkList();
+        }
+        //如果某个轨迹有了匹配，就在state_cur_list_加上它，用state_prediction_list_[match.first]做一个赋值，
+        //后面获取当前状态的时候，会更新掉相关数据
+        state_cur_list_[match.first] = state_prediction_list_[match.first];
     }
+    hold_on.sleep();
+
 }
 
 void myBackend::StopObj(std::vector<unsigned long> dead_ids)
@@ -71,7 +82,10 @@ void myBackend::StopObj(std::vector<unsigned long> dead_ids)
     }
 }
        
-
+void myBackend::RemoveUnmatchTrk(unsigned long id)
+{
+    state_cur_list_.erase(id);
+}
 
 myBackend::ObjInfotype myBackend::GetStatePrediction(double time)
 {

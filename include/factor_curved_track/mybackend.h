@@ -33,6 +33,8 @@ public:
     //删除航迹
     void StopObj(std::vector<unsigned long> dead_ids);
 
+    void RemoveUnmatchTrk(unsigned long id);
+
 
     //和数据匹配结果相关
     //将检测结果添加到对应的frontend，并且更新

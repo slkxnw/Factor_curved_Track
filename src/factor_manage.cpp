@@ -222,24 +222,81 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
         od_res.push_back(det);
     }
     backend.InitObj(od_res, time);
-    ROS_INFO("Init success! Delete starts!");
+    ROS_INFO("Init success!");
+
     //删除老旧轨迹
-    //TODO 这个删除有问题，会报错
     // for(int i = 0; i < int(request.unmatch_trks.ids.data.size()); ++i)
-    ROS_INFO("threr is %d unmatched trks", request.unmatch_trks.ids.data.size());
+    ROS_INFO("Delete start! threr is %d unmatched trks", request.unmatch_trks.ids.data.size());
     for (auto &id : request.unmatch_trks.ids.data)
     {
         backend_id = backend.GetObjIDlist()[id];
         double last_time = backend.GetObjlist()[backend_id]->GetLaststamp();
         // ROS_INFO("time delay = %f",time - backend.GetObjlist()[backend_id]->GetLastfeame()->time_stamp_);
-        if((time - last_time) > 1.5)
+        if((time - last_time) > 1)
             dead_ids.push_back(backend_id);
         // ROS_INFO("its id is : %d", id);
+        backend.RemoveUnmatchTrk(backend_id);
     }
     backend.StopObj(dead_ids);
-    ROS_INFO("Delete success!");
+    ROS_INFO("Delete success, delete %d trks!", dead_ids.size());
 
 
+    //TODO：未匹配轨迹的数据不应该发布
+    //获取检测对应轨迹的当前状态，包括观测角/z等数据,这里的观测角/z和上面轨迹预测状态的是一样的，都使用最近的检测数据的参数
+    auto trks_state_cur = backend.GetStateCur();
+    trks_cur.header = request.dets.header;
+    for(auto &pair : trks_state_cur)
+    {
+        trk_.pos.x = pair.second[0];
+        //因子图坐标系和kitti坐标系不一样
+        trk_.pos.z = pair.second[1];
+        trk_.pos.y = pair.second[2];
+        trk_.siz.x = pair.second[3];
+        trk_.siz.y = pair.second[4];
+        trk_.siz.z = pair.second[5];
+        trk_.alp = pair.second[6];
+        trks_cur.detecs.push_back(trk_);
+        //这里是当前帧的观测角
+        info_.orin = pair.second[7];
+        info_.type = 0;
+        info_.score = pair.second[8];
+        trks_cur.infos.push_back(info_);
+    }
+    //发布活跃轨迹id
+    
+    auto obj_ids = backend.GetObjIDlist();
+    active_ids.header = request.dets.header;
+    for(auto &id : obj_ids)
+        active_ids.ids.data.push_back(id); 
+    response.detecs = trks_cur.detecs;
+    response.infos = trks_cur.infos;
+    response.ids = active_ids.ids;
+
+    
+    // track_msgs::Trk_state_store srv;
+    // srv.request.detecs = trks_cur.detecs;
+    // srv.request.infos = trks_cur.infos;
+    // srv.request.header = trks_cur.header;
+    // srv.request.ids = active_ids.ids;
+    // ros::service::waitForService("/trk_state_store");
+    // ROS_INFO("Call service to store trk info");
+    // bool ret = trk_store.call(srv);    
+    // ROS_INFO("Call service to store trk info state: %d", int(ret));
+    
+    if(int(request.dets.header.stamp.sec) % 1 == 0)
+        ROS_INFO("Frame %d optimization finished with %d trks updated, %d trks initialed, %d trks deleted",
+                int(request.dets.header.stamp.sec), matches.size(), od_res.size(), dead_ids.size());
+
+    response.success = true;
+    return true;
+}
+
+bool trk_store_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_update::Response& response)
+{
+    track_msgs::Detection trk_;
+    track_msgs::Information info_;
+    track_msgs::Detection_list trks_cur;
+    track_msgs::StampArray active_ids;
     //发布轨迹当前状态，包括观测角/z等数据,这里的观测角/z和上面轨迹预测状态的是一样的，都使用最近的检测数据的参数
     auto trks_state_cur = backend.GetStateCur();
     trks_cur.header = request.dets.header;
@@ -273,13 +330,11 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     srv.request.infos = trks_cur.infos;
     srv.request.header = trks_cur.header;
     srv.request.ids = active_ids.ids;
-    ros::service::waitForService("/trk_state_store");
+
     ROS_INFO("Call service to store trk info");
     bool ret = trk_store.call(srv);    
     ROS_INFO("Call service to store trk info state: %d", int(ret));
-    if(int(request.dets.header.stamp.sec) % 1 == 0)
-        ROS_INFO("Frame %d optimization finished with %d trks updated, %d trks initialed, %d trks deleted, and state save %d",
-                int(request.dets.header.stamp.sec), matches.size(), od_res.size(), dead_ids.size(), int(srv.response.success));
+
 
     response.success = true;
     return true;

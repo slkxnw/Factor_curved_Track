@@ -50,7 +50,7 @@ def transform_callback(req):
     # 检测结果帧对应的车辆位姿（以初始时刻的坐标为原点，坐标方向为正东）
     # stamp使用frameid代替
     frame_id = int(req.header.stamp.secs)
-    rospy.loginfo("Transform cord of trks in frame %d and save them", frame_id)
+    # rospy.loginfo("Transform cord of trks in frame %d and save them", frame_id)
     ego_Oxt = imu_pose[frame_id]
     ego_trans = ego_Oxt.T_w_imu[0:3, 3]
     ego_rotZ = ego_Oxt.packet.yaw
@@ -82,8 +82,8 @@ def transform_callback(req):
         obsrv_conf = info.score
         res = [dim, pos, roty, id, obsrv_agl, obsrv_conf]
         save_results(res, vis_file, eval_file, frame_id, score_threshold = 0)
-    if(frame_id % 1 == 0):
-        rospy.loginfo("Transform cord of trks in frame %d and save them", frame_id)
+    # if(frame_id % 1 == 0):
+        # rospy.loginfo("Transform cord of trks in frame %d and save them", frame_id)
     
     res = Trk_state_storeResponse()
     res.success = True

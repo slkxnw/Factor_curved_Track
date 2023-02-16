@@ -9,6 +9,7 @@ myFrontend::myFrontend()
     frontend_running_.store(true);
     frontend_thread = std::thread(std::bind(&myFrontend::FrontendLoop, this));
     last_state_ = Vec6::Zero();
+    last_state_[3] = 14;
     last_timestamp_ = 0;
 }
 
@@ -167,6 +168,7 @@ void myFrontend::Optimize(myTrkList::KeyframeType &keyframes)
 {
     //TODO:确定huber鲁棒核函数参数如何设计
     
+    
     double chi2_th = 5.991;  // robust kernel 阈值
     
     typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 6>> BlockSolverType;
@@ -213,7 +215,7 @@ void myFrontend::Optimize(myTrkList::KeyframeType &keyframes)
         last_id = kf_pair.first;
         last_time = kf->time_stamp_;
     }
-    // ROS_INFO("Trere is %d kf", keyframes.size());
+    ROS_INFO("Trere is %d kf in %d", keyframes.size(), trk_list_->GetObjID());
     optimizer.initializeOptimization();
     optimizer.optimize(10);
 

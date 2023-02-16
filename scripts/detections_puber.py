@@ -63,6 +63,8 @@ def pub_callback(req):
         # TODO 确认坐标系，看了kittidevkit，z轴是向前的，那么我们需要的是x和z的坐标位置
         # 从kitti-devkit给的图来看，roty就是w
     for det,info in zip(dets_frame, infos_frame):
+        if(info[6] <= 1):
+            continue
         inf = Information()
         inf.type = int(info[1])
         inf.score = info[6]# 实际上是检测的score

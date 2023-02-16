@@ -5,6 +5,7 @@
 import rospy
 import numpy as np
 from kitti_oxts import load_oxts_packets_and_poses
+import time
 
 import argparse
 import os
@@ -121,11 +122,12 @@ def transform(args):
     except rospy.ServiceException as e:
         rospy.logwarn(e)
     frame = 0
-    while frame < 20:
+    while frame < 255:
         res = get_dets_orin(frame)
         # transform_callback(dets,(imu_pose, dets_puber))
         transform_callback(res.dets)
         rate.sleep()
+        # time.sleep(2)
         frame = frame + 1 
     # 
     # rospy.loginfo("Transform cord of dets")

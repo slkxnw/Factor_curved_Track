@@ -63,7 +63,7 @@ private:
     std::mutex data_lck_;
 
     Frontendtype obj_list_;
-    TrkListType dead_obj_list;
+    // TrkListType dead_obj_list;
     ObjInfotype state_prediction_list_;
     ObjInfotype state_cur_list_;
     std::vector<unsigned long> obj_id_list;

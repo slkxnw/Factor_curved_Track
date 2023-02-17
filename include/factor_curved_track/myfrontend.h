@@ -36,7 +36,7 @@ public:
     //提取出本frontend中的trklist
     std::shared_ptr<myTrkList> GetTrklist()
     {
-        std::unique_lock<std::mutex> lock(data_mutex_);
+        // std::unique_lock<std::mutex> lock(data_mutex_);
         return trk_list_;
     }
 

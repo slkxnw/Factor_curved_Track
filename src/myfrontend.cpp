@@ -6,8 +6,8 @@ namespace mytrk
 
 myFrontend::myFrontend()
 {
-    frontend_running_.store(true);
-    frontend_thread = std::thread(std::bind(&myFrontend::FrontendLoop, this));
+    // frontend_running_.store(true);
+    // frontend_thread = std::thread(std::bind(&myFrontend::FrontendLoop, this));
     last_state_ = Vec6::Zero();
     // last_state_[3] = 14;
     last_timestamp_ = 0;
@@ -46,11 +46,12 @@ void myFrontend::ConcatTrklist(std::shared_ptr<myTrkList> new_trk_list)
     }
 }
 
+//TODO 修改结束函数
 void myFrontend::Stop()
 {
-    frontend_running_.store(false);
-    trk_list_update_.notify_one();
-    frontend_thread.join();
+    // frontend_running_.store(false);
+    // trk_list_update_.notify_one();
+    // frontend_thread.join();
 }
 
 myFrame::Ptr myFrontend::CreateMeasureFrame(Vec3 measure, double time, bool is_measure)
@@ -93,22 +94,24 @@ myFrame::Ptr myFrontend::CreateExtrpFrame(double time)
     return new_frame;
 }
 
-void myFrontend::FrontendLoop()
-{
-    while(frontend_running_.load())
-    {
-        std::unique_lock<std::mutex> lock(data_mutex_);
-        trk_list_update_.wait(lock);
+// void myFrontend::FrontendLoop()
+// {
+//     while(frontend_running_.load())
+//     {
+//         std::unique_lock<std::mutex> lock(data_mutex_);
+//         trk_list_update_.wait(lock);
 
-        auto active_kfs = trk_list_->GetActivateKeyframe();
-        Optimize(active_kfs);
-    }
-}
+//         auto active_kfs = trk_list_->GetActivateKeyframe();
+//         Optimize(active_kfs);
+//     }
+// }
 
 void myFrontend::UpdateTrkList()
 {
     // std::unique_lock<std::mutex> lock(data_mutex_);
     // trk_list_update_.notify_one();
+    auto active_kfs = trk_list_->GetActivateKeyframe();
+    Optimize(active_kfs);
 }
 
 /**

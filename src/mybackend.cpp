@@ -55,7 +55,7 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches,
         obj_list_[match.first]->SetObjObsrvAgl(match.second[7]);
         obj_list_[match.first]->SetObjObsrvConf(match.second[8]);
         
-        //至少有7帧数据时，启动因子图优化
+        //至少有7帧数据时，启动因子图优化,少于7帧的时候，使用kf优化
         //TODO 在这里启动多线程优化，而非在前段启动多线程优化
         //TODO 添加kf功能，当帧数较少的时候，使用kf来更新
         int num_of_kf = obj_list_[match.first]->GetTrklist()->GetKeyframeNum();
@@ -63,6 +63,10 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches,
         if(num_of_kf > 7)
         {
             obj_list_[match.first]->UpdateTrkList();
+        }
+        else
+        {
+            obj_list_[match.first]->UpdateTrkListKF();
         }
         //如果某个轨迹有了匹配，就在state_cur_list_加上它，用state_prediction_list_[match.first]做一个赋值，
         //后面获取当前状态的时候，会更新掉相关数据

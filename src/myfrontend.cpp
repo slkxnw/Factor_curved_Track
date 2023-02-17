@@ -107,8 +107,8 @@ void myFrontend::FrontendLoop()
 
 void myFrontend::UpdateTrkList()
 {
-    std::unique_lock<std::mutex> lock(data_mutex_);
-    trk_list_update_.notify_one();
+    // std::unique_lock<std::mutex> lock(data_mutex_);
+    // trk_list_update_.notify_one();
 }
 
 /**

@@ -47,13 +47,13 @@ public:
 
     std::vector<unsigned long> GetObjIDlist()
     {
-        std::unique_lock<std::mutex> lck(data_lck_);
+        // std::unique_lock<std::mutex> lck(data_lck_);
         return obj_id_list;
     }
 
     Frontendtype GetObjlist()
     {
-        std::unique_lock<std::mutex> lck(data_lck_);
+        // std::unique_lock<std::mutex> lck(data_lck_);
         return obj_list_;
     }
 

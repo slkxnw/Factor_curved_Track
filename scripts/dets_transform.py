@@ -16,6 +16,8 @@ from track_msgs.srv import Data_association
 
 # TODO :设置两种模式，跑数据集，使用服务获取原始检测结果，跑试车，订阅topic
 
+seq_length = {'0001':447, '0006':270, '0008':390, '0010':294, '0012':78, '0013':340, '0014':106, '0015':376, '0016':209, '0018':339, '0019':1059}
+
 def parse_args():
     parser = argparse.ArgumentParser(description='cord_transform')
     parser.add_argument('--datadir', type=str, default='/home/chenz/GD/dataset')
@@ -105,7 +107,10 @@ def transform(args):
     #Poses are given in an East-North-Up coordinate system， whose origin is the first GPS position.
     global imu_pose
     imu_pose = load_oxts_packets_and_poses(oxt_path)
+    print('length of imu_pose is %d', len(imu_pose))
+    
     rospy.init_node('dets_transform', anonymous=True)
+    rospy.loginfo('there is %d imupose', len(imu_pose))
 
     # dets_puber = rospy.Publisher('/detections', Detection_list, queue_size = 10)
 
@@ -122,7 +127,8 @@ def transform(args):
     except rospy.ServiceException as e:
         rospy.logwarn(e)
     frame = 0
-    while frame < 255:
+    # while frame < seq_length[args.seqs]:
+    while frame < 20:
         res = get_dets_orin(frame)
         # transform_callback(dets,(imu_pose, dets_puber))
         transform_callback(res.dets)

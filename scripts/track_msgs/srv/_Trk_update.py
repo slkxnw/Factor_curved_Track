@@ -11,7 +11,7 @@ import std_msgs.msg
 import track_msgs.msg
 
 class Trk_updateRequest(genpy.Message):
-  _md5sum = "4648a59c4a2ec2854e2421af9f54ed43"
+  _md5sum = "7e5a66bff2cfd637b904354438b295b9"
   _type = "track_msgs/Trk_updateRequest"
   _has_header = False  # flag to mark the presence of a Header object
   _full_text = """Pairs matches
@@ -22,8 +22,8 @@ Detection_list dets
 ================================================================================
 MSG: track_msgs/Pairs
 Header header
-std_msgs/UInt8MultiArray dets
-std_msgs/UInt8MultiArray trk
+std_msgs/UInt16MultiArray dets
+std_msgs/UInt16MultiArray trk
 
 ================================================================================
 MSG: std_msgs/Header
@@ -42,12 +42,12 @@ time stamp
 string frame_id
 
 ================================================================================
-MSG: std_msgs/UInt8MultiArray
+MSG: std_msgs/UInt16MultiArray
 # Please look at the MultiArrayLayout message definition for
 # documentation on all multiarrays.
 
 MultiArrayLayout  layout        # specification of data layout
-uint8[]           data          # array of data
+uint16[]            data        # array of data
 
 
 ================================================================================
@@ -87,7 +87,7 @@ uint32 stride  # stride of given dimension
 ================================================================================
 MSG: track_msgs/StampArray
 Header header
-std_msgs/UInt8MultiArray ids
+std_msgs/UInt16MultiArray ids
 
 ================================================================================
 MSG: track_msgs/Detection_list
@@ -196,13 +196,10 @@ float32 orin
         buff.write(_get_struct_2I().pack(_x.size, _x.stride))
       _x = self.matches.dets.layout.data_offset
       buff.write(_get_struct_I().pack(_x))
-      _x = self.matches.dets.data
-      length = len(_x)
-      # - if encoded as a list instead, serialize as bytes instead of string
-      if type(_x) in [list, tuple]:
-        buff.write(struct.Struct('<I%sB'%length).pack(length, *_x))
-      else:
-        buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      length = len(self.matches.dets.data)
+      buff.write(_struct_I.pack(length))
+      pattern = '<%sH'%length
+      buff.write(struct.Struct(pattern).pack(*self.matches.dets.data))
       length = len(self.matches.trk.layout.dim)
       buff.write(_struct_I.pack(length))
       for val1 in self.matches.trk.layout.dim:
@@ -216,13 +213,10 @@ float32 orin
         buff.write(_get_struct_2I().pack(_x.size, _x.stride))
       _x = self.matches.trk.layout.data_offset
       buff.write(_get_struct_I().pack(_x))
-      _x = self.matches.trk.data
-      length = len(_x)
-      # - if encoded as a list instead, serialize as bytes instead of string
-      if type(_x) in [list, tuple]:
-        buff.write(struct.Struct('<I%sB'%length).pack(length, *_x))
-      else:
-        buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      length = len(self.matches.trk.data)
+      buff.write(_struct_I.pack(length))
+      pattern = '<%sH'%length
+      buff.write(struct.Struct(pattern).pack(*self.matches.trk.data))
       _x = self
       buff.write(_get_struct_3I().pack(_x.unmatch_dets.header.seq, _x.unmatch_dets.header.stamp.secs, _x.unmatch_dets.header.stamp.nsecs))
       _x = self.unmatch_dets.header.frame_id
@@ -244,13 +238,10 @@ float32 orin
         buff.write(_get_struct_2I().pack(_x.size, _x.stride))
       _x = self.unmatch_dets.ids.layout.data_offset
       buff.write(_get_struct_I().pack(_x))
-      _x = self.unmatch_dets.ids.data
-      length = len(_x)
-      # - if encoded as a list instead, serialize as bytes instead of string
-      if type(_x) in [list, tuple]:
-        buff.write(struct.Struct('<I%sB'%length).pack(length, *_x))
-      else:
-        buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      length = len(self.unmatch_dets.ids.data)
+      buff.write(_struct_I.pack(length))
+      pattern = '<%sH'%length
+      buff.write(struct.Struct(pattern).pack(*self.unmatch_dets.ids.data))
       _x = self
       buff.write(_get_struct_3I().pack(_x.unmatch_trks.header.seq, _x.unmatch_trks.header.stamp.secs, _x.unmatch_trks.header.stamp.nsecs))
       _x = self.unmatch_trks.header.frame_id
@@ -272,13 +263,10 @@ float32 orin
         buff.write(_get_struct_2I().pack(_x.size, _x.stride))
       _x = self.unmatch_trks.ids.layout.data_offset
       buff.write(_get_struct_I().pack(_x))
-      _x = self.unmatch_trks.ids.data
-      length = len(_x)
-      # - if encoded as a list instead, serialize as bytes instead of string
-      if type(_x) in [list, tuple]:
-        buff.write(struct.Struct('<I%sB'%length).pack(length, *_x))
-      else:
-        buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      length = len(self.unmatch_trks.ids.data)
+      buff.write(_struct_I.pack(length))
+      pattern = '<%sH'%length
+      buff.write(struct.Struct(pattern).pack(*self.unmatch_trks.ids.data))
       _x = self
       buff.write(_get_struct_3I().pack(_x.dets.header.seq, _x.dets.header.stamp.secs, _x.dets.header.stamp.nsecs))
       _x = self.dets.header.frame_id
@@ -362,9 +350,11 @@ float32 orin
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
+      pattern = '<%sH'%length
       start = end
-      end += length
-      self.matches.dets.data = str[start:end]
+      s = struct.Struct(pattern)
+      end += s.size
+      self.matches.dets.data = s.unpack(str[start:end])
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
@@ -391,9 +381,11 @@ float32 orin
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
+      pattern = '<%sH'%length
       start = end
-      end += length
-      self.matches.trk.data = str[start:end]
+      s = struct.Struct(pattern)
+      end += s.size
+      self.matches.trk.data = s.unpack(str[start:end])
       _x = self
       start = end
       end += 12
@@ -433,9 +425,11 @@ float32 orin
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
+      pattern = '<%sH'%length
       start = end
-      end += length
-      self.unmatch_dets.ids.data = str[start:end]
+      s = struct.Struct(pattern)
+      end += s.size
+      self.unmatch_dets.ids.data = s.unpack(str[start:end])
       _x = self
       start = end
       end += 12
@@ -475,9 +469,11 @@ float32 orin
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
+      pattern = '<%sH'%length
       start = end
-      end += length
-      self.unmatch_trks.ids.data = str[start:end]
+      s = struct.Struct(pattern)
+      end += s.size
+      self.unmatch_trks.ids.data = s.unpack(str[start:end])
       _x = self
       start = end
       end += 12
@@ -555,13 +551,10 @@ float32 orin
         buff.write(_get_struct_2I().pack(_x.size, _x.stride))
       _x = self.matches.dets.layout.data_offset
       buff.write(_get_struct_I().pack(_x))
-      _x = self.matches.dets.data
-      length = len(_x)
-      # - if encoded as a list instead, serialize as bytes instead of string
-      if type(_x) in [list, tuple]:
-        buff.write(struct.Struct('<I%sB'%length).pack(length, *_x))
-      else:
-        buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      length = len(self.matches.dets.data)
+      buff.write(_struct_I.pack(length))
+      pattern = '<%sH'%length
+      buff.write(self.matches.dets.data.tostring())
       length = len(self.matches.trk.layout.dim)
       buff.write(_struct_I.pack(length))
       for val1 in self.matches.trk.layout.dim:
@@ -575,13 +568,10 @@ float32 orin
         buff.write(_get_struct_2I().pack(_x.size, _x.stride))
       _x = self.matches.trk.layout.data_offset
       buff.write(_get_struct_I().pack(_x))
-      _x = self.matches.trk.data
-      length = len(_x)
-      # - if encoded as a list instead, serialize as bytes instead of string
-      if type(_x) in [list, tuple]:
-        buff.write(struct.Struct('<I%sB'%length).pack(length, *_x))
-      else:
-        buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      length = len(self.matches.trk.data)
+      buff.write(_struct_I.pack(length))
+      pattern = '<%sH'%length
+      buff.write(self.matches.trk.data.tostring())
       _x = self
       buff.write(_get_struct_3I().pack(_x.unmatch_dets.header.seq, _x.unmatch_dets.header.stamp.secs, _x.unmatch_dets.header.stamp.nsecs))
       _x = self.unmatch_dets.header.frame_id
@@ -603,13 +593,10 @@ float32 orin
         buff.write(_get_struct_2I().pack(_x.size, _x.stride))
       _x = self.unmatch_dets.ids.layout.data_offset
       buff.write(_get_struct_I().pack(_x))
-      _x = self.unmatch_dets.ids.data
-      length = len(_x)
-      # - if encoded as a list instead, serialize as bytes instead of string
-      if type(_x) in [list, tuple]:
-        buff.write(struct.Struct('<I%sB'%length).pack(length, *_x))
-      else:
-        buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      length = len(self.unmatch_dets.ids.data)
+      buff.write(_struct_I.pack(length))
+      pattern = '<%sH'%length
+      buff.write(self.unmatch_dets.ids.data.tostring())
       _x = self
       buff.write(_get_struct_3I().pack(_x.unmatch_trks.header.seq, _x.unmatch_trks.header.stamp.secs, _x.unmatch_trks.header.stamp.nsecs))
       _x = self.unmatch_trks.header.frame_id
@@ -631,13 +618,10 @@ float32 orin
         buff.write(_get_struct_2I().pack(_x.size, _x.stride))
       _x = self.unmatch_trks.ids.layout.data_offset
       buff.write(_get_struct_I().pack(_x))
-      _x = self.unmatch_trks.ids.data
-      length = len(_x)
-      # - if encoded as a list instead, serialize as bytes instead of string
-      if type(_x) in [list, tuple]:
-        buff.write(struct.Struct('<I%sB'%length).pack(length, *_x))
-      else:
-        buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      length = len(self.unmatch_trks.ids.data)
+      buff.write(_struct_I.pack(length))
+      pattern = '<%sH'%length
+      buff.write(self.unmatch_trks.ids.data.tostring())
       _x = self
       buff.write(_get_struct_3I().pack(_x.dets.header.seq, _x.dets.header.stamp.secs, _x.dets.header.stamp.nsecs))
       _x = self.dets.header.frame_id
@@ -722,9 +706,11 @@ float32 orin
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
+      pattern = '<%sH'%length
       start = end
-      end += length
-      self.matches.dets.data = str[start:end]
+      s = struct.Struct(pattern)
+      end += s.size
+      self.matches.dets.data = numpy.frombuffer(str[start:end], dtype=numpy.uint16, count=length)
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
@@ -751,9 +737,11 @@ float32 orin
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
+      pattern = '<%sH'%length
       start = end
-      end += length
-      self.matches.trk.data = str[start:end]
+      s = struct.Struct(pattern)
+      end += s.size
+      self.matches.trk.data = numpy.frombuffer(str[start:end], dtype=numpy.uint16, count=length)
       _x = self
       start = end
       end += 12
@@ -793,9 +781,11 @@ float32 orin
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
+      pattern = '<%sH'%length
       start = end
-      end += length
-      self.unmatch_dets.ids.data = str[start:end]
+      s = struct.Struct(pattern)
+      end += s.size
+      self.unmatch_dets.ids.data = numpy.frombuffer(str[start:end], dtype=numpy.uint16, count=length)
       _x = self
       start = end
       end += 12
@@ -835,9 +825,11 @@ float32 orin
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
+      pattern = '<%sH'%length
       start = end
-      end += length
-      self.unmatch_trks.ids.data = str[start:end]
+      s = struct.Struct(pattern)
+      end += s.size
+      self.unmatch_trks.ids.data = numpy.frombuffer(str[start:end], dtype=numpy.uint16, count=length)
       _x = self
       start = end
       end += 12
@@ -933,13 +925,13 @@ import std_msgs.msg
 import track_msgs.msg
 
 class Trk_updateResponse(genpy.Message):
-  _md5sum = "3571d17b4f556ceb85168d330844b49b"
+  _md5sum = "8882d31d8a52a0ab7e86b85cbf5e2b44"
   _type = "track_msgs/Trk_updateResponse"
   _has_header = False  # flag to mark the presence of a Header object
   _full_text = """bool success
 Detection[] detecs
 Information[] infos
-std_msgs/UInt8MultiArray ids
+std_msgs/UInt16MultiArray ids
 
 
 ================================================================================
@@ -978,12 +970,12 @@ float32 score
 float32 orin
 
 ================================================================================
-MSG: std_msgs/UInt8MultiArray
+MSG: std_msgs/UInt16MultiArray
 # Please look at the MultiArrayLayout message definition for
 # documentation on all multiarrays.
 
 MultiArrayLayout  layout        # specification of data layout
-uint8[]           data          # array of data
+uint16[]            data        # array of data
 
 
 ================================================================================
@@ -1021,7 +1013,7 @@ string label   # label of given dimension
 uint32 size    # size of given dimension (in type units)
 uint32 stride  # stride of given dimension"""
   __slots__ = ['success','detecs','infos','ids']
-  _slot_types = ['bool','track_msgs/Detection[]','track_msgs/Information[]','std_msgs/UInt8MultiArray']
+  _slot_types = ['bool','track_msgs/Detection[]','track_msgs/Information[]','std_msgs/UInt16MultiArray']
 
   def __init__(self, *args, **kwds):
     """
@@ -1047,12 +1039,12 @@ uint32 stride  # stride of given dimension"""
       if self.infos is None:
         self.infos = []
       if self.ids is None:
-        self.ids = std_msgs.msg.UInt8MultiArray()
+        self.ids = std_msgs.msg.UInt16MultiArray()
     else:
       self.success = False
       self.detecs = []
       self.infos = []
-      self.ids = std_msgs.msg.UInt8MultiArray()
+      self.ids = std_msgs.msg.UInt16MultiArray()
 
   def _get_types(self):
     """
@@ -1097,13 +1089,10 @@ uint32 stride  # stride of given dimension"""
         buff.write(_get_struct_2I().pack(_x.size, _x.stride))
       _x = self.ids.layout.data_offset
       buff.write(_get_struct_I().pack(_x))
-      _x = self.ids.data
-      length = len(_x)
-      # - if encoded as a list instead, serialize as bytes instead of string
-      if type(_x) in [list, tuple]:
-        buff.write(struct.Struct('<I%sB'%length).pack(length, *_x))
-      else:
-        buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      length = len(self.ids.data)
+      buff.write(_struct_I.pack(length))
+      pattern = '<%sH'%length
+      buff.write(struct.Struct(pattern).pack(*self.ids.data))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -1120,7 +1109,7 @@ uint32 stride  # stride of given dimension"""
       if self.infos is None:
         self.infos = None
       if self.ids is None:
-        self.ids = std_msgs.msg.UInt8MultiArray()
+        self.ids = std_msgs.msg.UInt16MultiArray()
       end = 0
       start = end
       end += 1
@@ -1183,9 +1172,11 @@ uint32 stride  # stride of given dimension"""
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
+      pattern = '<%sH'%length
       start = end
-      end += length
-      self.ids.data = str[start:end]
+      s = struct.Struct(pattern)
+      end += s.size
+      self.ids.data = s.unpack(str[start:end])
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e)  # most likely buffer underfill
@@ -1229,13 +1220,10 @@ uint32 stride  # stride of given dimension"""
         buff.write(_get_struct_2I().pack(_x.size, _x.stride))
       _x = self.ids.layout.data_offset
       buff.write(_get_struct_I().pack(_x))
-      _x = self.ids.data
-      length = len(_x)
-      # - if encoded as a list instead, serialize as bytes instead of string
-      if type(_x) in [list, tuple]:
-        buff.write(struct.Struct('<I%sB'%length).pack(length, *_x))
-      else:
-        buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      length = len(self.ids.data)
+      buff.write(_struct_I.pack(length))
+      pattern = '<%sH'%length
+      buff.write(self.ids.data.tostring())
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -1253,7 +1241,7 @@ uint32 stride  # stride of given dimension"""
       if self.infos is None:
         self.infos = None
       if self.ids is None:
-        self.ids = std_msgs.msg.UInt8MultiArray()
+        self.ids = std_msgs.msg.UInt16MultiArray()
       end = 0
       start = end
       end += 1
@@ -1316,9 +1304,11 @@ uint32 stride  # stride of given dimension"""
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
+      pattern = '<%sH'%length
       start = end
-      end += length
-      self.ids.data = str[start:end]
+      s = struct.Struct(pattern)
+      end += s.size
+      self.ids.data = numpy.frombuffer(str[start:end], dtype=numpy.uint16, count=length)
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e)  # most likely buffer underfill
@@ -1359,6 +1349,6 @@ def _get_struct_f():
     return _struct_f
 class Trk_update(object):
   _type          = 'track_msgs/Trk_update'
-  _md5sum = '01bf462c856f42e165e411282363fe70'
+  _md5sum = '8d291aaf9bc52f2fd18d20eece9cb6c6'
   _request_class  = Trk_updateRequest
   _response_class = Trk_updateResponse

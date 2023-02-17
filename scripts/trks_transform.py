@@ -54,9 +54,9 @@ def transform_callback(req):
     ego_Oxt = imu_pose[frame_id]
     ego_trans = ego_Oxt.T_w_imu[0:3, 3]
     ego_rotZ = ego_Oxt.packet.yaw
-    eval_path = '/home/chenz/GD/dataset/KITTI/eval/pointrcnn_category_val_H1/data_0'
+    # eval_path = '/home/chenz/GD/dataset/KITTI/eval/pointrcnn_category_val_H1/data_0'
     vis_path = '/home/chenz/GD/dataset/KITTI/eval/pointrcnn_category_val_H1/trk_withid_0'
-    eval_file = open(os.path.join(eval_path, str(frame_id).zfill(6) + '.txt'), 'w')
+    # eval_file = open(os.path.join(eval_path, '0001.txt'), 'w')
     vis_file = open(os.path.join(vis_path, str(frame_id).zfill(6) + '.txt'), 'w')
 
     # 这里，将trk车辆在全局坐标系下的pos/roty减去自车在全局坐标系下的pos/roty
@@ -82,8 +82,8 @@ def transform_callback(req):
         obsrv_conf = info.score
         res = [dim, pos, roty, id, obsrv_agl, obsrv_conf]
         save_results(res, vis_file, eval_file, frame_id, score_threshold = 0)
-    # if(frame_id % 1 == 0):
-        # rospy.loginfo("Transform cord of trks in frame %d and save them", frame_id)
+    if(frame_id % 1 == 0):
+        rospy.loginfo("Transform cord of trks in frame %d and save them", frame_id)
     
     res = Trk_state_storeResponse()
     res.success = True
@@ -96,7 +96,11 @@ def transform(args):
     oxt_path = [os.path.join(args.datadir, args.dataset, "oxts" ,args.split, args.seqs + '.txt')]
     #返回的imupose是OxtsData的list，每个OxtsData包含一条原始的oxt数据，和变换后的，相较于起始帧位置的SE3矩阵
     #Poses are given in an East-North-Up coordinate system， whose origin is the first GPS position.
-    global imu_pose
+    global imu_pose,eval_file
+    #eval文件只打开一次
+    eval_path = '/home/chenz/GD/dataset/KITTI/eval/pointrcnn_category_val_H1/data_0'
+    eval_file = open(os.path.join(eval_path, args.seqs + '.txt'), 'w')
+    
     imu_pose = load_oxts_packets_and_poses(oxt_path)
     rospy.init_node('trks_transform', anonymous=True)
     rospy.loginfo("Transform cord of trksand save them")

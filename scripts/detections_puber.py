@@ -55,15 +55,10 @@ def get_frame_det(dets_all, frame):
 def pub_callback(req):
     dets_frame, infos_frame = get_frame_det(dets_read, req.frame_id)
     det_list = Detection_list()
-        # TODO：这里可能有问题，主要在于
-        # 第一，在msg文件中设置了几个默认值，不知是否可行
-        # 第二，不知道ros的数组在Python对应什么格式，目前是按照对应list来看的，
-        # 因为，ROS的UInt16MultiArray Message在Python是一个类，其中self.data = []
-        # 是一个list
         # TODO 确认坐标系，看了kittidevkit，z轴是向前的，那么我们需要的是x和z的坐标位置
         # 从kitti-devkit给的图来看，roty就是w
     for det,info in zip(dets_frame, infos_frame):
-        if(info[6] <= 1):
+        if(info[6] < 0):
             continue
         inf = Information()
         inf.type = int(info[1])

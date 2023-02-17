@@ -9,7 +9,7 @@ myFrontend::myFrontend()
     frontend_running_.store(true);
     frontend_thread = std::thread(std::bind(&myFrontend::FrontendLoop, this));
     last_state_ = Vec6::Zero();
-    last_state_[3] = 14;
+    // last_state_[3] = 14;
     last_timestamp_ = 0;
 }
 

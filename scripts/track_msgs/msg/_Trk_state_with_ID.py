@@ -11,13 +11,13 @@ import std_msgs.msg
 import track_msgs.msg
 
 class Trk_state_with_ID(genpy.Message):
-  _md5sum = "01b1e2a3cdae4cc7711adb315df873bf"
+  _md5sum = "adbbc5ffb6c34da6fe11a3683c242938"
   _type = "track_msgs/Trk_state_with_ID"
   _has_header = True  # flag to mark the presence of a Header object
   _full_text = """Header header
 Detection[] detecs
 Information[] infos
-std_msgs/UInt8MultiArray ids
+std_msgs/UInt16MultiArray ids
 ================================================================================
 MSG: std_msgs/Header
 # Standard metadata for higher-level stamped data types.
@@ -70,12 +70,12 @@ float32 score
 float32 orin
 
 ================================================================================
-MSG: std_msgs/UInt8MultiArray
+MSG: std_msgs/UInt16MultiArray
 # Please look at the MultiArrayLayout message definition for
 # documentation on all multiarrays.
 
 MultiArrayLayout  layout        # specification of data layout
-uint8[]           data          # array of data
+uint16[]            data        # array of data
 
 
 ================================================================================
@@ -113,7 +113,7 @@ string label   # label of given dimension
 uint32 size    # size of given dimension (in type units)
 uint32 stride  # stride of given dimension"""
   __slots__ = ['header','detecs','infos','ids']
-  _slot_types = ['std_msgs/Header','track_msgs/Detection[]','track_msgs/Information[]','std_msgs/UInt8MultiArray']
+  _slot_types = ['std_msgs/Header','track_msgs/Detection[]','track_msgs/Information[]','std_msgs/UInt16MultiArray']
 
   def __init__(self, *args, **kwds):
     """
@@ -139,12 +139,12 @@ uint32 stride  # stride of given dimension"""
       if self.infos is None:
         self.infos = []
       if self.ids is None:
-        self.ids = std_msgs.msg.UInt8MultiArray()
+        self.ids = std_msgs.msg.UInt16MultiArray()
     else:
       self.header = std_msgs.msg.Header()
       self.detecs = []
       self.infos = []
-      self.ids = std_msgs.msg.UInt8MultiArray()
+      self.ids = std_msgs.msg.UInt16MultiArray()
 
   def _get_types(self):
     """
@@ -195,13 +195,10 @@ uint32 stride  # stride of given dimension"""
         buff.write(_get_struct_2I().pack(_x.size, _x.stride))
       _x = self.ids.layout.data_offset
       buff.write(_get_struct_I().pack(_x))
-      _x = self.ids.data
-      length = len(_x)
-      # - if encoded as a list instead, serialize as bytes instead of string
-      if type(_x) in [list, tuple]:
-        buff.write(struct.Struct('<I%sB'%length).pack(length, *_x))
-      else:
-        buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      length = len(self.ids.data)
+      buff.write(_struct_I.pack(length))
+      pattern = '<%sH'%length
+      buff.write(struct.Struct(pattern).pack(*self.ids.data))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -220,7 +217,7 @@ uint32 stride  # stride of given dimension"""
       if self.infos is None:
         self.infos = None
       if self.ids is None:
-        self.ids = std_msgs.msg.UInt8MultiArray()
+        self.ids = std_msgs.msg.UInt16MultiArray()
       end = 0
       _x = self
       start = end
@@ -292,9 +289,11 @@ uint32 stride  # stride of given dimension"""
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
+      pattern = '<%sH'%length
       start = end
-      end += length
-      self.ids.data = str[start:end]
+      s = struct.Struct(pattern)
+      end += s.size
+      self.ids.data = s.unpack(str[start:end])
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e)  # most likely buffer underfill
@@ -344,13 +343,10 @@ uint32 stride  # stride of given dimension"""
         buff.write(_get_struct_2I().pack(_x.size, _x.stride))
       _x = self.ids.layout.data_offset
       buff.write(_get_struct_I().pack(_x))
-      _x = self.ids.data
-      length = len(_x)
-      # - if encoded as a list instead, serialize as bytes instead of string
-      if type(_x) in [list, tuple]:
-        buff.write(struct.Struct('<I%sB'%length).pack(length, *_x))
-      else:
-        buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      length = len(self.ids.data)
+      buff.write(_struct_I.pack(length))
+      pattern = '<%sH'%length
+      buff.write(self.ids.data.tostring())
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -370,7 +366,7 @@ uint32 stride  # stride of given dimension"""
       if self.infos is None:
         self.infos = None
       if self.ids is None:
-        self.ids = std_msgs.msg.UInt8MultiArray()
+        self.ids = std_msgs.msg.UInt16MultiArray()
       end = 0
       _x = self
       start = end
@@ -442,9 +438,11 @@ uint32 stride  # stride of given dimension"""
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
+      pattern = '<%sH'%length
       start = end
-      end += length
-      self.ids.data = str[start:end]
+      s = struct.Struct(pattern)
+      end += s.size
+      self.ids.data = numpy.frombuffer(str[start:end], dtype=numpy.uint16, count=length)
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e)  # most likely buffer underfill

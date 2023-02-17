@@ -7,7 +7,7 @@ namespace mytrk
 
 void myBackend::InitObj(std::vector<Vec9> &od_res, double time)
 {
-    std::unique_lock<std::mutex> lck(data_lck_);
+    // std::unique_lock<std::mutex> lck(data_lck_);
     Vec3 measure;
     Vec3 box_size;
     for (auto &od :od_res)
@@ -25,7 +25,6 @@ void myBackend::InitObj(std::vector<Vec9> &od_res, double time)
         new_frontend->SetObjObsrvAgl(od[7]);
         //当前帧的置信度
         new_frontend->SetObjObsrvConf(od[8]);
-        
         //hashmap插入方式
         obj_list_[num_of_obj] = new_frontend;
         // Vec6 state;
@@ -40,7 +39,6 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches,
 {
     Vec3 measure;
     Vec3 box_size;
-    ros::Rate hold_on(2);
     
     for (auto &match :matches)
     {
@@ -57,7 +55,9 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches,
         obj_list_[match.first]->SetObjObsrvAgl(match.second[7]);
         obj_list_[match.first]->SetObjObsrvConf(match.second[8]);
         
-        //至少有12帧数据时，启动因子图优化
+        //至少有7帧数据时，启动因子图优化
+        //TODO 在这里启动多线程优化，而非在前段启动多线程优化
+        //TODO 添加kf功能，当帧数较少的时候，使用kf来更新
         int num_of_kf = obj_list_[match.first]->GetTrklist()->GetKeyframeNum();
         ROS_INFO("Trere is %d kf in trk %d", num_of_kf, match.first);
         if(num_of_kf > 7)

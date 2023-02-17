@@ -77,6 +77,8 @@ public:
     //有了新的观测，触发优化,在外部使用这个frontend类的地方调用这个函数
     void UpdateTrkList();
 
+    void UpdateTrkListKF();
+
     //TODO：得到边的测量，并把数据添加给measure——list
     //TODO：设计一个measurelist，他是tek-list的一部分，存放这里计算的结果
     Vec6 CalEdgeMeasure();

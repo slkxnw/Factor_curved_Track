@@ -64,6 +64,10 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches,
         {
             obj_list_[match.first]->UpdateTrkList();
         }
+        else
+        {
+            obj_list_[match.first]->UpdateTrkListKF();
+        }
         //如果某个轨迹有了匹配，就在state_cur_list_加上它，用state_prediction_list_[match.first]做一个赋值，
         //后面获取当前状态的时候，会更新掉相关数据
         state_cur_list_[match.first] = state_prediction_list_[match.first];

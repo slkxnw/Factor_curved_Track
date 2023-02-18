@@ -11,6 +11,7 @@ void myTrkList::InsertKeyframe(std::shared_ptr<myFrame> kf)
     {
         keyframes_.insert(std::make_pair(kf->id_, kf));
         active_keyframes_.insert(std::make_pair(kf->id_, kf));
+        active_keyframes_ids.push_back(kf->id_);
     }
     else
     {
@@ -27,7 +28,7 @@ void myTrkList::ResetKeyframe()
     if (cur_frame_ == nullptr)
         return;
     double oldest_time = cur_frame_->time_stamp_, oldest_notmea_time = cur_frame_->time_stamp_;
-    unsigned long oldest_id = 0, not_measure_id = 0;
+    unsigned long oldest_id = 0, not_measure_id = -1;
     for(auto & kf : active_keyframes_)
     {
         double time = kf.second->time_stamp_;
@@ -60,6 +61,8 @@ void myTrkList::ResetKeyframe()
     }
 
     active_keyframes_.erase(frame_to_remove->id_);
+    auto er_pos = std::find(active_keyframes_ids.cbegin(), active_keyframes_ids.cend(), int(frame_to_remove->id_));
+    active_keyframes_ids.erase(er_pos);
 }
 
 } // namespace mytrk

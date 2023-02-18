@@ -154,7 +154,7 @@ private:
     void SetMeasurement();
 
     //更新关键帧的状态,参考slam14讲，利用g2o和李代数进行位姿图优化的代码
-    void Optimize(myTrkList::KeyframeType &keyframes);
+    void Optimize(myTrkList::KeyframeType &keyframes, std::vector<int> &kf_ids);
 
     std::thread frontend_thread;
     std::atomic<bool> frontend_running_;

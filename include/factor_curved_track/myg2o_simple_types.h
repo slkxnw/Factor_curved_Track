@@ -79,12 +79,13 @@ public:
         double dy = ((-v * w - a * dth) * cos(th + dth) + a * sin(th + dth)
          + v * w * cos(th) - a * sin(th)) / ((w + 1e-9) * (w + 1e-9));
 
-        _error<<dx - (state_last[0] - state_cur[0]), 
-                dy - (state_last[1] - state_cur[1]),
-                dth - (th - state_cur[2]),
-                dv - (v - state_cur[3]),
-                0 - (a - state_cur[4]),
-                0 - (w - state_cur[5]);
+        //TODO 这里是不是反了，应该是后一个状态减去前一个状态，得到x，y,theta的增量，试着修改了
+        _error<<dx + (state_last[0] - state_cur[0]), 
+                dy + (state_last[1] - state_cur[1]),
+                dth + (th - state_cur[2]),
+                dv + (v - state_cur[3]),
+                0 + (a - state_cur[4]),
+                0 + (w - state_cur[5]);
     }
 
     //每个雅克比是6*6的，六个误差，分别针对每个顶点的六个参数的偏导数
@@ -99,26 +100,26 @@ public:
         double th = state_last[2];
         double v = state_last[3];
         double a = state_last[4];
-        double w = state_last[5] + 1e-9;
+        double w = state_last[5];
 
         double dth = w * _dt;
         double dv = a * _dt;
 
         //[dx - (state_last[0] - state_cur[0])],对每个元素求偏导
         //dx = [(v(t)ω + aωT) sin(θ(t) + ωT)+a cos(θ(t) + ωT)−v(t)ω sin θ(t) − a cos θ(t)] / ω^2
-        _jacobianOplusXi << -1, 0, ((v * w + a * dth) * cos(th + dth) - a * sin(th + dth) - v * w * cos(th) + a * cos(th)) / (w * w),
-        (sin(th + dth) - sin(th)) / w, (dth * sin(th + dth) + cos(th + dth) - cos(th)) / (w * w), 
-        ((v  + a * _dt) * sin(th + dth) + (v * w + a * dth) * cos(th + dth) * _dt - a * _dt * sin(th + dth) - v * sin(th)) / (w * w) 
-        - 2 * ((v * w + a * dth) * sin(th + dth) + a * cos(th + dth) - v * w * sin(th) - a * cos(th)) / (w * w * w),
-                            0, -1, ((v * w + a * dth) * sin(th + dth) + a * cos(th + dth) - v * w * sin(th) - a * cos(th)) / (w * w),
-        (-cos(th + dth) + cos(th)) / w, (-dth * cos(th + dth) +sin(th + dth) - sin(th)) / (w * w),
-        ((-v - a * _dt) * cos(th + dth) - (-v * w - a * dth) * sin(th + dth) * _dt + a * _dt * cos(th + dth) + v * cos(th)) / (w * w) 
-        - 2 * ((-v * w - a * dth) * cos(th + dth) + a * sin(th + dth) + v * w * cos(th) - a * sin(th)) / (w * w * w), 
-                            0, 0, -1, 0, 0, _dt,
-                            0, 0, 0, -1, _dt, 0,
-                            0, 0, 0, 0, -1, 0,
-                            0, 0, 0, 0, 0, -1;
-        _jacobianOplusXj = Mat66::Identity();
+        _jacobianOplusXi << 1, 0, ((v * w + a * dth) * cos(th + dth) - a * sin(th + dth) - v * w * cos(th) + a * cos(th)) / ((w + 1e-9) * (w + 1e-9)),
+        (sin(th + dth) - sin(th)) / (w + 1e-9), (dth * sin(th + dth) + cos(th + dth) - cos(th)) / ((w + 1e-9) * (w + 1e-9)), 
+        ((v  + a * _dt) * sin(th + dth) + (v * w + a * dth) * cos(th + dth) * _dt - a * _dt * sin(th + dth) - v * sin(th)) / ((w + 1e-9) * (w + 1e-9)) 
+        - 2 * ((v * w + a * dth) * sin(th + dth) + a * cos(th + dth) - v * w * sin(th) - a * cos(th)) / ((w + 1e-9) * (w + 1e-9) * (w + 1e-9)),
+                            0, 1, ((v * w + a * dth) * sin(th + dth) + a * cos(th + dth) - v * w * sin(th) - a * cos(th)) / ((w + 1e-9) * (w + 1e-9)),
+        (-cos(th + dth) + cos(th)) / (w + 1e-9), (-dth * cos(th + dth) +sin(th + dth) - sin(th)) / ((w + 1e-9) * (w + 1e-9)),
+        ((-v - a * _dt) * cos(th + dth) - (-v * w - a * dth) * sin(th + dth) * _dt + a * _dt * cos(th + dth) + v * cos(th)) / ((w + 1e-9) * (w + 1e-9)) 
+        - 2 * ((-v * w - a * dth) * cos(th + dth) + a * sin(th + dth) + v * w * cos(th) - a * sin(th)) / ((w + 1e-9) * (w + 1e-9) * (w + 1e-9)), 
+                            0, 0, 1, 0, 0, _dt,
+                            0, 0, 0, 1, _dt, 0,
+                            0, 0, 0, 0, 1, 0,
+                            0, 0, 0, 0, 0, 1;
+        _jacobianOplusXj = Mat66::Identity() * -1;
     }
 
     virtual bool read(std::istream &in) override {return true;}

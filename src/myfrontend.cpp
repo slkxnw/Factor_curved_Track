@@ -67,7 +67,7 @@ myFrame::Ptr myFrontend::CreateMeasureFrame(Vec3 measure, double time, bool is_m
     new_frame->id_ = num_of_frames++;
     new_frame->obj_state_ = cur_state;
     new_frame->time_stamp_ = time;
-    new_frame->is_measure_ = is_measure;
+    new_frame->is_measure_ = true;
     
     cur_frame_ = new_frame;
     
@@ -111,7 +111,8 @@ void myFrontend::UpdateTrkList()
     // std::unique_lock<std::mutex> lock(data_mutex_);
     // trk_list_update_.notify_one();
     auto active_kfs = trk_list_->GetActivateKeyframe();
-    Optimize(active_kfs);
+    auto active_kf_ids = trk_list_->GetActivateKeyframeIDs();
+    Optimize(active_kfs, active_kf_ids);
 }
 
 /**
@@ -167,7 +168,7 @@ Vec3 myFrontend::GetCurPosition()
 }
 
 
-void myFrontend::Optimize(myTrkList::KeyframeType &keyframes)
+void myFrontend::Optimize(myTrkList::KeyframeType &keyframes, std::vector<int> &kf_ids)
 {
     //TODO:确定huber鲁棒核函数参数如何设计
     
@@ -187,25 +188,27 @@ void myFrontend::Optimize(myTrkList::KeyframeType &keyframes)
     int edge_cnt = 0;
     std::map<unsigned long, VertexState *> vertexs;
     std::map<unsigned long, EdgeConstVary *> edges;
-    double last_time = 0.0;
+    std::sort(kf_ids.begin(), kf_ids.end());
+    double last_time = 0;
     unsigned long last_id = 0;
-    for (auto &kf_pair : keyframes)
+
+    for(int & frame_id : kf_ids)
     {
-        auto kf = kf_pair.second;
+        // std::cout<<"当前帧的id:"<<frame_id<<std::endl;
+        auto kf = keyframes[frame_id];
         VertexState * vertex_state = new VertexState();
-        vertex_state->setId(kf_pair.first);
+        vertex_state->setId(frame_id);
         vertex_state->setEstimate(kf->obj_state_);
         optimizer.addVertex(vertex_state);
-        vertexs.insert({kf_pair.first, vertex_state});
-
-        if (last_time != 0.0)
+        vertexs.insert({frame_id, vertex_state});
+        if(vertexs.size() > 1)
         {
             double dt = kf->time_stamp_ - last_time;
-            EdgeConstVary * edge = new EdgeConstVary(dt);
+            EdgeConstVary *edge = new EdgeConstVary(dt);
 
             edge->setId(edge_cnt);
             edge->setVertex(0, vertexs.at(last_id));
-            edge->setVertex(1, vertexs.at(kf_pair.first));
+            edge->setVertex(1, vertexs.at(frame_id));
             edge->setMeasurement(Vec6::Zero());
             edge->setInformation(Mat66::Identity());
             auto rk = new g2o::RobustKernelHuber();
@@ -215,9 +218,42 @@ void myFrontend::Optimize(myTrkList::KeyframeType &keyframes)
             edges.insert({edge_cnt, edge});
             edge_cnt++;
         }
-        last_id = kf_pair.first;
         last_time = kf->time_stamp_;
+        last_id = frame_id;
     }
+    //TODO：关键帧是放在哈希表中的，然后遍历的时候在两帧之间建立边，这样会不会有问题，遍历的顺序和帧id顺序是否一致呢？进行一些修改
+
+
+    //感觉应该维护一个活跃帧id列表
+    // for (auto &kf_pair : keyframes)
+    // {
+    //     std::cout<<"当前帧的id:"<<last_id<<std::endl;
+    //     auto kf = kf_pair.second;
+    //     VertexState * vertex_state = new VertexState();
+    //     vertex_state->setId(kf_pair.first);
+    //     vertex_state->setEstimate(kf->obj_state_);
+    //     optimizer.addVertex(vertex_state);
+    //     vertexs.insert({kf_pair.first, vertex_state});
+    //     if (last_time != 0.0)
+    //     {
+    //         double dt = kf->time_stamp_ - last_time;
+    //         EdgeConstVary * edge = new EdgeConstVary(dt);
+    //         edge->setId(edge_cnt);
+    //         edge->setVertex(0, vertexs.at(last_id));
+    //         edge->setVertex(1, vertexs.at(kf_pair.first));
+    //         edge->setMeasurement(Vec6::Zero());
+    //         edge->setInformation(Mat66::Identity());
+    //         auto rk = new g2o::RobustKernelHuber();
+    //         rk->setDelta(chi2_th);
+    //         edge->setRobustKernel(rk);
+    //         optimizer.addEdge(edge);
+    //         edges.insert({edge_cnt, edge});
+    //         edge_cnt++;
+    //     }
+    //     last_id = kf_pair.first;
+    //     last_time = kf->time_stamp_;
+    // }
+    
     ROS_INFO("Trere is %d kf in %d", keyframes.size(), trk_list_->GetObjID());
     optimizer.initializeOptimization();
     optimizer.optimize(10);

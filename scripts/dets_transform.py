@@ -107,14 +107,14 @@ def transform(args):
     #Poses are given in an East-North-Up coordinate system， whose origin is the first GPS position.
     global imu_pose
     imu_pose = load_oxts_packets_and_poses(oxt_path)
-    print('length of imu_pose is %d', len(imu_pose))
+    # print('length of imu_pose is %d', len(imu_pose))
     
     rospy.init_node('dets_transform', anonymous=True)
     rospy.loginfo('there is %d imupose', len(imu_pose))
 
     # dets_puber = rospy.Publisher('/detections', Detection_list, queue_size = 10)
 
-    rate = rospy.Rate(1)
+    rate = rospy.Rate(8)
     rospy.wait_for_service('/det_pub')
     rospy.wait_for_service('/data_association')
     try:
@@ -127,8 +127,8 @@ def transform(args):
     except rospy.ServiceException as e:
         rospy.logwarn(e)
     frame = 0
-    # while frame < seq_length[args.seqs]:
-    while frame < 20:
+    while frame < seq_length[args.seqs]:
+    # while frame < 30:
         res = get_dets_orin(frame)
         # transform_callback(dets,(imu_pose, dets_puber))
         transform_callback(res.dets)

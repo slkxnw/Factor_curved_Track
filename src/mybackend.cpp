@@ -60,14 +60,14 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches,
         //TODO 添加kf功能，当帧数较少的时候，使用kf来更新
         int num_of_kf = obj_list_[match.first]->GetTrklist()->GetKeyframeNum();
         ROS_INFO("Trere is %d kf in trk %d", num_of_kf, match.first);
-        if(num_of_kf > 7)
+        if(num_of_kf > 4)
         {
             obj_list_[match.first]->UpdateTrkList();
         }
-        else
-        {
-            obj_list_[match.first]->UpdateTrkListKF();
-        }
+        // else
+        // {
+            // obj_list_[match.first]->UpdateTrkListKF();
+        // }
         //如果某个轨迹有了匹配，就在state_cur_list_加上它，用state_prediction_list_[match.first]做一个赋值，
         //后面获取当前状态的时候，会更新掉相关数据
         state_cur_list_[match.first] = state_prediction_list_[match.first];

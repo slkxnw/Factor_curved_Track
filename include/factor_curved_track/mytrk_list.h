@@ -20,6 +20,7 @@ public:
     typedef std::shared_ptr<myTrkList> Ptr;
     typedef std::unordered_map<unsigned long, std::shared_ptr<myFrame> > KeyframeType;
 
+
     //航迹管理相关的操作
     //构造函数
     myTrkList(unsigned long id) : obj_id_(id) {};
@@ -43,6 +44,7 @@ public:
         std::unique_lock<std::mutex> lck(data_mutex_);
         keyframes_.clear();
         active_keyframes_.clear();
+        active_keyframes_ids.clear();
     }
 
     //合并轨迹，这个并不需要，各自帧的id相互独立，因此将两个trklist合并，要修改每一帧的id，较为复杂
@@ -66,6 +68,12 @@ public:
         std::unique_lock<std::mutex> lck(data_mutex_);
         return active_keyframes_;
     }
+    
+    std::vector<int> GetActivateKeyframeIDs()
+    {
+        std::unique_lock<std::mutex> lck(data_mutex_);
+        return active_keyframes_ids;
+    }
     int GetKeyframeNum()
     {
         std::unique_lock<std::mutex> lck(data_mutex_);
@@ -85,6 +93,7 @@ private:
     std::mutex data_mutex_;
     KeyframeType keyframes_;
     KeyframeType active_keyframes_;
+    std::vector<int> active_keyframes_ids;
 
     std::shared_ptr<myFrame> cur_frame_ = nullptr;
 

@@ -209,7 +209,7 @@ def main():
 
 	rospy.wait_for_service('/trk_predict')
 	rospy.wait_for_service('/trk_update')
-	rospy.wait_for_service('//trk_state_store')
+	rospy.wait_for_service('/trk_state_store')
 	global process_trk_update, get_trk_preds, trk_store
 	try:
 		process_trk_update = rospy.ServiceProxy('/trk_update', Trk_update)

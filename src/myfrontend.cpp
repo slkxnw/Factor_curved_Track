@@ -134,11 +134,13 @@ Vec3 myFrontend::PredictPostion(double time)
 
     //[(v(t)ω + aωT) sin(θ(t) + ωT)+a cos(θ(t) + ωT)−v(t)ω sin θ(t) − a cos θ(t)] / ω^2
     double dx = ((v * w + a * dth) * sin(th + dth) + a * cos(th + dth)
-         - v * w * sin(th) - a * cos(th)) / ((w + 1e-9) * (w + 1e-9));
+         - v * w * sin(th) - a * cos(th)) / ((w + 1e-6) * (w + 1e-6));
     //[(−v(t)ω − aωT) cos(θ(t) + ωT)+a sin(θ(t) + ωT)+v(t)ω cos θ(t) − a sin θ(t)] / ω^2
     double dy = ((-v * w - a * dth) * cos(th + dth) + a * sin(th + dth)
-         + v * w * cos(th) - a * sin(th)) / ((w + 1e-9) * (w + 1e-9));
-    // std::cout<<dt<<' '<<dv<<' '<<dth<<' '<<dx<<' '<<dy<<std::endl;
+         + v * w * cos(th) - a * sin(th)) / ((w + 1e-6) * (w + 1e-6));
+    int id_ = trk_list_->GetObjID();
+    std::cout<<id_<<':'<<dt<<' '<<dv<<' '<<dth<<' '<<dx<<' '<<dy<<std::endl;
+    std::cout<<id_<<':'<<v<<' '<<a<<' '<<w<<std::endl;
     pred_position<<cur_state[0] + dx, cur_state[1] + dy, cur_state[2] + dth;
     return pred_position;
 }
@@ -183,7 +185,7 @@ void myFrontend::Optimize(myTrkList::KeyframeType &keyframes, std::vector<int> &
         g2o::make_unique<BlockSolverType> (g2o::make_unique<LinearSolverType>()));
     g2o::SparseOptimizer optimizer;
     optimizer.setAlgorithm(solver);
-    optimizer.setVerbose(false);
+    optimizer.setVerbose(true);
 
     int edge_cnt = 0;
     std::map<unsigned long, VertexState *> vertexs;
@@ -256,10 +258,13 @@ void myFrontend::Optimize(myTrkList::KeyframeType &keyframes, std::vector<int> &
     
     ROS_INFO("Trere is %d kf in %d", keyframes.size(), trk_list_->GetObjID());
     optimizer.initializeOptimization();
-    optimizer.optimize(10);
+    optimizer.optimize(30);
 
-    for(auto &v : vertexs)
-        keyframes.at(v.first)->SetObjState(v.second->estimate()); 
+    for(auto &v : vertexs){
+        std::cout<<v.first<<' '<<v.second->estimate()<<std::endl;
+        keyframes.at(v.first)->SetObjState(v.second->estimate());
+    }
+         
 }
 
 } // namespace mytrk

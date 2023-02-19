@@ -60,7 +60,7 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches,
         //TODO 添加kf功能，当帧数较少的时候，使用kf来更新
         int num_of_kf = obj_list_[match.first]->GetTrklist()->GetKeyframeNum();
         ROS_INFO("Trere is %d kf in trk %d", num_of_kf, match.first);
-        if(num_of_kf > 4)
+        if(num_of_kf > 15)
         {
             obj_list_[match.first]->UpdateTrkList();
         }
@@ -103,6 +103,7 @@ myBackend::ObjInfotype myBackend::GetStatePrediction(double time)
         //x,y,theta
         position_prediction = obj_list_[state_pair.first]->PredictPostion(time);
         // state_pair.second.block<2, 1>(0, 0) = position_prediction;
+        
         state_pair.second[0] = position_prediction[0];
         state_pair.second[1] = position_prediction[1];
         state_pair.second[6] = position_prediction[2];

@@ -128,7 +128,7 @@ def transform(args):
         rospy.logwarn(e)
     frame = 0
     while frame < seq_length[args.seqs]:
-    # while frame < 30:
+    # while frame < 18:
         res = get_dets_orin(frame)
         # transform_callback(dets,(imu_pose, dets_puber))
         transform_callback(res.dets)

@@ -9,6 +9,7 @@ import time
 import argparse
 import os
 import math
+import random
 
 from track_msgs.msg import Detection_list
 from track_msgs.msg import Pairs
@@ -28,7 +29,7 @@ y0 = 0
 th0 = 0
 v0 = 10
 a0 = 1
-w0 = 1e-6
+w0 = 0.00001
 
 #车辆状态更新
 def updateCarState(state):
@@ -44,7 +45,7 @@ def updateCarState(state):
     state[1] = state[1] + dy
     state[2] = state[2] + dth
     state[3] = state[3] + dv
-    print('gt_state:',state[0], state[1], state[2])
+    print('gt_state:',state)
     return state
 
 
@@ -64,12 +65,12 @@ if __name__ == '__main__':
     
     frame = 0
     state = [x0, y0, th0, v0, a0, w0]
-    while(frame < 21):
+    while(frame < 30):
         preds = get_trk_preds(frame / 10);
         preds = preds.trk_predicts
         for pred in preds.detecs:
             print('frame:',frame)
-            print('pred:',[pred.siz.x, pred.siz.y, pred.siz.z, pred.pos.x, pred.pos.y, pred.pos.z, pred.alp])
+            print('pred:',[pred.pos.x, pred.pos.z, pred.alp])
         
         pub_match = Pairs()
         pub_match.header.stamp.secs = frame
@@ -87,7 +88,7 @@ if __name__ == '__main__':
             pub_match.trk.data = [0]
             state = updateCarState(state)
         det = Detection()
-        det.alp = 0
+        det.alp = state[2]
         det.pos.x = state[0]
         det.pos.y = 1
         det.pos.z = state[1]

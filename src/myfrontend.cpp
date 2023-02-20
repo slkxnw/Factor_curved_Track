@@ -9,7 +9,9 @@ myFrontend::myFrontend()
     // frontend_running_.store(true);
     // frontend_thread = std::thread(std::bind(&myFrontend::FrontendLoop, this));
     last_state_ = Vec6::Zero();
-    // last_state_[3] = 14;
+    last_state_[3] = 11;
+    last_state_[4] = 0.8;
+    last_state_[5] = 0.00001;
     last_timestamp_ = 0;
 }
 
@@ -258,7 +260,7 @@ void myFrontend::Optimize(myTrkList::KeyframeType &keyframes, std::vector<int> &
     
     ROS_INFO("Trere is %d kf in %d", keyframes.size(), trk_list_->GetObjID());
     optimizer.initializeOptimization();
-    optimizer.optimize(30);
+    optimizer.optimize(60);
 
     for(auto &v : vertexs){
         std::cout<<v.first<<' '<<v.second->estimate()<<std::endl;

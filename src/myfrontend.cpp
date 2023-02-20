@@ -9,9 +9,9 @@ myFrontend::myFrontend()
     // frontend_running_.store(true);
     // frontend_thread = std::thread(std::bind(&myFrontend::FrontendLoop, this));
     last_state_ = Vec6::Zero();
-    last_state_[3] = 11;
-    last_state_[4] = 0.8;
-    last_state_[5] = 0.00001;
+    last_state_[3] = 9.5;
+    last_state_[4] = 1.1;
+    last_state_[5] = 0.0009;
     last_timestamp_ = 0;
 }
 
@@ -141,8 +141,8 @@ Vec3 myFrontend::PredictPostion(double time)
     double dy = ((-v * w - a * dth) * cos(th + dth) + a * sin(th + dth)
          + v * w * cos(th) - a * sin(th)) / ((w + 1e-6) * (w + 1e-6));
     int id_ = trk_list_->GetObjID();
-    std::cout<<id_<<':'<<dt<<' '<<dv<<' '<<dth<<' '<<dx<<' '<<dy<<std::endl;
-    std::cout<<id_<<':'<<v<<' '<<a<<' '<<w<<std::endl;
+    std::cout<<id_<<": dt:"<<dt<<" dv:"<<dv<<" dth:"<<dth<<" dx:"<<dx<<" dy:"<<dy<<std::endl;
+    std::cout<<id_<<": v:"<<v<<" a:"<<a<<" w:"<<w<<std::endl;
     pred_position<<cur_state[0] + dx, cur_state[1] + dy, cur_state[2] + dth;
     return pred_position;
 }
@@ -181,10 +181,14 @@ void myFrontend::Optimize(myTrkList::KeyframeType &keyframes, std::vector<int> &
     
     typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 6>> BlockSolverType;
     typedef g2o::LinearSolverEigen<BlockSolverType::PoseMatrixType> LinearSolverType;
+    // typedef g2o::LinearSolverCSparse<BlockSolverType::PoseMatrixType> LinearSolverType;
+
 
     //这是一个简化的写法，正常要写三行代码
     auto solver = new g2o::OptimizationAlgorithmLevenberg(
         g2o::make_unique<BlockSolverType> (g2o::make_unique<LinearSolverType>()));
+    // auto solver = new g2o::OptimizationAlgorithmGaussNewton(
+        // g2o::make_unique<BlockSolverType> (g2o::make_unique<LinearSolverType>()));
     g2o::SparseOptimizer optimizer;
     optimizer.setAlgorithm(solver);
     optimizer.setVerbose(true);
@@ -260,10 +264,10 @@ void myFrontend::Optimize(myTrkList::KeyframeType &keyframes, std::vector<int> &
     
     ROS_INFO("Trere is %d kf in %d", keyframes.size(), trk_list_->GetObjID());
     optimizer.initializeOptimization();
-    optimizer.optimize(60);
+    optimizer.optimize(10);
 
     for(auto &v : vertexs){
-        std::cout<<v.first<<' '<<v.second->estimate()<<std::endl;
+        std::cout<<v.first<<' '<<v.second->estimate().transpose()<<std::endl;
         keyframes.at(v.first)->SetObjState(v.second->estimate());
     }
          

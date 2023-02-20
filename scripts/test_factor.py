@@ -29,7 +29,7 @@ y0 = 0
 th0 = 0
 v0 = 10
 a0 = 1
-w0 = 0.00001
+w0 = 0.001
 
 #车辆状态更新
 def updateCarState(state):

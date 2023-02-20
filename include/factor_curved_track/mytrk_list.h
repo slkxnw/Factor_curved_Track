@@ -98,7 +98,7 @@ private:
     std::shared_ptr<myFrame> cur_frame_ = nullptr;
 
     unsigned long obj_id_;
-    int num_active_keyframes = 20;
+    int num_active_keyframes = 40;
     double max_obs_time_gap = 3.0;
     double max_ext_time_gap = 0.7;  
 

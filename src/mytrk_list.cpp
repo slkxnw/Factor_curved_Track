@@ -31,7 +31,7 @@ void myTrkList::ResetKeyframe()
     unsigned long oldest_id = 0, not_measure_id = -1;
     for(auto & kf : active_keyframes_)
     {
-        std::cout<<"id:"<<kf.first<<" "<<"time:"<<kf.second->time_stamp_<<std::endl;
+        // std::cout<<"id:"<<kf.first<<" "<<"time:"<<kf.second->time_stamp_<<std::endl;
         double time = kf.second->time_stamp_;
         if(oldest_time > time)
         {

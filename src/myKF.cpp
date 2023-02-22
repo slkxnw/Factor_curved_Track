@@ -11,14 +11,10 @@ CV_KF::CV_KF(Vec6 init_state, Vec3 dt_a)
     delta_ath = dt_a[2];
     
     A = Mat66::Identity();
-    A[0, 3] = 1;
-    A[1, 4] = 1;
-    A[2, 5] = 1;
+    A.block<3, 3>(0, 3) = Mat33::Identity();
 
     C = Mat36::Zero();
-    C[0, 0] = 1;
-    C[1, 1] = 1;
-    C[2, 2] = 1;
+    C.block<3, 3>(0,0) = Mat33::Identity();
 
     P = Mat66::Identity();
     //借鉴AB3DMOT，初始时刻，对于速度的不确定性是非常大的，因此相关的协方差设的很大
@@ -42,13 +38,13 @@ void CV_KF::predict(double dt)
          0, 0, 0.5 * delta_ath * delta_ath * (double)pow(dt, 3), 0, 0, dt * dt * delta_ath * delta_ath;
     
     x_state = A * x_state;
-    P = A * P * A.transpose() + Q;
+    P = A * P * (A.transpose()) + Q;
 }
 
 void CV_KF::update(Vec3 measure)
 {
-    Mat33 Tmp = C * P * C.transpose() + Q;
-    Mat63 K = P * C.transpose() * Tmp.inverse();
+    Mat33 Tmp = C * P * (C.transpose()) + R;
+    Mat63 K = P * (C.transpose()) * (Tmp.inverse());
     x_state = x_state + K * (measure - C * x_state);
     
     P = (Mat66::Identity() - K * C) * P;

@@ -1,4 +1,5 @@
 add_library(mytrk SHARED
+        myKF.cpp
         mybackend.cpp
         myframe.cpp
         myfrontend.cpp

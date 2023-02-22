@@ -12,7 +12,7 @@ class CV_KF
 
 public:
 
-    CV_KF(Vec3 init_state, Vec3 dt_a);
+    CV_KF(Vec6 init_state, Vec3 dt_a);
 
     void predict(double dt);
 
@@ -32,7 +32,7 @@ private:
     Mat66 Q;
     //观测方程
     //z_t = C * x_t + v
-    //v是一个多远高斯噪声，均值为0，方差为R
+    //v是一个多元高斯噪声，均值为0，方差为R
     Mat36 C;
     Mat33 R = Mat33::Identity();
     //状态是一个高斯分布，均值为x_state，方差为P

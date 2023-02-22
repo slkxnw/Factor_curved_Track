@@ -68,9 +68,9 @@ private:
     ObjInfotype state_cur_list_;
     std::vector<unsigned long> obj_id_list;
 
-    //初始状态假设,xyz速度和加速度方差
-    Vec3 vs = {10, 0, 0};
-    Vec3 as = {0.5, 0.1, 0.01};
+    //KF初始状态假设,x,y,th速度和加速度方差
+    Vec3 vel = {10, 0, 0};
+    Vec3 acc = {0.5, 0.1, 0.05};
 };
 
 

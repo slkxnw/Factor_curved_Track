@@ -12,8 +12,7 @@ class CV_KF
 
 public:
 
-    CV_KF();
-    CV_KF(Vec6 init_state, Vec3 dt_a);
+    CV_KF(Vec3 init_state, Vec3 dt_a);
 
     void predict(double dt);
 

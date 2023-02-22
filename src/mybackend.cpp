@@ -10,9 +10,15 @@ void myBackend::InitObj(std::vector<Vec9> &od_res, double time)
     // std::unique_lock<std::mutex> lck(data_lck_);
     Vec3 measure;
     Vec3 box_size;
+    Vec6 kf_state;
     for (auto &od :od_res)
     {
         myFrontend::Ptr new_frontend = myFrontend::Ptr(new myFrontend);
+        
+        //KF
+        kf_state << od[0], od[1], od[6], vel[0], vel[1], vel[2];
+        new_frontend->BuildInitKF(kf_state, acc);
+        //因子图
         //x,y,theta
         measure << od[0], od[1], od[6];
         new_frontend->BuildInitTrkList(measure, time, num_of_obj);
@@ -64,10 +70,10 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches,
         {
             obj_list_[match.first]->UpdateTrkList();
         }
-        // else
-        // {
-            // obj_list_[match.first]->UpdateTrkListKF();
-        // }
+        else
+        {
+            obj_list_[match.first]->UpdateTrkListFilter();
+        }
         //如果某个轨迹有了匹配，就在state_cur_list_加上它，用state_prediction_list_[match.first]做一个赋值，
         //后面获取当前状态的时候，会更新掉相关数据
         state_cur_list_[match.first] = state_prediction_list_[match.first];

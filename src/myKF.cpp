@@ -10,6 +10,7 @@ CV_KF::CV_KF(Vec6 init_state, Vec3 dt_a)
     delta_ay = dt_a[1];
     delta_ath = dt_a[2];
     
+    //设置A，A值不确定，x的增量和dt有关，右上角暂时初始化为1
     A = Mat66::Identity();
     A.block<3, 3>(0, 3) = Mat33::Identity();
 
@@ -26,17 +27,19 @@ CV_KF::CV_KF(Vec6 init_state, Vec3 dt_a)
     //实际上，我是按照另一个思路算的，参考下面文章中的Q推导
     //https://zhuanlan.zhihu.com/p/389589611
     Q.block<3, 3>(3, 3) = Mat33::Ones() * 0.01;
+    std::cout<<Q<<std::endl;
 }
 
 void CV_KF::predict(double dt)
 {
-    Q << 0.25 * delta_ax * delta_ax * (double)pow(dt, 4), 0, 0, 0.5 * delta_ax * delta_ax * (double)pow(dt, 3), 0, 0,
-         0, 0.25 * delta_ay * delta_ay * (double)pow(dt, 4), 0, 0, 0.5 * delta_ay * delta_ay * (double)pow(dt, 3), 0,
-         0, 0, 0.25 * delta_ath * delta_ath * (double)pow(dt, 4), 0, 0, 0.5 * delta_ath * delta_ath * (double)pow(dt, 3),
-         0.5 * delta_ax * delta_ax * (double)pow(dt, 3), 0, 0, dt * dt * delta_ax * delta_ax, 0, 0,
-         0, 0.5 * delta_ay * delta_ay * (double)pow(dt, 3), 0, 0, dt * dt * delta_ay * delta_ay, 0,
-         0, 0, 0.5 * delta_ath * delta_ath * (double)pow(dt, 3), 0, 0, dt * dt * delta_ath * delta_ath;
+    // Q << 0.25 * delta_ax * delta_ax * (double)pow(dt, 4), 0, 0, 0.5 * delta_ax * delta_ax * (double)pow(dt, 3), 0, 0,
+    //      0, 0.25 * delta_ay * delta_ay * (double)pow(dt, 4), 0, 0, 0.5 * delta_ay * delta_ay * (double)pow(dt, 3), 0,
+    //      0, 0, 0.25 * delta_ath * delta_ath * (double)pow(dt, 4), 0, 0, 0.5 * delta_ath * delta_ath * (double)pow(dt, 3),
+    //      0.5 * delta_ax * delta_ax * (double)pow(dt, 3), 0, 0, dt * dt * delta_ax * delta_ax, 0, 0,
+    //      0, 0.5 * delta_ay * delta_ay * (double)pow(dt, 3), 0, 0, dt * dt * delta_ay * delta_ay, 0,
+    //      0, 0, 0.5 * delta_ath * delta_ath * (double)pow(dt, 3), 0, 0, dt * dt * delta_ath * delta_ath;
     
+    A.block<3, 3>(0, 3) = Mat33::Identity() * dt;
     x_state = A * x_state;
     P = A * P * (A.transpose()) + Q;
 }

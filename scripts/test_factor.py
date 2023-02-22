@@ -27,9 +27,9 @@ dt = 0.1
 x0 = 0
 y0 = 0
 th0 = 0
-v0 = 10
+v0 = 20
 a0 = 1
-w0 = 0.001
+w0 = 0.1
 
 
 #车辆状态更新
@@ -47,6 +47,7 @@ def updateCarState(state):
     state[2] = state[2] + dth
     state[3] = state[3] + dv
     state[4] = state[4] + random.gauss(0, 0.05)
+    # state[4] = random.gauss(0, 0.05)
     print('gt_state:',state)
     return state
 

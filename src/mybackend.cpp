@@ -66,7 +66,7 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches,
         //TODO 添加kf功能，当帧数较少的时候，使用kf来更新
         int num_of_kf = obj_list_[match.first]->GetTrklist()->GetKeyframeNum();
         ROS_INFO("Trere is %d kf in trk %d", num_of_kf, match.first);
-        if(num_of_kf > 15)
+        if(num_of_kf > 40)
         {
             obj_list_[match.first]->UpdateTrkList();
         }

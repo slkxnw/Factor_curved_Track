@@ -9,9 +9,9 @@ myFrontend::myFrontend()
     // frontend_running_.store(true);
     // frontend_thread = std::thread(std::bind(&myFrontend::FrontendLoop, this));
     last_state_ = Vec6::Zero();
-    last_state_[3] = 9.5;
-    last_state_[4] = 0.1;
-    last_state_[5] = 0.0009;
+    last_state_[3] = 15;
+    last_state_[4] = 0.0;
+    last_state_[5] = 0.0;
     last_timestamp_ = 0;
 }
 
@@ -128,6 +128,7 @@ void myFrontend::UpdateTrkList()
 void myFrontend::UpdateTrkListFilter()
 {
     double dt = cur_frame_->ObjTimestamp() - last_timestamp_;
+    // std::cout<<dt<<" "<<dt<<std::endl;
     //x,y,th,v,a,w
     Vec6 state = cur_frame_->ObjState();
     Vec3 measure;
@@ -143,7 +144,7 @@ void myFrontend::UpdateTrkListFilter()
     double th = kf_state[2];
     //TODO vx和vy的夹角也能表现th，是否考虑把它和上面的th综合一下呢？
     Vec6 new_state;
-    new_state << kf_state[0], kf_state[1], th, v, a, kf_state[5];
+    new_state << kf_state[0], kf_state[1], th, v, 0, kf_state[5];
 
     cur_frame_->SetObjState(new_state);
 }
@@ -172,8 +173,8 @@ Vec3 myFrontend::PredictPostion(double time)
     double dy = ((-v * w - a * dth) * cos(th + dth) + a * sin(th + dth)
          + v * w * cos(th) - a * sin(th)) / ((w + 1e-6) * (w + 1e-6));
     int id_ = trk_list_->GetObjID();
-    std::cout<<id_<<": dt:"<<dt<<" dv:"<<dv<<" dth:"<<dth<<" dx:"<<dx<<" dy:"<<dy<<std::endl;
-    std::cout<<id_<<": v:"<<v<<" a:"<<a<<" w:"<<w<<std::endl;
+    std::cout<<id_<<"pred_growth: dt:"<<dt<<" dv:"<<dv<<" dth:"<<dth<<" dx:"<<dx<<" dy:"<<dy<<std::endl;
+    std::cout<<id_<<"_state: x:"<<cur_state[0]<<" y:"<<cur_state[1]<<" th:"<<th<<" v:"<<v<<" a:"<<a<<" w:"<<w<<std::endl;
     pred_position<<cur_state[0] + dx, cur_state[1] + dy, cur_state[2] + dth;
     return pred_position;
 }

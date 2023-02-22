@@ -31,6 +31,7 @@ v0 = 10
 a0 = 1
 w0 = 0.001
 
+
 #车辆状态更新
 def updateCarState(state):
     [x,y,th,v,a,w] = state
@@ -45,6 +46,7 @@ def updateCarState(state):
     state[1] = state[1] + dy
     state[2] = state[2] + dth
     state[3] = state[3] + dv
+    state[4] = state[4] + random.gauss(0, 0.05)
     print('gt_state:',state)
     return state
 
@@ -88,10 +90,10 @@ if __name__ == '__main__':
             pub_match.trk.data = [0]
             state = updateCarState(state)
         det = Detection()
-        det.alp = state[2]
-        det.pos.x = state[0]
+        det.alp = state[2] + random.gauss(0, 0.02)
+        det.pos.x = state[0] + random.gauss(0, 0.1)
         det.pos.y = 1
-        det.pos.z = state[1]
+        det.pos.z = state[1] + random.gauss(0, 0.05)
         det.siz.x = 2
         det.siz.y = 3
         det.siz.z = 2

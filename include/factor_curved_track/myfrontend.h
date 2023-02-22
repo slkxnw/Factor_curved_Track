@@ -6,11 +6,13 @@
 #include "mycommon_include.h"
 #include "myframe.h"
 #include "mytrk_list.h"
+#include "myKF.h"
 
 namespace mytrk
 {
 struct myFrame;
 class myTrkList;
+class CV_KF;
 
 //结合检测结果，结合上一针的状态，初始化Frame，并分配给map，然后构建一个因子图，进行优化
 class myFrontend
@@ -29,6 +31,7 @@ public:
     //初始化轨迹,设定初始车速为0，初始加速度和横摆角速度为0，根据匹配的观测结果和分配的目标id，初始化轨迹
     //TODO：确定合适的初始车速，之前取14，以便于符合匝道工况，但后来想了想，还是取为0，这样，匹配错误会少一点？
     bool BuildInitTrkList(Vec3 measure, double time, unsigned int id);
+    bool BuildInitKF(Vec6 state, Vec3 vars);
 
     //合并两个轨迹
     void ConcatTrklist(std::shared_ptr<myTrkList> new_trk_list);
@@ -77,7 +80,7 @@ public:
     //有了新的观测，触发优化,在外部使用这个frontend类的地方调用这个函数
     void UpdateTrkList();
 
-    void UpdateTrkListKF();
+    void UpdateTrkListEKF();
 
     //TODO：得到边的测量，并把数据添加给measure——list
     //TODO：设计一个measurelist，他是tek-list的一部分，存放这里计算的结果
@@ -166,6 +169,7 @@ private:
     myFrame::Ptr cur_frame_ = nullptr;
 
     std::shared_ptr<myTrkList> trk_list_ = nullptr;
+    std::shared_ptr<CV_KF> kf_ = nullptr;
     unsigned long num_of_frames = 0;
 
 

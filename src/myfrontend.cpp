@@ -10,7 +10,7 @@ myFrontend::myFrontend()
     // frontend_thread = std::thread(std::bind(&myFrontend::FrontendLoop, this));
     last_state_ = Vec6::Zero();
     last_state_[3] = 9.5;
-    last_state_[4] = 1.1;
+    last_state_[4] = 0.1;
     last_state_[5] = 0.0009;
     last_timestamp_ = 0;
 }
@@ -33,6 +33,14 @@ bool myFrontend::BuildInitTrkList(Vec3 measure, double time, unsigned int id)
     new_trk->InsertKeyframe(cur_frame_);
 
     trk_list_ = new_trk;
+    return true;
+}
+
+bool myFrontend::BuildInitKF(Vec6 state, Vec3 vars)
+{
+    std::shared_ptr<CV_KF> new_kf = std::shared_ptr<CV_KF>(new myTrkList(state, vars));
+    kf_ = new_kf;
+
     return true;
 }
 
@@ -115,6 +123,11 @@ void myFrontend::UpdateTrkList()
     auto active_kfs = trk_list_->GetActivateKeyframe();
     auto active_kf_ids = trk_list_->GetActivateKeyframeIDs();
     Optimize(active_kfs, active_kf_ids);
+}
+
+void UpdateTrkListEKF()
+{
+
 }
 
 /**
@@ -264,7 +277,7 @@ void myFrontend::Optimize(myTrkList::KeyframeType &keyframes, std::vector<int> &
     
     ROS_INFO("Trere is %d kf in %d", keyframes.size(), trk_list_->GetObjID());
     optimizer.initializeOptimization();
-    optimizer.optimize(10);
+    optimizer.optimize(60);
 
     for(auto &v : vertexs){
         std::cout<<v.first<<' '<<v.second->estimate().transpose()<<std::endl;

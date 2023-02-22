@@ -16,9 +16,13 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
+#include <math.h>
 //Eigen
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+//KF
+#include <kalman/ekfilter.hpp>
+
 
 //eigen typedef
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatXX;
@@ -27,6 +31,7 @@ typedef Eigen::Matrix<double, 13, 13> Mat1313;
 typedef Eigen::Matrix<double, 8, 10> Mat810;
 typedef Eigen::Matrix<double, 8, 3> Mat83;
 typedef Eigen::Matrix<double, 6, 6> Mat66;
+typedef Eigen::Matrix<double, 6, 3> Mat63;
 typedef Eigen::Matrix<double, 5, 3> Mat53;
 typedef Eigen::Matrix<double, 4, 3> Mat43;
 typedef Eigen::Matrix<double, 4, 2> Mat42;
@@ -46,6 +51,7 @@ typedef Eigen::Matrix<double, 8, 4> Mat84;
 typedef Eigen::Matrix<double, 4, 8> Mat48;
 typedef Eigen::Matrix<double, 4, 4> Mat44;
 typedef Eigen::Matrix<double, 3, 4> Mat34;
+typedef Eigen::Matrix<double, 3, 6> Mat36;
 typedef Eigen::Matrix<double, 14, 14> Mat1414;
 // float matricies
 typedef Eigen::Matrix<float, 3, 3> Mat33f;

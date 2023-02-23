@@ -9,7 +9,7 @@ CA_EKF::CA_EKF(Vec8 init_state)
     
     //雅克比矩阵是变化的，对角线的元素确定
     J = Mat88::Identity();
-
+    // std::cout<<J<<std::endl;
     C = Mat38::Zero();
     C.block<3, 3>(0, 0) = Mat33::Identity();
 
@@ -27,14 +27,15 @@ CA_EKF::CA_EKF(Vec8 init_state)
 void CA_EKF::calJacobi(double dt)
 {
     //dx = dt * vx + 0.5 * dt * dt * ax
-    J[0, 3] = dt;
-    J[0, 6] = 0.5 * dt * dt;
-    J[1, 4] = dt;
-    J[1, 7] = 0.5 * dt * dt;
-    J[2, 5] = dt;
+    // std::cout<<J<<std::endl;
+    J(0, 3) = dt;
+    J(0, 6) = 0.5 * dt * dt;
+    J(1, 4) = dt;
+    J(1, 7) = 0.5 * dt * dt;
+    J(2, 5) = dt;
     //dvx = dt * ax    
-    J[3, 6] = dt;
-    J[4, 7] = dt;
+    J(3, 6) = dt;
+    J(4, 7) = dt;
 }
 
 void CA_EKF::predict(double dt)
@@ -54,7 +55,8 @@ void CA_EKF::update(Vec3 measure)
     Mat33 tmp = C * P * C.transpose() + R;
     Mat83 K = P * C.transpose() * tmp.inverse();
 
-    x_state = x_state + K * (measure - C * x_state);
+    Vec3 tmp_diff = measure - C * x_state;
+    x_state = x_state + K * tmp_diff;
     P = (Mat88::Identity() - K * C) * P;
 }
 

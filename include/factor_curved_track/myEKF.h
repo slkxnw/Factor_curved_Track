@@ -7,36 +7,36 @@
 namespace mytrk
 {
 
-class CTRA_EKF : public Kalman::EKFilter<double,1>
-{
+// class CTRA_EKF : public Kalman::EKFilter<double,1>
+// {
 
-public:
+// public:
 
-    CTRA_EKF()
-    {
-        setDim(6, 0, 3, 3, 3);
-        T = 0.1;
-    }
+//     CTRA_EKF()
+//     {
+//         setDim(6, 0, 3, 3, 3);
+//         T = 0.1;
+//     }
 
-    void SetT(double T_)
-    {
-        T = T_;
-    }
+//     void SetT(double T_)
+//     {
+//         T = T_;
+//     }
 
-protected:
+// protected:
 
-    void makeA();
-    void makeH();
-    void makeV();
-    void makeR();
-    void makeW();
-    void makeQ();
-    void makeProcess();
-    void makeMeasure();
+//     void makeA();
+//     void makeH();
+//     void makeV();
+//     void makeR();
+//     void makeW();
+//     void makeQ();
+//     void makeProcess();
+//     void makeMeasure();
 
-    double T;
+//     double T;
 
-};
+// };
 
 class CA_EKF
 {

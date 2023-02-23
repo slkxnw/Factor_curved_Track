@@ -28,7 +28,7 @@ x0 = 0
 y0 = 0
 th0 = 0
 v0 = 20
-a0 = 1
+a0 = 0
 w0 = 0.1
 
 
@@ -41,7 +41,7 @@ def updateCarState(state):
          - v * w * math.sin(th) - a * math.cos(th)) / ((w + 1e-9) * (w + 1e-9))
     dy = ((-v * w - a * dth) * math.cos(th + dth) + a * math.sin(th + dth)
          + v * w * math.cos(th) - a * math.sin(th)) / ((w + 1e-9) * (w + 1e-9))
-    print('plus:', dx,dy)
+    # print('plus:', dx,dy)
     state[0] = state[0] + dx
     state[1] = state[1] + dy
     state[2] = state[2] + dth
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     
     frame = 0
     state = [x0, y0, th0, v0, a0, w0]
-    while(frame < 30):
+    while(frame < 15):
         preds = get_trk_preds(frame / 10);
         preds = preds.trk_predicts
         for pred in preds.detecs:

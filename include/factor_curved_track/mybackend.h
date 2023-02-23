@@ -73,7 +73,7 @@ private:
     //加速度方差
     Vec3 acc = {0.5, 0.1, 0.05};
     //加速度
-    Vec3 acc_value = {0, 0};
+    Vec2 acc_value = {0, 0};
 };
 
 

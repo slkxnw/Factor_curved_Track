@@ -165,9 +165,10 @@ void myFrontend::UpdateTrkListCA_EKF()
     Vec6 state = cur_frame_->ObjState();
     Vec3 measure;
     measure << state[0], state[1], state[2];
-    
+    std::cout<<"start_ekf"<<std::endl;
     ca_ekf_->predict(dt);
     ca_ekf_->update(measure);
+    std::cout<<"finish_ekf"<<std::endl;
     //x,y,th,vx,vy,w, ax, ay
     Vec8 kf_state = ca_ekf_->GetState();
     //更新frame状态
@@ -176,7 +177,7 @@ void myFrontend::UpdateTrkListCA_EKF()
     double th = kf_state[2];
     //TODO vx和vy的夹角也能表现th，是否考虑把它和上面的th综合一下呢？
     Vec6 new_state;
-    new_state << kf_state[0], kf_state[1], th, v, a, kf_state[5];
+    new_state << kf_state[0], kf_state[1], th, v,  a, kf_state[5];
 
     cur_frame_->SetObjState(new_state);
 }

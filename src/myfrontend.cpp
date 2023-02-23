@@ -44,6 +44,14 @@ bool myFrontend::BuildInitKF(Vec6 state, Vec3 vars)
     return true;
 }
 
+bool myFrontend::BuildInitCA_EKF(Vec8 state)
+{
+    std::shared_ptr<CA_EKF> new_kf = std::shared_ptr<CA_EKF>(new CA_EKF(state));
+    ca_ekf_ = new_kf;
+
+    return true;
+}
+
 void myFrontend::ConcatTrklist(std::shared_ptr<myTrkList> new_trk_list)
 {
     myTrkList::KeyframeType new_frames = new_trk_list->GetAllKeyframe();
@@ -124,8 +132,8 @@ void myFrontend::UpdateTrkList()
     auto active_kf_ids = trk_list_->GetActivateKeyframeIDs();
     Optimize(active_kfs, active_kf_ids);
 }
-//目前是按照CV模型写的,观测较少的时候，使用kf估计状态
-void myFrontend::UpdateTrkListFilter()
+//观测较少的时候，使用kf估计状态
+void myFrontend::UpdateTrkListKF()
 {
     double dt = cur_frame_->ObjTimestamp() - last_timestamp_;
     // std::cout<<dt<<" "<<dt<<std::endl;
@@ -145,6 +153,30 @@ void myFrontend::UpdateTrkListFilter()
     //TODO vx和vy的夹角也能表现th，是否考虑把它和上面的th综合一下呢？
     Vec6 new_state;
     new_state << kf_state[0], kf_state[1], th, v, 0, kf_state[5];
+
+    cur_frame_->SetObjState(new_state);
+}
+//CA_EKF估计
+void myFrontend::UpdateTrkListCA_EKF()
+{
+    double dt = cur_frame_->ObjTimestamp() - last_timestamp_;
+    // std::cout<<dt<<" "<<dt<<std::endl;
+    //x,y,th,v,a,w
+    Vec6 state = cur_frame_->ObjState();
+    Vec3 measure;
+    measure << state[0], state[1], state[2];
+    
+    ca_ekf_->predict(dt);
+    ca_ekf_->update(measure);
+    //x,y,th,vx,vy,w, ax, ay
+    Vec8 kf_state = ca_ekf_->GetState();
+    //更新frame状态
+    double v = sqrtf64(pow(kf_state[3], 2) + pow(kf_state[4], 2));
+    double a = sqrtf64(pow(kf_state[6], 2) + pow(kf_state[7], 2));
+    double th = kf_state[2];
+    //TODO vx和vy的夹角也能表现th，是否考虑把它和上面的th综合一下呢？
+    Vec6 new_state;
+    new_state << kf_state[0], kf_state[1], th, v, a, kf_state[5];
 
     cur_frame_->SetObjState(new_state);
 }

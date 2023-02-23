@@ -11,6 +11,7 @@ void myBackend::InitObj(std::vector<Vec9> &od_res, double time)
     Vec3 measure;
     Vec3 box_size;
     Vec6 kf_state;
+    Vec8 ca_ekf_state;
     for (auto &od :od_res)
     {
         myFrontend::Ptr new_frontend = myFrontend::Ptr(new myFrontend);
@@ -18,6 +19,9 @@ void myBackend::InitObj(std::vector<Vec9> &od_res, double time)
         //KF
         kf_state << od[0], od[1], od[6], vel[0], vel[1], vel[2];
         new_frontend->BuildInitKF(kf_state, acc);
+        //ca_ekf
+        ca_ekf_state << od[0], od[1], od[6], vel[0], vel[1], vel[2], acc_value[0], acc_value[1];
+        new_frontend->BuildInitCA_EKF(ca_ekf_state);
         //因子图
         //x,y,theta
         measure << od[0], od[1], od[6];
@@ -72,7 +76,11 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches,
         }
         else
         {
-            obj_list_[match.first]->UpdateTrkListFilter();
+            //使用CV+KF
+            // obj_list_[match.first]->UpdateTrkListKF();
+            //使用CA + EKF
+            obj_list_[match.first]->UpdateTrkListCA_EKF();
+
         }
         //如果某个轨迹有了匹配，就在state_cur_list_加上它，用state_prediction_list_[match.first]做一个赋值，
         //后面获取当前状态的时候，会更新掉相关数据

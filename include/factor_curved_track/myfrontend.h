@@ -7,6 +7,7 @@
 #include "myframe.h"
 #include "mytrk_list.h"
 #include "myKF.h"
+#include "myEKF.h"
 
 namespace mytrk
 {
@@ -32,6 +33,7 @@ public:
     //TODO：确定合适的初始车速，之前取14，以便于符合匝道工况，但后来想了想，还是取为0，这样，匹配错误会少一点？
     bool BuildInitTrkList(Vec3 measure, double time, unsigned int id);
     bool BuildInitKF(Vec6 state, Vec3 vars);
+    bool BuildInitCA_EKF(Vec8 state);
 
     //合并两个轨迹
     void ConcatTrklist(std::shared_ptr<myTrkList> new_trk_list);
@@ -80,7 +82,9 @@ public:
     //有了新的观测，触发优化,在外部使用这个frontend类的地方调用这个函数
     void UpdateTrkList();
 
-    void UpdateTrkListFilter();
+    void UpdateTrkListKF();
+    void UpdateTrkListCA_EKF();
+
 
     //TODO：得到边的测量，并把数据添加给measure——list
     //TODO：设计一个measurelist，他是tek-list的一部分，存放这里计算的结果
@@ -170,6 +174,7 @@ private:
 
     std::shared_ptr<myTrkList> trk_list_ = nullptr;
     std::shared_ptr<CV_KF> kf_ = nullptr;
+    std::shared_ptr<CA_EKF> ca_ekf_ = nullptr;
     unsigned long num_of_frames = 0;
 
 

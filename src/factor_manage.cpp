@@ -275,9 +275,9 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     response.detecs = trks_cur.detecs;
     response.infos = trks_cur.infos;
     response.ids = active_ids.ids;
-    std::cout<<id_list.size()<<std::endl;
-    std::cout<<trks_cur.detecs.size()<<std::endl;
-    std::cout<<trks_cur.infos.size()<<std::endl;
+    // std::cout<<id_list.size()<<std::endl;
+    // std::cout<<trks_cur.detecs.size()<<std::endl;
+    // std::cout<<trks_cur.infos.size()<<std::endl;
 
     
     // track_msgs::Trk_state_store srv;

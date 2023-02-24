@@ -267,17 +267,15 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     }
     //发布活跃轨迹id
     
-    auto obj_ids = backend.GetObjwithdetIDlist();
+    // auto obj_ids = backend.GetObjwithdetIDlist();
     
     active_ids.header = request.dets.header;
-    for(auto &id : obj_ids)
+    for(auto &id : id_list)
         active_ids.ids.data.push_back(id); 
-    // for(auto &id : id_list)
-    //     active_ids.ids.data.push_back(id); 
     response.detecs = trks_cur.detecs;
     response.infos = trks_cur.infos;
     response.ids = active_ids.ids;
-    std::cout<<obj_ids.size()<<std::endl;
+    std::cout<<id_list.size()<<std::endl;
     std::cout<<trks_cur.detecs.size()<<std::endl;
     std::cout<<trks_cur.infos.size()<<std::endl;
 

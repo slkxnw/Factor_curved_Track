@@ -46,7 +46,7 @@ void myBackend::InitObj(std::vector<Vec9> &od_res, double time)
         state_prediction_list_[num_of_obj] = od;
         state_cur_list_[num_of_obj] = od;
         obj_id_list.push_back(num_of_obj);
-        objwithdet_id_list.push_back(num_of_obj);
+        // objwithdet_id_list.push_back(num_of_obj);
         num_of_obj++;
     }
 }
@@ -96,7 +96,7 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches,
         //后面获取当前状态的时候，会更新掉相关数据
         state_cur_list_[match.first] = state_prediction_list_[match.first];
         //获取完有检测的轨迹列表后，直接将它清空，在这里处理有检测的轨迹加上对应的
-        objwithdet_id_list.push_back(match.first);
+        // objwithdet_id_list.push_back(match.first);
     }
     // usleep(0.5);
 

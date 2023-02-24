@@ -25,7 +25,7 @@ CV_KF::CV_KF(Vec6 init_state, Vec3 dt_a)
     Q = Mat66::Identity();
     //AB3DMOT认为速度是常量这一假设非常强，将速度相关的协方差设置的非常小
     Q.block<3, 3>(3, 3) = Q.block<3, 3>(3, 3) * 0.01;
-    std::cout<<Q<<std::endl;
+    // std::cout<<Q<<std::endl;
 }
 
 void CV_KF::predict(double dt)

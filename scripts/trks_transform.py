@@ -15,24 +15,27 @@ def parse_args():
     parser.add_argument('--dataset', type=str, default='KITTI', help='KITTI, nuScenes')
     parser.add_argument('--split', type=str, default='training', help='training, testing')
     parser.add_argument('--seqs', type=str, default='0001')
-    # parser.add_argument('__name', type=str)
-    # parser.add_argument('__log', type=str)
+    parser.add_argument('__name', type=str)
+    parser.add_argument('__log', type=str)
     args = parser.parse_args()
     return args
 
-def save_results(res, save_trk_file, eval_file, frame, score_threshold):
+def save_results(res, save_trk_file, frame, score_threshold):
 
 	# box3d in the format of h, w, l, x, y, z, theta in camera coordinate
 	# TODO这个Orintmp是如何更新的没有看到
 	# TODO这个id_tmp是什么，是每条轨迹的绝对id，不是相对于某一时刻的活跃轨迹的排名
-	bbox3d_size, bbox3d_pos, roty, id_tmp, ori_tmp, type_tmp, bbox2d_tmp_trk, conf_tmp = \
-		res[0], res[1], res[2], res[3], res[4], 'car', [0,0,0,0], res[5] 		
+    bbox3d_size, bbox3d_pos, roty, id_tmp, ori_tmp, type_tmp, bbox2d_tmp_trk, conf_tmp = res[0], res[1], res[2], res[3], res[4], 'car', [0,0,0,0], res[5] 		
 	 
 	# save in detection format with track ID, can be used for dection evaluation and tracking visualization
-	str_to_srite = '%s -1 -1 %f %f %f %f %f %f %f %f %f %f %f %f %f %d\n' % (type_tmp, ori_tmp,
-		bbox2d_tmp_trk[0], bbox2d_tmp_trk[1], bbox2d_tmp_trk[2], bbox2d_tmp_trk[3], 
-		bbox3d_size[0], bbox3d_size[1], bbox3d_size[2], bbox3d_pos[0], bbox3d_pos[1], bbox3d_pos[2], roty, conf_tmp, id_tmp)
-	save_trk_file.write(str_to_srite)
+    str_to_srite = '%s -1 -1 %f %f %f %f %f %f %f %f %f %f %f %f %f %d\n' % (type_tmp, ori_tmp, bbox2d_tmp_trk[0], bbox2d_tmp_trk[1], bbox2d_tmp_trk[2], bbox2d_tmp_trk[3], bbox3d_size[0], bbox3d_size[1], bbox3d_size[2], bbox3d_pos[0], bbox3d_pos[1], bbox3d_pos[2], roty, conf_tmp, id_tmp)
+    save_trk_file.write(str_to_srite)
+    if (conf_tmp >= score_threshold):
+        # print(conf_tmp)
+        str_to_srite = '%d %d %s 0 0 %f %f %f %f %f %f %f %f %f %f %f %f %f\n' % (frame, id_tmp, 
+			type_tmp, ori_tmp, bbox2d_tmp_trk[0], bbox2d_tmp_trk[1], bbox2d_tmp_trk[2], bbox2d_tmp_trk[3], 
+			bbox3d_size[0], bbox3d_size[1], bbox3d_size[2], bbox3d_pos[0], bbox3d_pos[1], bbox3d_pos[2], roty, conf_tmp)
+        eval_file.write(str_to_srite)
 
 	# save in tracking format, for 3D MOT evaluation
 	# 记录当前帧的跟踪结果，bbox3d数据均为使用检测结果更新后的数据
@@ -40,11 +43,7 @@ def save_results(res, save_trk_file, eval_file, frame, score_threshold):
 	# id_tmp： 在整个跟踪算法过程中，会有很多条轨迹出现消失，中间也可能会将一条轨迹分成两条，
 	# 不管怎么样，id_tmp是在整个跟踪算法运行期间，某一条轨迹的绝对id
 	# 一下的格式和kitti官方一致
-	if conf_tmp >= score_threshold:
-		str_to_srite = '%d %d %s 0 0 %f %f %f %f %f %f %f %f %f %f %f %f %f\n' % (frame, id_tmp, 
-			type_tmp, ori_tmp, bbox2d_tmp_trk[0], bbox2d_tmp_trk[1], bbox2d_tmp_trk[2], bbox2d_tmp_trk[3], 
-			bbox3d_size[0], bbox3d_size[1], bbox3d_size[2], bbox3d_pos[0], bbox3d_pos[1], bbox3d_pos[2], roty, conf_tmp)
-		eval_file.write(str_to_srite)
+
 
 def transform_callback(req):
     # 检测结果帧对应的车辆位姿（以初始时刻的坐标为原点，坐标方向为正东）
@@ -62,6 +61,7 @@ def transform_callback(req):
     # 这里，将trk车辆在全局坐标系下的pos/roty减去自车在全局坐标系下的pos/roty
     # TODO：位置可以直接减，roty直接减的可行性需要分析一下
     # 根据官方的图，ry应该就是横摆角，他们的alpha角在示意图中不能直接画出来
+    # print("trks_transform:", len(req.detecs), len(req.infos), len(req.ids.data))
     trk_state = req.detecs
     trk_info = req.infos
     trk_ids = req.ids.data
@@ -81,7 +81,8 @@ def transform_callback(req):
         obsrv_agl = info.orin
         obsrv_conf = info.score
         res = [dim, pos, roty, id, obsrv_agl, obsrv_conf]
-        save_results(res, vis_file, eval_file, frame_id, score_threshold = 0)
+        # print(res)
+        save_results(res, vis_file, frame_id, score_threshold = 0)
     if(frame_id % 1 == 0):
         rospy.loginfo("Transform cord of trks in frame %d and save them", frame_id)
     

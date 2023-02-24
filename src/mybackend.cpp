@@ -41,6 +41,7 @@ void myBackend::InitObj(std::vector<Vec9> &od_res, double time)
         // state << od[0], od[1], od[6], od[3], od[4], od[5];
         state_prediction_list_[num_of_obj] = od;
         state_cur_list_[num_of_obj] = od;
+        obj_id_list.push_back(num_of_obj);
         num_of_obj++;
     }
 }
@@ -77,9 +78,9 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches,
         else
         {
             //使用CV+KF
-            // obj_list_[match.first]->UpdateTrkListKF();
+            obj_list_[match.first]->UpdateTrkListKF();
             //使用CA + EKF
-            obj_list_[match.first]->UpdateTrkListCA_EKF();
+            // obj_list_[match.first]->UpdateTrkListCA_EKF();
 
         }
         //如果某个轨迹有了匹配，就在state_cur_list_加上它，用state_prediction_list_[match.first]做一个赋值，
@@ -140,6 +141,7 @@ myBackend::ObjInfotype myBackend::GetStateCur()
 {
     Vec3 cur_position;
     Vec3 obj_size;
+    // std::cout<<state_cur_list_.size()<<std::endl;
     for (auto &state_pair : state_cur_list_)
     {
         //x,y,theta

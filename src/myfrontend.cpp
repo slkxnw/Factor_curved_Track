@@ -206,8 +206,8 @@ Vec3 myFrontend::PredictPostion(double time)
     double dy = ((-v * w - a * dth) * cos(th + dth) + a * sin(th + dth)
          + v * w * cos(th) - a * sin(th)) / ((w + 1e-6) * (w + 1e-6));
     int id_ = trk_list_->GetObjID();
-    std::cout<<id_<<"pred_growth: dt:"<<dt<<" dv:"<<dv<<" dth:"<<dth<<" dx:"<<dx<<" dy:"<<dy<<std::endl;
-    std::cout<<id_<<"_state: x:"<<cur_state[0]<<" y:"<<cur_state[1]<<" th:"<<th<<" v:"<<v<<" a:"<<a<<" w:"<<w<<std::endl;
+    // std::cout<<id_<<"pred_growth: dt:"<<dt<<" dv:"<<dv<<" dth:"<<dth<<" dx:"<<dx<<" dy:"<<dy<<std::endl;
+    // std::cout<<id_<<"_state: x:"<<cur_state[0]<<" y:"<<cur_state[1]<<" th:"<<th<<" v:"<<v<<" a:"<<a<<" w:"<<w<<std::endl;
     pred_position<<cur_state[0] + dx, cur_state[1] + dy, cur_state[2] + dth;
     return pred_position;
 }
@@ -256,7 +256,7 @@ void myFrontend::Optimize(myTrkList::KeyframeType &keyframes, std::vector<int> &
         // g2o::make_unique<BlockSolverType> (g2o::make_unique<LinearSolverType>()));
     g2o::SparseOptimizer optimizer;
     optimizer.setAlgorithm(solver);
-    optimizer.setVerbose(true);
+    optimizer.setVerbose(false);
 
     int edge_cnt = 0;
     std::map<unsigned long, VertexState *> vertexs;

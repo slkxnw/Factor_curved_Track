@@ -185,7 +185,7 @@ def srv_associate_Callback(req):
 
 
 	update_res = process_trk_update(pub_match, pub_undets, pub_untrks, dets)
-
+	# print(len(update_res.ids.data))
 	store_res = trk_store(dets.header, update_res.detecs, update_res.infos, update_res.ids);
 
 	# match_pub.publish(pub_match)

@@ -34,6 +34,7 @@ public:
     bool BuildInitTrkList(Vec3 measure, double time, unsigned int id);
     bool BuildInitKF(Vec6 state, Vec3 vars);
     bool BuildInitCA_EKF(Vec8 state);
+    bool BuildInitAB3D_KF(Vec10 state);
 
     //合并两个轨迹
     void ConcatTrklist(std::shared_ptr<myTrkList> new_trk_list);
@@ -84,6 +85,7 @@ public:
 
     void UpdateTrkListKF();
     void UpdateTrkListCA_EKF();
+    void UpdateTrkListAB3D_KF();
 
 
     //TODO：得到边的测量，并把数据添加给measure——list
@@ -94,6 +96,9 @@ public:
     //返回预测时刻的 x y theta
     Vec3 PredictPostion(double time);
 
+    Vec3 PredictPostionKF(double time);
+    Vec3 PredictPostionCA_EKF(double time);
+    Vec3 PredictPostionAB3D_KF(double time);
     //
     Vec6 PredictState(double time);
 
@@ -175,6 +180,7 @@ private:
     std::shared_ptr<myTrkList> trk_list_ = nullptr;
     std::shared_ptr<CV_KF> kf_ = nullptr;
     std::shared_ptr<CA_EKF> ca_ekf_ = nullptr;
+    std::shared_ptr<AB3D_KF> ab3d_kf_ = nullptr;   
     unsigned long num_of_frames = 0;
 
 

@@ -12,14 +12,18 @@ void myBackend::InitObj(std::vector<Vec9> &od_res, double time)
     Vec3 box_size;
     Vec6 kf_state;
     Vec8 ca_ekf_state;
+    Vec10 ab3d_kf_state;
     for (auto &od :od_res)
     {
         myFrontend::Ptr new_frontend = myFrontend::Ptr(new myFrontend);
         
-        //KF
+        //ab3dmot-kf,x, y, z, theta, l, w, h, dx, dy, dz
+        ab3d_kf_state << od[0], od[1], od[2], od[6], od[3], od[4], od[5], 1, 1, 1;
+        new_frontend->BuildInitAB3D_KF(ab3d_kf_state);
+        //KF,x,y,th,vx,vy,w
         kf_state << od[0], od[1], od[6], vel[0], vel[1], vel[2];
         new_frontend->BuildInitKF(kf_state, acc);
-        //ca_ekf
+        //ca_ekf,x,y,th,vx,vy,w,ax,ay
         ca_ekf_state << od[0], od[1], od[6], vel[0], vel[1], vel[2], acc_value[0], acc_value[1];
         new_frontend->BuildInitCA_EKF(ca_ekf_state);
         //因子图
@@ -71,17 +75,21 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches,
         //TODO 添加kf功能，当帧数较少的时候，使用kf来更新
         int num_of_kf = obj_list_[match.first]->GetTrklist()->GetKeyframeNum();
         ROS_INFO("Trere is %d kf in trk %d", num_of_kf, match.first);
-        if(num_of_kf > 40)
+        if(num_of_kf > kf_opt_thres)
         {
             obj_list_[match.first]->UpdateTrkList();
         }
         else
         {
-            //使用CV+KF
-            obj_list_[match.first]->UpdateTrkListKF();
-            //使用CA + EKF
-            // obj_list_[match.first]->UpdateTrkListCA_EKF();
-
+            if (filter_type == 1)
+                //使用CV+KF
+                obj_list_[match.first]->UpdateTrkListKF();
+            else if (filter_type == 2)
+                //使用CA + EKF
+                obj_list_[match.first]->UpdateTrkListCA_EKF();
+            else if (filter_type == 0)
+                //使用AB3DMOT方法
+                obj_list_[match.first]->UpdateTrkListAB3D_KF();
         }
         //如果某个轨迹有了匹配，就在state_cur_list_加上它，用state_prediction_list_[match.first]做一个赋值，
         //后面获取当前状态的时候，会更新掉相关数据
@@ -116,7 +124,25 @@ myBackend::ObjInfotype myBackend::GetStatePrediction(double time)
     for (auto &state_pair : state_prediction_list_)
     {
         //x,y,theta
-        position_prediction = obj_list_[state_pair.first]->PredictPostion(time);
+        int num_of_kf = obj_list_[state_pair.first]->GetTrklist()->GetKeyframeNum();
+        if(num_of_kf > kf_opt_thres)
+        {
+            position_prediction = obj_list_[state_pair.first]->PredictPostion(time);
+        }
+        else
+        {
+            if (filter_type == 1)
+                //使用CV+KF
+                position_prediction = obj_list_[state_pair.first]->PredictPostionKF(time);
+            else if (filter_type == 2)
+                //使用CA + EKF
+                position_prediction = obj_list_[state_pair.first]->PredictPostionCA_EKF(time);
+            else if (filter_type == 0)
+                //使用AB3DMOT方法
+                position_prediction = obj_list_[state_pair.first]->PredictPostionAB3D_KF(time);
+            
+        }
+        
         // state_pair.second.block<2, 1>(0, 0) = position_prediction;
         
         state_pair.second[0] = position_prediction[0];

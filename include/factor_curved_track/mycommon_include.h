@@ -53,6 +53,8 @@ typedef Eigen::Matrix<double, 4, 4> Mat44;
 typedef Eigen::Matrix<double, 3, 4> Mat34;
 typedef Eigen::Matrix<double, 3, 6> Mat36;
 typedef Eigen::Matrix<double, 3, 8> Mat38;
+typedef Eigen::Matrix<double, 7, 10> Mat710;
+typedef Eigen::Matrix<double, 10, 7> Mat107;
 typedef Eigen::Matrix<double, 14, 14> Mat1414;
 // float matricies
 typedef Eigen::Matrix<float, 3, 3> Mat33f;

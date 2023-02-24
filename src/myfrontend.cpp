@@ -52,6 +52,14 @@ bool myFrontend::BuildInitCA_EKF(Vec8 state)
     return true;
 }
 
+bool myFrontend::BuildInitAB3D_KF(Vec10 state)
+{
+    std::shared_ptr<AB3D_KF> new_kf = std::shared_ptr<AB3D_KF>(new AB3D_KF(state));
+    ab3d_kf_ = new_kf;
+
+    return true;
+}
+
 void myFrontend::ConcatTrklist(std::shared_ptr<myTrkList> new_trk_list)
 {
     myTrkList::KeyframeType new_frames = new_trk_list->GetAllKeyframe();
@@ -142,7 +150,7 @@ void myFrontend::UpdateTrkListKF()
     Vec3 measure;
     measure << state[0], state[1], state[2];
     
-    kf_->predict(dt);
+    // kf_->predict(dt);
     kf_->update(measure);
     //x,y,th,vx,vy,w
     Vec6 kf_state = kf_->GetState();
@@ -166,7 +174,7 @@ void myFrontend::UpdateTrkListCA_EKF()
     Vec3 measure;
     measure << state[0], state[1], state[2];
     std::cout<<"start_ekf"<<std::endl;
-    ca_ekf_->predict(dt);
+    // ca_ekf_->predict(dt);
     ca_ekf_->update(measure);
     std::cout<<"finish_ekf"<<std::endl;
     //x,y,th,vx,vy,w, ax, ay
@@ -178,6 +186,35 @@ void myFrontend::UpdateTrkListCA_EKF()
     //TODO vx和vy的夹角也能表现th，是否考虑把它和上面的th综合一下呢？
     Vec6 new_state;
     new_state << kf_state[0], kf_state[1], th, v,  a, kf_state[5];
+
+    cur_frame_->SetObjState(new_state);
+}
+//AB3D_KF估计
+void myFrontend::UpdateTrkListAB3D_KF()
+{
+    double dt = cur_frame_->ObjTimestamp() - last_timestamp_;
+    // std::cout<<dt<<" "<<dt<<std::endl;
+    //x,y,th,v,a,w
+    Vec6 state = cur_frame_->ObjState();
+    //x, y, z, theta, l, w, h,
+    Vec7 measure;
+    measure << state[0], state[1], z_, obj_size_[0], obj_size_[1], obj_size_[2], state[2];
+    std::cout<<"start_AB3D_kf"<<std::endl;
+    // ca_ekf_->predict(dt);
+    ab3d_kf_->update(measure);
+    std::cout<<"finish_ekf"<<std::endl;
+    //x,y,th,vx,vy,w, ax, ay
+    Vec10 kf_state = ab3d_kf_->GetState();
+    //更新frame状态
+    double v = sqrtf64(pow(kf_state[7], 2) + pow(kf_state[8], 2));
+    // double a = sqrtf64(pow(kf_state[6], 2) + pow(kf_state[7], 2));
+    double th = kf_state[2];
+    //TODO vx和vy的夹角也能表现th，是否考虑把它和上面的th综合一下呢？
+    Vec6 new_state;
+    //AB3D没有角速度项
+    new_state << kf_state[0], kf_state[1], th, v, 0, 0;
+    z_ = kf_state[2];
+    obj_size_ << kf_state[4], kf_state[5], kf_state[6];
 
     cur_frame_->SetObjState(new_state);
 }
@@ -209,6 +246,57 @@ Vec3 myFrontend::PredictPostion(double time)
     // std::cout<<id_<<"pred_growth: dt:"<<dt<<" dv:"<<dv<<" dth:"<<dth<<" dx:"<<dx<<" dy:"<<dy<<std::endl;
     // std::cout<<id_<<"_state: x:"<<cur_state[0]<<" y:"<<cur_state[1]<<" th:"<<th<<" v:"<<v<<" a:"<<a<<" w:"<<w<<std::endl;
     pred_position<<cur_state[0] + dx, cur_state[1] + dy, cur_state[2] + dth;
+    return pred_position;
+}
+
+Vec3 myFrontend::PredictPostionKF(double time)
+{
+    Vec3 pred_position;
+    double cur_time = cur_frame_->ObjTimestamp();
+    double dt = time - cur_time;
+    //使用KF
+    kf_->predict(dt);
+    //x,y,th,vx,vy,w
+    Vec6 state = kf_->GetState();
+
+    pred_position << state[0], state[1], state[2];
+
+    return pred_position;
+
+}
+
+Vec3 myFrontend::PredictPostionCA_EKF(double time)
+{
+    Vec3 pred_position;
+    double cur_time = cur_frame_->ObjTimestamp();
+    double dt = time - cur_time;
+
+    //使用CA_EKF
+    ca_ekf_->predict(dt);
+    //x,y,th,vx,vy,w，ax,ay
+    Vec8 state = ca_ekf_->GetState();
+
+    pred_position << state[0], state[1], state[2];
+
+    return pred_position;
+}
+
+Vec3 myFrontend::PredictPostionAB3D_KF(double time)
+{
+    Vec3 pred_position;
+    double cur_time = cur_frame_->ObjTimestamp();
+    double dt = time - cur_time;
+
+    //使用AB3D_KF
+    ab3d_kf_->predict(dt);
+    //x, y, z, theta, l, w, h, vx, vy, vz
+    Vec10 state = ab3d_kf_->GetState();
+
+    pred_position << state[0], state[1], state[3];
+
+    z_ = state[2];
+    obj_size_ << state[4], state[5], state[6];
+
     return pred_position;
 }
 

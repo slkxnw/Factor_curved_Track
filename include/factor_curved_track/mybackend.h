@@ -50,6 +50,14 @@ public:
         // std::unique_lock<std::mutex> lck(data_lck_);
         return obj_id_list;
     }
+    std::vector<unsigned long> GetObjwithdetIDlist()
+    {
+        // std::unique_lock<std::mutex> lck(data_lck_);
+        std::vector<unsigned long> new_list;
+        new_list.clear();
+        new_list.swap(objwithdet_id_list);
+        return new_list;
+    }
 
     Frontendtype GetObjlist()
     {
@@ -71,9 +79,10 @@ private:
     // TrkListType dead_obj_list;
     ObjInfotype state_prediction_list_;
     ObjInfotype state_cur_list_;
-    //活跃轨迹的id列表
+    //所有活跃轨迹的id列表
     std::vector<unsigned long> obj_id_list;
-
+    //所有有检测匹配的轨迹id列表
+    std::vector<unsigned long> objwithdet_id_list;
     //KF初始状态假设,x,y,th速度,和加速度以及方差
     Vec3 vel = {0, 0, 0};
     //加速度方差

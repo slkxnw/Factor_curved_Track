@@ -82,7 +82,7 @@ def transform_callback(req):
         obsrv_conf = info.score
         res = [dim, pos, roty, id, obsrv_agl, obsrv_conf]
         # print(res)
-        save_results(res, vis_file, frame_id, score_threshold = 0)
+        save_results(res, vis_file, frame_id, score_threshold = -10000)
     if(frame_id % 1 == 0):
         rospy.loginfo("Transform cord of trks in frame %d and save them", frame_id)
     

@@ -244,6 +244,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     //TODO：未匹配轨迹的数据不应该发布
     //获取检测对应轨迹的当前状态，包括观测角/z等数据,这里的观测角/z和上面轨迹预测状态的是一样的，都使用最近的检测数据的参数
     auto trks_state_cur = backend.GetStateCur();
+    std::vector<unsigned long> id_list;
     
     trks_cur.header = request.dets.header;
     for(auto &pair : trks_state_cur)
@@ -262,18 +263,23 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
         info_.type = 0;
         info_.score = pair.second[8];
         trks_cur.infos.push_back(info_);
+        id_list.push_back(pair.first);
     }
     //发布活跃轨迹id
     
-    auto obj_ids = backend.GetObjIDlist();
+    auto obj_ids = backend.GetObjwithdetIDlist();
     
     active_ids.header = request.dets.header;
     for(auto &id : obj_ids)
         active_ids.ids.data.push_back(id); 
+    // for(auto &id : id_list)
+    //     active_ids.ids.data.push_back(id); 
     response.detecs = trks_cur.detecs;
     response.infos = trks_cur.infos;
     response.ids = active_ids.ids;
-    // std::cout<<obj_ids.size()<<std::endl;
+    std::cout<<obj_ids.size()<<std::endl;
+    std::cout<<trks_cur.detecs.size()<<std::endl;
+    std::cout<<trks_cur.infos.size()<<std::endl;
 
     
     // track_msgs::Trk_state_store srv;

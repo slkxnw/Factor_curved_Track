@@ -5,6 +5,7 @@
 import rospy
 import numpy as np
 from kitti_oxts import load_oxts_packets_and_poses
+from kitti_calib import Calibration
 import argparse
 import os
 from track_msgs.srv import Trk_state_store, Trk_state_storeResponse
@@ -14,7 +15,7 @@ def parse_args():
     parser.add_argument('--datadir', type=str, default='/home/chenz/GD/dataset')
     parser.add_argument('--dataset', type=str, default='KITTI', help='KITTI, nuScenes')
     parser.add_argument('--split', type=str, default='training', help='training, testing')
-    parser.add_argument('--seqs', type=str, default='0010')
+    parser.add_argument('--seqs', type=str, default='0001')
     parser.add_argument('__name', type=str)
     parser.add_argument('__log', type=str)
     args = parser.parse_args()
@@ -52,6 +53,7 @@ def transform_callback(req):
     # rospy.loginfo("Transform cord of trks in frame %d and save them", frame_id)
     ego_Oxt = imu_pose[frame_id]
     ego_trans = ego_Oxt.T_w_imu[0:3, 3]
+    ego_rot = ego_Oxt.T_w_imu[0:3, 0:3]
     ego_rotZ = ego_Oxt.packet.yaw
     # eval_path = '/home/chenz/GD/dataset/KITTI/eval/pointrcnn_category_val_H1/data_0'
     vis_path = '/home/chenz/GD/dataset/KITTI/eval/pointrcnn_category_val_H1/trk_withid_0'
@@ -66,9 +68,20 @@ def transform_callback(req):
     trk_info = req.infos
     trk_ids = req.ids.data
     for [trk, info, id] in zip(trk_state, trk_info, trk_ids):
+        # 从初始帧imu变换到，当前帧imu
+        # x' = Rx + t
+        # x = R^-1 * (x' - t)
         trk.pos.x = trk.pos.x - ego_trans[0]
         trk.pos.y = trk.pos.y - ego_trans[1]
         trk.pos.z = trk.pos.z - ego_trans[2]
+        tmp_pos = np.matmul(np.linalg.inv(ego_rot), np.array([trk.pos.x, trk.pos.y, trk.pos.z]).reshape((3, 1)))
+        # 从当前帧imu变换到rect
+        tmp_pos = calib.imu_to_rect(np.array([tmp_pos[0], tmp_pos[1], tmp_pos[2]]).reshape(1, -1))
+        # print(tmp_pos)
+        tmp_pos = tmp_pos[0]
+        trk.pos.x = tmp_pos[0]
+        trk.pos.y = tmp_pos[1]
+        trk.pos.z = tmp_pos[2]
         trk.alp = trk.alp - ego_rotZ
         while(trk.alp > 3.14159 / 2):
             trk.alp -= 3.14159
@@ -95,10 +108,12 @@ def transform_callback(req):
 def transform(args):
     #TODO 添加接收来自slam的本车位置msg的功能
     oxt_path = [os.path.join(args.datadir, args.dataset, "oxts" ,args.split, args.seqs + '.txt')]
+    calib_path = os.path.join('/home/chenz/GD/Trk/AB3DMOT/data/KITTI/tracking/training/calib', args.seqs + '.txt')
     #返回的imupose是OxtsData的list，每个OxtsData包含一条原始的oxt数据，和变换后的，相较于起始帧位置的SE3矩阵
     #Poses are given in an East-North-Up coordinate system， whose origin is the first GPS position.
-    global imu_pose,eval_file
+    global imu_pose,eval_file, calib
     #eval文件只打开一次
+    calib = Calibration(calib_path)
     eval_path = '/home/chenz/GD/dataset/KITTI/eval/pointrcnn_category_val_H1/data_0'
     eval_file = open(os.path.join(eval_path, args.seqs + '.txt'), 'w')
     

@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument('--datadir', type=str, default='/home/chenz/GD/dataset')
     parser.add_argument('--dataset', type=str, default='KITTI', help='KITTI, nuScenes')
     parser.add_argument('--split', type=str, default='training', help='training, testing')
-    parser.add_argument('--seqs', type=str, default='0010')
+    parser.add_argument('--seqs', type=str, default='0001')
     parser.add_argument('__name', type=str)
     parser.add_argument('__log', type=str)
     args = parser.parse_args()
@@ -39,14 +39,25 @@ def transform_callback(dets):
     # stamp使用frameid代替
     ego_Oxt = imu_pose[int(dets.header.stamp.secs)]
     ego_trans = ego_Oxt.T_w_imu[0:3, 3]
+    ego_rot = ego_Oxt.T_w_imu[0:3, 0:3]
+    # print(ego_trans)
     ego_rotZ = ego_Oxt.packet.yaw
     # 这里，将自车在全局坐标系下的roty和检测结果车辆在自车坐标系下的roty相加
     for det in dets.detecs:
-        new_pos = calib.rect_to_imu(np.array([det.pos.x, det.pos.y, det.pos.z]))
+        # 将检测结果，从当前帧的rect坐标系转换到当前帧的imu坐标系中
+        # 这里的rect_to_imu中的y和检测中的y是同一个
+        new_pos = calib.rect_to_imu(np.array([det.pos.x, det.pos.y, det.pos.z]).reshape(1, -1))
+        # print(new_pos[0])
+        # 注意，oxt/ego中，z是高度，检测结果中/new_pos，y是高度
+        # 从当前帧imu转换到初始帧imu坐标系中
+        # [R,t] * [p, 1]^T = Rp + t
+        # 校正旋转
+        new_pos = np.matmul(ego_rot, np.array(new_pos[0]).reshape((3, 1)))
+        # print(new_pos)
         det.pos.x = new_pos[0] + ego_trans[0]
-        det.pos.y = new_pos[1] + ego_trans[1]
-        det.pos.z = new_pos[2] + ego_trans[2]
-        # 这里还没有改
+        det.pos.y = new_pos[2] + ego_trans[2]
+        det.pos.z = new_pos[1] + ego_trans[1]
+        # 全局坐标系使用正东正西方向，ego_rotZ是本车在当前帧的yaw，
         det.alp = det.alp + ego_rotZ
         while(det.alp > 3.14159 / 2):
             det.alp -= 3.14159

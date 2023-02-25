@@ -235,6 +235,7 @@ def load_oxts_packets_and_poses(oxts_files):
                 if origin is None:
                     origin = t
 
+                # 起始坐标点为第一帧坐标点，但是坐标系的方向是正东正西
                 T_w_imu = transform_from_rot_trans(R, t - origin)
 
                 oxts.append(OxtsData(packet, T_w_imu))

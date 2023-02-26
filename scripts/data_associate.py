@@ -111,7 +111,7 @@ def data_association(dets, trks, metric, threshold, algm='greedy', \
 
 	# compute affinity matrix
 	aff_matrix = compute_affinity(dets, trks, metric, trk_inv_inn_matrices)
-	print(aff_matrix)
+	# print(aff_matrix)
 
 	# association based on the affinity matrix
 	if hypothesis == 1:

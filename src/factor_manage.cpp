@@ -236,7 +236,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
         backend_id = backend.GetObjIDlist()[id];
         double last_time = backend.GetObjlist()[backend_id]->GetLaststamp();
         // ROS_INFO("time delay = %f",time - backend.GetObjlist()[backend_id]->GetLastfeame()->time_stamp_);
-        if((time - last_time) > 1)
+        if((time - last_time) > 0.3)
             dead_ids.push_back(backend_id);
         // ROS_INFO("its id is : %d", id);
         backend.RemoveUnmatchTrk(backend_id);

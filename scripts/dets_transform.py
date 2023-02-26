@@ -59,7 +59,7 @@ def transform_callback(dets):
         det.pos.y = new_pos[1] + ego_trans[1]
         det.pos.z = new_pos[2] + ego_trans[2]
         # 全局坐标系使用正东正西方向，ego_rotZ是本车在当前帧的yaw，
-        # print(np.array([det.pos.x, det.pos.y, det.pos.z]))
+        print(np.array([det.pos.x, det.pos.y, det.pos.z]).reshape((1, 3)))
         det.alp = det.alp + ego_rotZ
         while(det.alp > 3.14159 / 2):
             det.alp -= 3.14159

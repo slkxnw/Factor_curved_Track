@@ -40,24 +40,26 @@ def transform_callback(dets):
     ego_Oxt = imu_pose[int(dets.header.stamp.secs)]
     ego_trans = ego_Oxt.T_w_imu[0:3, 3]
     ego_rot = ego_Oxt.T_w_imu[0:3, 0:3]
-    # print(ego_trans)
+    # print("ego:",ego_trans)
     ego_rotZ = ego_Oxt.packet.yaw
     # 这里，将自车在全局坐标系下的roty和检测结果车辆在自车坐标系下的roty相加
     for det in dets.detecs:
         # 将检测结果，从当前帧的rect坐标系转换到当前帧的imu坐标系中
-        # 这里的rect_to_imu中的y和检测中的y是同一个
+        # 这里的rect_to_imu转换后，new_pos的z变成了向上的，和oxt一样
         new_pos = calib.rect_to_imu(np.array([det.pos.x, det.pos.y, det.pos.z]).reshape(1, -1))
-        # print(new_pos[0])
-        # 注意，oxt/ego中，z是高度，检测结果中/new_pos，y是高度
+        # 注意，oxt/ego中，z是高度，new_pos，z是高度
         # 从当前帧imu转换到初始帧imu坐标系中
         # [R,t] * [p, 1]^T = Rp + t
-        # 校正旋转
+        # 校正旋转,到正东正西坐标系方向
+        
         new_pos = np.matmul(ego_rot, np.array(new_pos[0]).reshape((3, 1)))
         # print(new_pos)
+        # 这里让z是朝上的
         det.pos.x = new_pos[0] + ego_trans[0]
-        det.pos.y = new_pos[2] + ego_trans[2]
-        det.pos.z = new_pos[1] + ego_trans[1]
+        det.pos.y = new_pos[1] + ego_trans[1]
+        det.pos.z = new_pos[2] + ego_trans[2]
         # 全局坐标系使用正东正西方向，ego_rotZ是本车在当前帧的yaw，
+        # print(np.array([det.pos.x, det.pos.y, det.pos.z]))
         det.alp = det.alp + ego_rotZ
         while(det.alp > 3.14159 / 2):
             det.alp -= 3.14159
@@ -101,8 +103,8 @@ def transform(args):
     except rospy.ServiceException as e:
         rospy.logwarn(e)
     frame = 0
-    while frame < seq_length[args.seqs]:
-    # while frame < 4:
+    # while frame < seq_length[args.seqs]:
+    while frame < 10:
         res = get_dets_orin(frame)
         # transform_callback(dets,(imu_pose, dets_puber))
         transform_callback(res.dets)

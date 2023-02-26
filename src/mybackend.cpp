@@ -147,7 +147,7 @@ myBackend::ObjInfotype myBackend::GetStatePrediction(double time)
         }
         
         // state_pair.second.block<2, 1>(0, 0) = position_prediction;
-        
+        //state_pair.second: x,y,z,l,w,h,th,obsryagl,conf
         state_pair.second[0] = position_prediction[0];
         state_pair.second[1] = position_prediction[1];
         state_pair.second[6] = position_prediction[2];

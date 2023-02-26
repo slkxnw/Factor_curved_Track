@@ -111,6 +111,7 @@ def data_association(dets, trks, metric, threshold, algm='greedy', \
 
 	# compute affinity matrix
 	aff_matrix = compute_affinity(dets, trks, metric, trk_inv_inn_matrices)
+	print(aff_matrix)
 
 	# association based on the affinity matrix
 	if hypothesis == 1:
@@ -157,6 +158,7 @@ def srv_associate_Callback(req):
 	dets = req.dets
 	unpack_dets = []
 	for det in dets.detecs:
+		# z朝向上方
 		unpack_dets.append(np.array([det.siz.x, det.siz.y, det.siz.z, det.pos.x, det.pos.y, det.pos.z, det.alp]))
 
 	pred_res = get_trk_preds(dets.header.stamp.secs / 10)
@@ -164,6 +166,7 @@ def srv_associate_Callback(req):
 	trks = pred_res.trk_predicts
 	unpack_trks = []
 	for trk in trks.detecs:
+		# z指向上方
 		unpack_trks.append(np.array([trk.siz.x, trk.siz.y, trk.siz.z, trk.pos.x, trk.pos.y, trk.pos.z, trk.alp]))
 		# print(np.array([trk.siz.x, trk.siz.y, trk.siz.z, trk.pos.x, trk.pos.y, trk.pos.z, trk.alp]))
 	

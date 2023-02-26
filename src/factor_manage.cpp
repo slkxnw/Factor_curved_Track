@@ -150,12 +150,14 @@ bool predict_callback(track_msgs::Trk_pred::Request &request, track_msgs::Trk_pr
     ROS_INFO("There is %d trks in Frame %d", trk_state_pred.size(), int(request.pred_time * 10));
     //将预测结果按照顺序，生成trk并放入列表中
     trks_pred.header.stamp.sec = request.pred_time * 10;
+    // std::cout<<"frame"<<int(trks_pred.header.stamp.sec)<<std::endl;
     for(auto &pair : trk_state_pred)
     {
+        //pair.second: x,y,z,l,w,h,th,obsryagl,conf
         trk_.pos.x = pair.second[0];
-        //因子图坐标系和kitti坐标系不一样
-        trk_.pos.z = pair.second[1];
-        trk_.pos.y = pair.second[2];
+        //z指向上方
+        trk_.pos.y = pair.second[1];
+        trk_.pos.z = pair.second[2];
         trk_.siz.x = pair.second[3];
         trk_.siz.y = pair.second[4];
         trk_.siz.z = pair.second[5];
@@ -167,6 +169,7 @@ bool predict_callback(track_msgs::Trk_pred::Request &request, track_msgs::Trk_pr
         info_.type = 0;
         info_.score = pair.second[8];
         trks_pred.infos.push_back(info_);
+        // std::cout<<trk_.pos.x<<' '<<trk_.pos.y<<' '<<trk_.pos.z<<std::endl;
     }
     response.trk_predicts = trks_pred;
 
@@ -205,7 +208,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     //TODO 是否会出现，还没有更新完，就发布的情况，也就是说，目前没有机制，使得更新完之前，不能从trk-list里获取最新状态
     for(int i = 0; i < request.matches.trk.data.size(); ++i)
     {
-        det << request.dets.detecs[i].pos.x, request.dets.detecs[i].pos.z, request.dets.detecs[i].pos.y, 
+        det << request.dets.detecs[i].pos.x, request.dets.detecs[i].pos.y, request.dets.detecs[i].pos.z, 
             request.dets.detecs[i].siz.x, request.dets.detecs[i].siz.y, request.dets.detecs[i].siz.z, 
             double(request.dets.detecs[i].alp), request.dets.infos[i].orin, request.dets.infos[i].score;
         backend_id = backend.GetObjIDlist()[int(request.matches.trk.data[i])];
@@ -216,10 +219,11 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     //初始化新轨迹
     for(auto & id : request.unmatch_dets.ids.data)
     {
-        det << request.dets.detecs[id].pos.x, request.dets.detecs[id].pos.z, request.dets.detecs[id].pos.y, 
+        det << request.dets.detecs[id].pos.x, request.dets.detecs[id].pos.y, request.dets.detecs[id].pos.z, 
             request.dets.detecs[id].siz.x, request.dets.detecs[id].siz.y, request.dets.detecs[id].siz.z, 
             double(request.dets.detecs[id].alp), request.dets.infos[id].orin, request.dets.infos[id].score;
         od_res.push_back(det);
+        // std::cout<<det.transpose()<<std::endl;
     }
     backend.InitObj(od_res, time);
     ROS_INFO("Init success!");
@@ -247,6 +251,8 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     std::vector<unsigned long> id_list;
     
     trks_cur.header = request.dets.header;
+    // std::cout<<"frame"<<int(request.dets.header.stamp.sec)<<std::endl;
+
     for(auto &pair : trks_state_cur)
     {
         trk_.pos.x = pair.second[0];
@@ -264,6 +270,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
         info_.score = pair.second[8];
         trks_cur.infos.push_back(info_);
         id_list.push_back(pair.first);
+        // std::cout<<trk_.pos.x<<' '<<trk_.pos.y<<' '<<trk_.pos.z<<std::endl;
     }
     //发布活跃轨迹id
     

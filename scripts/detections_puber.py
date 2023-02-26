@@ -65,11 +65,12 @@ def pub_callback(req):
         inf.score = info[6]# 实际上是检测的score
         inf.orin = info[0]
             # print(inf)
+        # det h,w,l,x,y,z,th
         det_ = Detection()
         det_.siz.x  = det[0]
         det_.siz.y  = det[1]
         det_.siz.z  = det[2]
-
+        # z是向前的方向
         det_.pos.x = det[3]
         det_.pos.y = det[4]
         det_.pos.z = det[5]

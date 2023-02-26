@@ -286,6 +286,7 @@ Vec3 myFrontend::PredictPostionAB3D_KF(double time)
     Vec3 pred_position;
     double cur_time = cur_frame_->ObjTimestamp();
     double dt = time - cur_time;
+    // std::cout<<dt<<std::endl;
 
     //使用AB3D_KF
     ab3d_kf_->predict(dt);

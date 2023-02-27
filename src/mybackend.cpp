@@ -18,7 +18,7 @@ void myBackend::InitObj(std::vector<Vec9> &od_res, double time)
         myFrontend::Ptr new_frontend = myFrontend::Ptr(new myFrontend);
         
         //ab3dmot-kf,x, y, z, theta, l, w, h, dx, dy, dz
-        ab3d_kf_state << od[0], od[1], od[2], od[6], od[3], od[4], od[5], 1, 1, 1;
+        ab3d_kf_state << od[0], od[1], od[2], od[6], od[3], od[4], od[5], vel[0], vel[1], vel[2];
         new_frontend->BuildInitAB3D_KF(ab3d_kf_state);
         //KF,x,y,th,vx,vy,w
         kf_state << od[0], od[1], od[6], vel[0], vel[1], vel[2];
@@ -45,7 +45,7 @@ void myBackend::InitObj(std::vector<Vec9> &od_res, double time)
         // state << od[0], od[1], od[6], od[3], od[4], od[5];
         state_prediction_list_[num_of_obj] = od;
         state_cur_list_[num_of_obj] = od;
-        obj_id_list.push_back(num_of_obj);
+        // obj_id_list.push_back(num_of_obj);
         // objwithdet_id_list.push_back(num_of_obj);
         num_of_obj++;
     }

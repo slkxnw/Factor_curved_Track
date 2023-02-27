@@ -27,6 +27,7 @@ ros::Publisher trk_cur_pub;
 ros::Publisher trk_id_pub;
 mytrk::myBackend backend;
 ros::ServiceClient trk_store;
+std::vector<unsigned long> all_trk_ids;
 
 //可以将1，3，4结合到一起
 // void callback(const track_msgs::PairsConstPtr &match_pair, 
@@ -146,6 +147,7 @@ bool predict_callback(track_msgs::Trk_pred::Request &request, track_msgs::Trk_pr
     track_msgs::Detection_list trks_pred;
     track_msgs::Detection trk_;
     track_msgs::Information info_;
+    all_trk_ids.clear();
     auto trk_state_pred = backend.GetStatePrediction(request.pred_time);
     ROS_INFO("There is %d trks in Frame %d", trk_state_pred.size(), int(request.pred_time * 10));
     //将预测结果按照顺序，生成trk并放入列表中
@@ -170,6 +172,7 @@ bool predict_callback(track_msgs::Trk_pred::Request &request, track_msgs::Trk_pr
         info_.score = pair.second[8];
         trks_pred.infos.push_back(info_);
         // std::cout<<trk_.pos.x<<' '<<trk_.pos.y<<' '<<trk_.pos.z<<std::endl;
+        all_trk_ids.push_back(pair.first);
     }
     response.trk_predicts = trks_pred;
 
@@ -211,7 +214,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
         det << request.dets.detecs[i].pos.x, request.dets.detecs[i].pos.y, request.dets.detecs[i].pos.z, 
             request.dets.detecs[i].siz.x, request.dets.detecs[i].siz.y, request.dets.detecs[i].siz.z, 
             double(request.dets.detecs[i].alp), request.dets.infos[i].orin, request.dets.infos[i].score;
-        backend_id = backend.GetObjIDlist()[int(request.matches.trk.data[i])];
+        backend_id = all_trk_ids[request.matches.trk.data[i]];
         matches[backend_id] = det;
     }
     backend.UpdateObjState(matches, time);
@@ -233,10 +236,10 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     ROS_INFO("Delete start! threr is %d unmatched trks", request.unmatch_trks.ids.data.size());
     for (auto &id : request.unmatch_trks.ids.data)
     {
-        backend_id = backend.GetObjIDlist()[id];
+        backend_id = all_trk_ids[id];
         double last_time = backend.GetObjlist()[backend_id]->GetLaststamp();
         // ROS_INFO("time delay = %f",time - backend.GetObjlist()[backend_id]->GetLastfeame()->time_stamp_);
-        if((time - last_time) > 0.3)
+        if((time - last_time) > 0.5)
             dead_ids.push_back(backend_id);
         // ROS_INFO("its id is : %d", id);
         backend.RemoveUnmatchTrk(backend_id);

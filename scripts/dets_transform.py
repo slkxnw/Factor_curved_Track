@@ -59,12 +59,12 @@ def transform_callback(dets):
         det.pos.y = new_pos[1] + ego_trans[1]
         det.pos.z = new_pos[2] + ego_trans[2]
         # 全局坐标系使用正东正西方向，ego_rotZ是本车在当前帧的yaw，
-        print(np.array([det.pos.x, det.pos.y, det.pos.z]).reshape((1, 3)))
+        # print(np.array([det.pos.x, det.pos.y, det.pos.z]).reshape((1, 3)))
         det.alp = det.alp + ego_rotZ
-        while(det.alp > 3.14159 / 2):
-            det.alp -= 3.14159
-        while(det.alp < -3.14159 / 2):
-            det.alp += 3.14159
+        while(det.alp > 3.14159):
+            det.alp -= 2 * 3.14159
+        while(det.alp < -3.14159):
+            det.alp += 2 * 3.14159
     if(int(dets.header.stamp.secs) % 1 == 0):
         rospy.loginfo("Transform cord of dets in frame %d", int(dets.header.stamp.secs))
     # dets_puber.publish(dets)

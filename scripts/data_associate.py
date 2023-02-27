@@ -160,15 +160,17 @@ def srv_associate_Callback(req):
 	for det in dets.detecs:
 		# z朝向上方
 		unpack_dets.append(np.array([det.siz.x, det.siz.y, det.siz.z, det.pos.x, det.pos.y, det.pos.z, det.alp]))
+		# print(np.array([det.siz.x, det.siz.y, det.siz.z, det.pos.x, det.pos.y, det.pos.z, det.alp]).reshape(1,-1))
 
 	pred_res = get_trk_preds(dets.header.stamp.secs / 10)
 		
 	trks = pred_res.trk_predicts
 	unpack_trks = []
+	# print('=---=')
 	for trk in trks.detecs:
 		# z指向上方
 		unpack_trks.append(np.array([trk.siz.x, trk.siz.y, trk.siz.z, trk.pos.x, trk.pos.y, trk.pos.z, trk.alp]))
-		# print(np.array([trk.siz.x, trk.siz.y, trk.siz.z, trk.pos.x, trk.pos.y, trk.pos.z, trk.alp]))
+		# print(np.array([trk.siz.x, trk.siz.y, trk.siz.z, trk.pos.x, trk.pos.y, trk.pos.z, trk.alp]).reshape(1,-1))
 	
 	matches,unmatch_dets,unmatch_trks, cost, aff_matrix = data_association(unpack_dets, unpack_trks, "giou_3d", -0.2, algm='hungar')
 
@@ -177,17 +179,19 @@ def srv_associate_Callback(req):
 	pub_match.header = dets.header
 	pub_match.dets.data = matches[:, 0].tolist()
 	pub_match.trk.data = matches[:, 1].tolist()
+	# print(pub_match.dets.data)
+	# print(pub_match.trk.data)
 
-	pub_undets = StampArray()
-	pub_undets.header = dets.header
-	pub_undets.ids.data = unmatch_dets.tolist()
+	pub_unm_dets = StampArray()
+	pub_unm_dets.header = dets.header
+	pub_unm_dets.ids.data = unmatch_dets.tolist()
 
-	pub_untrks = StampArray()
-	pub_untrks.header = dets.header
-	pub_untrks.ids.data = unmatch_trks.tolist()
+	pub_unm_trks = StampArray()
+	pub_unm_trks.header = dets.header
+	pub_unm_trks.ids.data = unmatch_trks.tolist()
 
 
-	update_res = process_trk_update(pub_match, pub_undets, pub_untrks, dets)
+	update_res = process_trk_update(pub_match, pub_unm_dets, pub_unm_trks, dets)
 	# print(len(update_res.ids.data))
 	store_res = trk_store(dets.header, update_res.detecs, update_res.infos, update_res.ids);
 
@@ -200,7 +204,7 @@ def srv_associate_Callback(req):
 		if update_res.success & store_res.success:
 			state = 'Success!'
 		rospy.loginfo("Data association of %d frame finished with %d matches, %d unmatched dets, %d unmatched trks, and updation of trks %s ", 
-		int(dets.header.stamp.secs), len(pub_match.dets.data), len(pub_undets.ids.data), len(pub_untrks.ids.data), state)
+		int(dets.header.stamp.secs), len(pub_match.dets.data), len(pub_unm_dets.ids.data), len(pub_unm_trks.ids.data), state)
 	
 	res = Data_associationResponse()
 	res.success =True

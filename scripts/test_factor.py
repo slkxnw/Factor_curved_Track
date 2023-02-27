@@ -27,9 +27,9 @@ dt = 0.1
 x0 = 0
 y0 = 0
 th0 = 0
-v0 = 20
+v0 = 10
 a0 = 0
-w0 = 0.1
+w0 = 0.0001
 
 
 #车辆状态更新
@@ -46,8 +46,8 @@ def updateCarState(state):
     state[1] = state[1] + dy
     state[2] = state[2] + dth
     state[3] = state[3] + dv
-    state[4] = state[4] + random.gauss(0, 0.05)
-    # state[4] = random.gauss(0, 0.05)
+    # state[4] = state[4] + random.gauss(0, 0.05)
+    state[4] = random.gauss(0, 0.05)
     print('gt_state:',state)
     return state
 
@@ -68,12 +68,12 @@ if __name__ == '__main__':
     
     frame = 0
     state = [x0, y0, th0, v0, a0, w0]
-    while(frame < 15):
+    while(frame < 40):
         preds = get_trk_preds(frame / 10);
         preds = preds.trk_predicts
         for pred in preds.detecs:
             print('frame:',frame)
-            print('pred:',[pred.pos.x, pred.pos.z, pred.alp])
+            print('pred:',[pred.pos.x, pred.pos.y, pred.pos.z])
         
         pub_match = Pairs()
         pub_match.header.stamp.secs = frame
@@ -93,8 +93,8 @@ if __name__ == '__main__':
         det = Detection()
         det.alp = state[2] + random.gauss(0, 0.02)
         det.pos.x = state[0] + random.gauss(0, 0.1)
-        det.pos.y = 1
-        det.pos.z = state[1] + random.gauss(0, 0.05)
+        det.pos.y = state[1] + random.gauss(0, 0.05)
+        det.pos.z = 1
         det.siz.x = 2
         det.siz.y = 3
         det.siz.z = 2

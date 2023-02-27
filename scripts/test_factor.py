@@ -5,11 +5,13 @@
 import rospy
 import numpy as np
 import time
+import pickle
 
 import argparse
 import os
 import math
 import random
+import copy
 
 from track_msgs.msg import Detection_list
 from track_msgs.msg import Pairs
@@ -68,6 +70,7 @@ if __name__ == '__main__':
     
     frame = 0
     state = [x0, y0, th0, v0, a0, w0]
+    states = []
     while(frame < 40):
         preds = get_trk_preds(frame / 10);
         preds = preds.trk_predicts
@@ -90,6 +93,7 @@ if __name__ == '__main__':
             pub_match.dets.data = [0]
             pub_match.trk.data = [0]
             state = updateCarState(state)
+        states.append(copy.deepcopy(state))
         det = Detection()
         det.alp = state[2] + random.gauss(0, 0.02)
         det.pos.x = state[0] + random.gauss(0, 0.1)
@@ -110,5 +114,8 @@ if __name__ == '__main__':
 
         update_res = process_trk_update(pub_match, pub_undets, pub_untrks, dets)
         frame = frame + 1
+    for item in states:
+        print(item)
+    pickle.dump(states, open('CV_states.pkl','wb'))
 
 

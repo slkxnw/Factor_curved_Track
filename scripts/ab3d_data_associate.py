@@ -243,8 +243,8 @@ def srv_associate_Callback(req):
 	res.success =True
 	return res
 
-def main():
-    oxt_path = [os.path.join(args.datadir, args.dataset, "oxts" ,args.split, args.seqs + '.txt')]
+def main(args):
+    oxt_path = os.path.join(args.datadir, args.dataset, "oxts" ,args.split, args.seqs + '.txt')
     calib_path = os.path.join('/home/chenz/GD/Trk/AB3DMOT/data/KITTI/tracking/training/calib', args.seqs + '.txt')
     #返回的imupose是OxtsData的list，每个OxtsData包含一条原始的oxt数据，和变换后的，相较于起始帧位置的SE3矩阵
     #Poses are given in an East-North-Up coordinate system， whose origin is the first GPS position.

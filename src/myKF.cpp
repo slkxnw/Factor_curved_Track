@@ -129,6 +129,10 @@ double AB3D_KF::within_range(double theta)
         theta -= 2 * 3.1415926;
     while(theta < -3.1415926)
         theta += 2 * 3.1415926;
+    // while(theta > 3.1415926 / 2.0)
+    //     theta -= 3.1415926;
+    // while(theta < -3.1415926 / 2.0)
+    //     theta += 3.1415926;
     return theta;
 }
 

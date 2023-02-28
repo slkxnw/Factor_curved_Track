@@ -62,6 +62,12 @@ class AB3D_KF
 
     double within_range(double theta);
 
+    void SetState(Vec3 new_pos)
+    {
+        x_state[0] = new_pos[0];
+        x_state[1] = new_pos[1];
+        x_state[2] = new_pos[2];
+    }
 private:
 
     //状态转移方程/运动方程变换矩阵参数

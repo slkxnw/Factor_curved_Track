@@ -20,6 +20,7 @@ from track_msgs.srv import Trk_pred
 from track_msgs.srv import Trk_update
 from track_msgs.srv import Data_association, Data_associationResponse
 from track_msgs.srv import Trk_state_store
+from track_msgs.srv import KF_update, KF_updateRequest
 
 
 
@@ -43,8 +44,8 @@ def ego_motion_compensation(frame, trks):
 		
 	from kitti_oxts import get_ego_traj, egomotion_compensation_ID
 	ego_xyz_imu, ego_rot_imu, left, right = get_ego_traj(imu_pose, frame, 1, 1, only_fut=True, inverse=True) 
-	for index in range(len(trks)):
-		trk_tmp = trks[index]
+	for index in range(len(trks.detecs)):
+		trk_tmp = trks.detecs[index]
 		xyz = np.array([trk_tmp.pos.x, trk_tmp.pos.y, trk_tmp.pos.z]).reshape((1, -1))
 		compensated = egomotion_compensation_ID(xyz, calib, ego_rot_imu, ego_xyz_imu, left, right)
 		trk_tmp.pos.x, trk_tmp.pos.y, trk_tmp.pos.z = compensated[0]
@@ -53,7 +54,7 @@ def ego_motion_compensation(frame, trks):
 		# 	self.trackers[index].kf.x[:3] = copy.copy(compensated).reshape((-1))
 		# except:
 		# 	self.trackers[index].kf.x[:3] = copy.copy(compensated).reshape((-1, 1))
-
+	res = trk_KF_pred_update(trks)
 	return trks
 
 def compute_affinity(dets, trks, metric, trk_inv_inn_matrices=None):
@@ -181,6 +182,8 @@ def data_association(dets, trks, metric, threshold, algm='greedy', \
 	if len(matches) == 0: 
 		matches = np.empty((0, 2),dtype=int)
 	else: matches = np.concatenate(matches, axis=0)
+	print("match:")
+	# print(matches)
 
 	return matches, np.array(unmatched_dets), np.array(unmatched_trks), cost, aff_matrix
 
@@ -188,17 +191,19 @@ def srv_associate_Callback(req):
 	
 	# rospy.loginfo("Data association Into callback")
 
+	frame = int(req.dets.header.stamp.secs)
 	dets = req.dets
 	unpack_dets = []
 	print("dets:")
 	for det in dets.detecs:
 		# z朝向上方
 		unpack_dets.append(np.array([det.siz.x, det.siz.y, det.siz.z, det.pos.x, det.pos.y, det.pos.z, det.alp]))
-		print(np.array([ det.pos.x, det.pos.y, det.pos.z, det.alp]).reshape(1,-1))
+		# print(np.array([ det.pos.x, det.pos.y, det.pos.z, det.alp]).reshape(1,-1))
 
 	pred_res = get_trk_preds(dets.header.stamp.secs / 10)
 		
 	trks = pred_res.trk_predicts
+	trks = ego_motion_compensation(frame, trks)
 	unpack_trks = []
 	print('predd:')
 	for trk in trks.detecs:
@@ -259,7 +264,8 @@ def main(args):
     rospy.wait_for_service('/trk_predict')
     rospy.wait_for_service('/trk_update')
     rospy.wait_for_service('/trk_state_store')
-    global process_trk_update, get_trk_preds, trk_store
+    rospy.wait_for_service('/trk_KF_pred_update')
+    global process_trk_update, get_trk_preds, trk_store,trk_KF_pred_update
     try:
         process_trk_update = rospy.ServiceProxy('/trk_update', Trk_update)
     except rospy.ServiceException as e:
@@ -270,6 +276,10 @@ def main(args):
         rospy.logwarn(e)
     try:
         trk_store = rospy.ServiceProxy('/trk_state_store', Trk_state_store)
+    except rospy.ServiceException as e:
+        rospy.logwarn(e)
+    try:
+        trk_KF_pred_update = rospy.ServiceProxy('/trk_KF_pred_update', KF_update)
     except rospy.ServiceException as e:
         rospy.logwarn(e)
 

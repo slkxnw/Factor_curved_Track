@@ -192,6 +192,13 @@ myBackend::ObjInfotype myBackend::GetStateCur()
     return state_cur_list_;
 }
 
+void myBackend::UpdateKFpred(std::unordered_map<unsigned long, Vec3> &new_pos)
+{
+    for(auto &pair : new_pos)
+    {
+        obj_list_[pair.first]->UpdateAB3D_KFPred(pair.second);
+    }
+}
 
 
 } // namespace mytrk

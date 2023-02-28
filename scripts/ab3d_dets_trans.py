@@ -43,6 +43,11 @@ def transform_callback(dets):
     # print("ego:",ego_trans)
     ego_rotZ = ego_Oxt.packet.yaw
     # 这里，将自车在全局坐标系下的roty和检测结果车辆在自车坐标系下的roty相加
+    # for det in dets.detecs:
+    #     while(det.alp > 3.14159 / 2.0) :
+    #         det.alp -= 3.14159
+    #     while(det.alp < -3.14159 / 2.0):
+    #         det.alp += 3.14159
     if(int(dets.header.stamp.secs) % 1 == 0):
         rospy.loginfo("Transform cord of dets in frame %d", int(dets.header.stamp.secs))
     # dets_puber.publish(dets)

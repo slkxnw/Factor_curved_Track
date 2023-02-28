@@ -20,6 +20,7 @@
 # include"track_msgs/Trk_pred.h"
 # include"track_msgs/Trk_update.h"
 # include"track_msgs/Trk_state_store.h"
+# include"track_msgs/KF_update.h"
 
 // 一些全局变量，这样不用向回调函数传参
 ros::Publisher trk_predict_pub;
@@ -308,6 +309,23 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     return true;
 }
 
+bool update_KF_callback(track_msgs::KF_update::Request &request, track_msgs::KF_update::Response& response)
+{
+    std::unordered_map<unsigned long, Vec3> updates;
+    Vec3 new_pos;
+
+    for(int i = 0; i < request.dets.detecs.size(); i++)
+    {
+        new_pos << request.dets.detecs[i].pos.x, request.dets.detecs[i].pos.y, request.dets.detecs[i].pos.z;
+        updates[all_trk_ids[i]] = new_pos;
+    }
+
+    backend.UpdateKFpred(updates);
+
+    response.success = true;
+    return true;
+}
+
 bool trk_store_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_update::Response& response)
 {
     track_msgs::Detection trk_;
@@ -372,6 +390,8 @@ int main(int argc, char** argv)
     ros::ServiceServer trk_predict = nh.advertiseService("/trk_predict", predict_callback);
     //轨迹更新服务
     ros::ServiceServer trk_update = nh.advertiseService("/trk_update", update_callback);
+    //KF预测 更新服务
+    ros::ServiceServer trk_KF_pred_update = nh.advertiseService("/trk_KF_pred_update", update_KF_callback);
     //因子管理后端
     // init_bd.push_back(Vec9::Zero());
     

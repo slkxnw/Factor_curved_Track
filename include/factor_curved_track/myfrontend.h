@@ -87,6 +87,11 @@ public:
     void UpdateTrkListCA_EKF();
     void UpdateTrkListAB3D_KF();
 
+    void UpdateAB3D_KFPred(Vec3 new_pos)
+    {
+        ab3d_kf_->SetState(new_pos);
+    }
+
 
     //TODO：得到边的测量，并把数据添加给measure——list
     //TODO：设计一个measurelist，他是tek-list的一部分，存放这里计算的结果

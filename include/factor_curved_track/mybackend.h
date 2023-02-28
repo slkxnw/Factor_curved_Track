@@ -42,6 +42,8 @@ public:
 
     //给出，给定时刻的目标位置预测结果
     ObjInfotype GetStatePrediction(double time);
+    //更新KF预测结果
+    void UpdateKFpred(std::unordered_map<unsigned long, Vec3> &new_pos);
     //获取更新后的轨迹当前状态，
     ObjInfotype GetStateCur();
 

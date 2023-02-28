@@ -53,10 +53,14 @@ class AB3D_KF
 
     void update(Vec7 measure);
 
+    double orin_correction(double obv_theta);
+
     Vec10 GetState()
     {
         return x_state;
     }
+
+    double within_range(double theta);
 
 private:
 

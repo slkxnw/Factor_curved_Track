@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="factor_curved_track" type="test_factor.py" name="test_factor" output="screen"/>
+    <node pkg="factor_curved_track" type="trks_transform.py" name="trks_transform" output="screen"/>
+    <node pkg="factor_curved_track" type="factor_manage" name="factor_manage" output="screen"/>
+</launch>

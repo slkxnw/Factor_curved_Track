@@ -86,11 +86,11 @@ private:
     //所有有检测匹配的轨迹id列表，实际上无用
     // std::vector<unsigned long> objwithdet_id_list;
     //KF初始状态假设,x,y,th速度,和加速度以及方差
-    Vec3 vel = {0, 0, 0};
+    Vec3 vel = {0.0, 0.0, 0.0};
     //加速度方差
     Vec3 acc = {0.5, 0.1, 0.05};
     //加速度
-    Vec2 acc_value = {0, 0};
+    Vec2 acc_value = {0.0, 0.0};
 
 };
 

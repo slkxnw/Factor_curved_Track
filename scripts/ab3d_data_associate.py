@@ -190,23 +190,25 @@ def srv_associate_Callback(req):
 
 	dets = req.dets
 	unpack_dets = []
+	print("dets:")
 	for det in dets.detecs:
 		# z朝向上方
 		unpack_dets.append(np.array([det.siz.x, det.siz.y, det.siz.z, det.pos.x, det.pos.y, det.pos.z, det.alp]))
-		# print(np.array([det.siz.x, det.siz.y, det.siz.z, det.pos.x, det.pos.y, det.pos.z, det.alp]).reshape(1,-1))
+		print(np.array([ det.pos.x, det.pos.y, det.pos.z, det.alp]).reshape(1,-1))
 
 	pred_res = get_trk_preds(dets.header.stamp.secs / 10)
 		
 	trks = pred_res.trk_predicts
 	unpack_trks = []
-	# print('=---=')
+	print('predd:')
 	for trk in trks.detecs:
 		# z指向上方
 		unpack_trks.append(np.array([trk.siz.x, trk.siz.y, trk.siz.z, trk.pos.x, trk.pos.y, trk.pos.z, trk.alp]))
-		# print(np.array([trk.siz.x, trk.siz.y, trk.siz.z, trk.pos.x, trk.pos.y, trk.pos.z, trk.alp]).reshape(1,-1))
+		print(np.array([trk.pos.x, trk.pos.y, trk.pos.z, trk.alp]).reshape(1,-1))
 	
 	matches,unmatch_dets,unmatch_trks, cost, aff_matrix = data_association(unpack_dets, unpack_trks, "giou_3d", -0.2, algm='hungar')
 
+	# print(aff_matrix.T)
 	# rospy.loginfo(str(type(matches)) + ' ' + str(type(unmatch_trks))+ ' ' + str(type(unmatch_dets)))
 	pub_match = Pairs()
 	pub_match.header = dets.header

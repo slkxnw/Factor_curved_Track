@@ -56,6 +56,7 @@ void CV_KF::update(Vec3 measure)
 AB3D_KF::AB3D_KF(Vec10 init_state)
 {
     x_state = init_state;
+    std::cout<<"init:"<<x_state.transpose()<<std::endl;
     
     //设置A，A值不确定，x的增量和dt有关，右上角暂时初始化为1
     A = Mat1010::Identity();
@@ -81,17 +82,54 @@ void AB3D_KF::predict(double dt)
     // A.block<3, 3>(0, 7) = Mat33::Identity() * dt;
     x_state = A * x_state;
     P = A * P * (A.transpose()) + Q;
+    x_state[3] = within_range(x_state[3]);
 }
 
 void AB3D_KF::update(Vec7 measure)
 {
-    Mat77 Tmp = C * P * (C.transpose()) + R;
-    Mat107 K = P * (C.transpose()) * (Tmp.inverse());
-    x_state = x_state + K * (measure - C * x_state);
+    measure[3] = orin_correction(measure[3]);
     
-    P = (Mat1010::Identity() - K * C) * P;
+    Vec7 y = measure - C * x_state;
+    Mat107 PCT = P * (C.transpose());
+    Mat77 Tmp = C * PCT + R;
+    Mat107 K = PCT * (Tmp.inverse());
+    x_state = x_state + K * y;
+    //P = (I-KC)P(I-KC)' + KRK'
+    Mat1010 I_KC = Mat1010::Identity() - K * C;
+    P = I_KC * P * I_KC.transpose() + K * R * K.transpose();
+    // std::cout<<P<<std::endl;
+    x_state[3] = within_range(x_state[3]);
 }
 
+double AB3D_KF::orin_correction(double obv_theta)
+{
+    obv_theta = within_range(obv_theta);
+    x_state[3] = within_range(x_state[3]);
 
+    if(abs(x_state[3] - obv_theta) > 3.1415926 / 2.0 && abs(obv_theta - x_state[3]) < 3.1415926 * 3.0 / 2.0)
+    {
+        x_state[3] += 3.1415926;
+        x_state[3] = within_range(x_state[3]);
+    }
+
+    if(abs(obv_theta - x_state[3]) >= 3.1415926 * 3.0 / 2.0)
+    {
+        if(obv_theta > 0)
+            x_state[3] += 3.1415926 * 2;
+        else
+            x_state[3] -= 3.1415926 * 2;
+    }
+
+    return obv_theta;
+}
+
+double AB3D_KF::within_range(double theta)
+{
+    while(theta > 3.1415926)
+        theta -= 2 * 3.1415926;
+    while(theta < -3.1415926)
+        theta += 2 * 3.1415926;
+    return theta;
+}
 
 } // namespace mytrk

@@ -114,8 +114,6 @@ if __name__ == '__main__':
 
         update_res = process_trk_update(pub_match, pub_undets, pub_untrks, dets)
         frame = frame + 1
-    for item in states:
-        print(item)
     pickle.dump(states, open('CA_states.pkl','wb'))
 
 

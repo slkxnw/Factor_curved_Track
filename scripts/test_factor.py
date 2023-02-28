@@ -30,7 +30,7 @@ x0 = 0
 y0 = 0
 th0 = 0
 v0 = 10
-a0 = 0
+a0 = 1
 w0 = 0.0001
 
 
@@ -48,8 +48,8 @@ def updateCarState(state):
     state[1] = state[1] + dy
     state[2] = state[2] + dth
     state[3] = state[3] + dv
-    # state[4] = state[4] + random.gauss(0, 0.05)
-    state[4] = random.gauss(0, 0.05)
+    state[4] = state[4] + random.gauss(0, 0.05)
+    # state[4] = random.gauss(0, 0.05)
     print('gt_state:',state)
     return state
 
@@ -116,6 +116,6 @@ if __name__ == '__main__':
         frame = frame + 1
     for item in states:
         print(item)
-    pickle.dump(states, open('CV_states.pkl','wb'))
+    pickle.dump(states, open('CA_states.pkl','wb'))
 
 

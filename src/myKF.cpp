@@ -60,7 +60,7 @@ AB3D_KF::AB3D_KF(Vec10 init_state)
     //设置A，A值不确定，x的增量和dt有关，右上角暂时初始化为1
     A = Mat1010::Identity();
     A.block<3, 3>(0, 7) = Mat33::Identity();
-    std::cout<<A<<std::endl;
+    // std::cout<<A<<std::endl;
 
     C = Mat710::Zero();
     C.block<7, 7>(0,0) = Mat77::Identity();
@@ -69,7 +69,7 @@ AB3D_KF::AB3D_KF(Vec10 init_state)
     //AB3DMOT，初始时刻，对于速度的不确定性是非常大的，因此相关的协方差设的很大
     P.block<3,3>(7, 7) = P.block<3,3>(7, 7) * 1000; 
     P = P * 10;
-    std::cout<<P<<std::endl;
+    // std::cout<<P<<std::endl;
     Q = Mat1010::Identity();
     //AB3DMOT认为速度是常量这一假设非常强，将速度相关的协方差设置的非常小
     Q.block<3, 3>(7, 7) = Q.block<3, 3>(7, 7) * 0.01;
@@ -78,7 +78,7 @@ AB3D_KF::AB3D_KF(Vec10 init_state)
 
 void AB3D_KF::predict(double dt)
 {
-    A.block<3, 3>(0, 7) = Mat33::Identity() * dt;
+    // A.block<3, 3>(0, 7) = Mat33::Identity() * dt;
     x_state = A * x_state;
     P = A * P * (A.transpose()) + Q;
 }

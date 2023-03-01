@@ -250,35 +250,59 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     ROS_INFO("Delete success, delete %d trks!", dead_ids.size());
 
 
+    
+    //获取检测对应轨迹的当前状态，包括观测角/z等数据,这里的观测角/z和上面轨迹预测状态的是一样的，都使用最近的检测数据的参数
+    std::vector<unsigned long> id_list;
+    trks_cur.header = request.dets.header;
     //TODO：某一个轨迹，如果上次更新时间间隔小于0.4秒，并且命中次数大于要求值，才会输出，当然最开始的两帧没有命中次数的限制
     //
-
-    //获取检测对应轨迹的当前状态，包括观测角/z等数据,这里的观测角/z和上面轨迹预测状态的是一样的，都使用最近的检测数据的参数
-    auto trks_state_cur = backend.GetStateCur();
-    std::vector<unsigned long> id_list;
-    
-    trks_cur.header = request.dets.header;
-    // std::cout<<"frame"<<int(request.dets.header.stamp.sec)<<std::endl;
-
-    for(auto &pair : trks_state_cur)
+    auto obj_list = backend.GetObjlist();
+    for(auto pair : obj_list)
     {
-        trk_.pos.x = pair.second[0];
-        //因子图坐标系和kitti坐标系不一样
-        trk_.pos.z = pair.second[1];
-        trk_.pos.y = pair.second[2];
-        trk_.siz.x = pair.second[3];
-        trk_.siz.y = pair.second[4];
-        trk_.siz.z = pair.second[5];
-        trk_.alp = pair.second[6];
-        trks_cur.detecs.push_back(trk_);
-        //这里是当前帧的观测角
-        info_.orin = pair.second[7];
-        info_.type = 0;
-        info_.score = pair.second[8];
-        trks_cur.infos.push_back(info_);
+        Vec3 cur_position;
+        Vec3 obj_size;
+        double last_time = pair.second->GetLaststamp();
+        int detected_time = pair.second->GetDetectedTime();
+        if((time - last_time) > 0.3 || (detected_time < 2 && time > 2))
+            continue;
         id_list.push_back(pair.first);
-        // std::cout<<trk_.pos.x<<' '<<trk_.pos.y<<' '<<trk_.pos.z<<std::endl;
+        cur_position = pair.second->GetCurPosition();
+        trk_.pos.x = cur_position[0];
+        trk_.pos.y = cur_position[1];
+        trk_.alp = cur_position[2];
+        obj_size = pair.second->GetObjSize();
+        trk_.siz.x = obj_size[0];
+        trk_.siz.y = obj_size[1];
+        trk_.siz.z = obj_size[2];
+
+        trk_.pos.z = pair.second->GetObjZ();
+        trks_cur.detecs.push_back(trk_);
+
+        info_.orin = pair.second->GetObjObsrvAgl();
+        info_.type = 0;
+        info_.score = pair.second->GetObjObsrvConf();
     }
+    // std::cout<<"frame"<<int(request.dets.header.stamp.sec)<<std::endl;
+    // auto trks_state_cur = backend.GetStateCur();
+    // for(auto &pair : trks_state_cur)
+    // {
+    //     trk_.pos.x = pair.second[0];
+    //     //因子图坐标系和kitti坐标系不一样
+    //     trk_.pos.z = pair.second[1];
+    //     trk_.pos.y = pair.second[2];
+    //     trk_.siz.x = pair.second[3];
+    //     trk_.siz.y = pair.second[4];
+    //     trk_.siz.z = pair.second[5];
+    //     trk_.alp = pair.second[6];
+    //     trks_cur.detecs.push_back(trk_);
+    //     //这里是当前帧的观测角
+    //     info_.orin = pair.second[7];
+    //     info_.type = 0;
+    //     info_.score = pair.second[8];
+    //     trks_cur.infos.push_back(info_);
+    //     id_list.push_back(pair.first);
+    //     // std::cout<<trk_.pos.x<<' '<<trk_.pos.y<<' '<<trk_.pos.z<<std::endl;
+    // }
     //发布活跃轨迹id
     
     // auto obj_ids = backend.GetObjwithdetIDlist();

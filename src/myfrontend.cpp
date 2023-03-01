@@ -136,6 +136,7 @@ void myFrontend::UpdateTrkList()
 {
     // std::unique_lock<std::mutex> lock(data_mutex_);
     // trk_list_update_.notify_one();
+    detected_time++;
     auto active_kfs = trk_list_->GetActivateKeyframe();
     auto active_kf_ids = trk_list_->GetActivateKeyframeIDs();
     Optimize(active_kfs, active_kf_ids);
@@ -149,6 +150,7 @@ void myFrontend::UpdateTrkListKF()
     Vec6 state = cur_frame_->ObjState();
     Vec3 measure;
     measure << state[0], state[1], state[2];
+    detected_time++;
     
     // kf_->predict(dt);
     kf_->update(measure);
@@ -170,6 +172,7 @@ void myFrontend::UpdateTrkListCA_EKF()
     double dt = cur_frame_->ObjTimestamp() - last_timestamp_;
     // std::cout<<dt<<" "<<dt<<std::endl;
     //x,y,th,v,a,w
+    detected_time++;
     Vec6 state = cur_frame_->ObjState();
     Vec3 measure;
     measure << state[0], state[1], state[2];
@@ -195,6 +198,7 @@ void myFrontend::UpdateTrkListAB3D_KF()
     double dt = cur_frame_->ObjTimestamp() - last_timestamp_;
     // std::cout<<dt<<" "<<dt<<std::endl;
     //x,y,th,v,a,w
+    detected_time++;
     Vec6 state = cur_frame_->ObjState();
     //x, y, z, theta, l, w, h,
     Vec7 measure;

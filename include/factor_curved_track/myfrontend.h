@@ -115,6 +115,10 @@ public:
     {
         return last_timestamp_;
     }
+    int GetDetectedTime()
+    {
+        return detected_time;
+    }
     //评估相关，将当前状态输出
     //不参与更新的目标参数，的初始化和更新
     void SetObjSize(Vec3 size)
@@ -196,6 +200,7 @@ private:
     double z_;
     double observ_agl;
     double observ_conf;
+    int detected_time = 1;
 
 };
 

@@ -83,10 +83,10 @@ def transform_callback(req):
         # trk.pos.y = tmp_pos[1]
         # trk.pos.z = tmp_pos[2]
         # trk.alp = trk.alp - ego_rotZ
-        while(trk.alp > 3.14159):
-            trk.alp -= 3.14159 * 2
-        while(trk.alp < -3.14159):
-            trk.alp += 3.14159 * 2
+        # while(trk.alp > 3.14159):
+        #     trk.alp -= 3.14159 * 2
+        # while(trk.alp < -3.14159):
+        #     trk.alp += 3.14159 * 2
         dim = [trk.siz.x, trk.siz.y, trk.siz.z]
         pos = [trk.pos.x, trk.pos.y, trk.pos.z]
         roty = trk.alp

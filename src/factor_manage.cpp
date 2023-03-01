@@ -240,7 +240,8 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
         backend_id = all_trk_ids[id];
         double last_time = backend.GetObjlist()[backend_id]->GetLaststamp();
         // ROS_INFO("time delay = %f",time - backend.GetObjlist()[backend_id]->GetLastfeame()->time_stamp_);
-        if((time - last_time) > 0.5)
+        //如果有4帧没有检测到物体，就把这个删了
+        if((time - last_time) > 0.3)
             dead_ids.push_back(backend_id);
         // ROS_INFO("its id is : %d", id);
         backend.RemoveUnmatchTrk(backend_id);
@@ -249,7 +250,9 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     ROS_INFO("Delete success, delete %d trks!", dead_ids.size());
 
 
-    //TODO：未匹配轨迹的数据不应该发布
+    //TODO：某一个轨迹，如果上次更新时间间隔小于0.4秒，并且命中次数大于要求值，才会输出，当然最开始的两帧没有命中次数的限制
+    //
+
     //获取检测对应轨迹的当前状态，包括观测角/z等数据,这里的观测角/z和上面轨迹预测状态的是一样的，都使用最近的检测数据的参数
     auto trks_state_cur = backend.GetStateCur();
     std::vector<unsigned long> id_list;

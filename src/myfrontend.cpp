@@ -198,7 +198,7 @@ void myFrontend::UpdateTrkListAB3D_KF()
     Vec6 state = cur_frame_->ObjState();
     //x, y, z, theta, l, w, h,
     Vec7 measure;
-    measure << state[0], state[1], z_, obj_size_[0], obj_size_[1], obj_size_[2], state[2];
+    measure << state[0], state[1], z_, state[2], obj_size_[0], obj_size_[1], obj_size_[2];
     std::cout<<"start_AB3D_kf"<<std::endl;
     // ca_ekf_->predict(dt);
     ab3d_kf_->update(measure);

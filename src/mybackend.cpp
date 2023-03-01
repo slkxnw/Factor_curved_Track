@@ -163,6 +163,7 @@ myBackend::ObjInfotype myBackend::GetStatePrediction(double time)
 
         obj_id_list.push_back(state_pair.first);
     }
+    
     return state_prediction_list_;
 }
 

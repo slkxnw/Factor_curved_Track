@@ -56,7 +56,7 @@ void CV_KF::update(Vec3 measure)
 AB3D_KF::AB3D_KF(Vec10 init_state)
 {
     x_state = init_state;
-    std::cout<<"init:"<<x_state.transpose()<<std::endl;
+    // std::cout<<"init:"<<x_state.transpose()<<std::endl;
     
     //设置A，A值不确定，x的增量和dt有关，右上角暂时初始化为1
     A = Mat1010::Identity();

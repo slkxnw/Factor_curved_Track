@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument('--datadir', type=str, default='/home/chenz/GD/dataset')
     parser.add_argument('--dataset', type=str, default='KITTI', help='KITTI, nuScenes')
     parser.add_argument('--split', type=str, default='training', help='training, testing')
-    parser.add_argument('--seqs', type=str, default='0001')
+    parser.add_argument('--seqs', type=str, default='0012')
     parser.add_argument('__name', type=str)
     parser.add_argument('__log', type=str)
     args = parser.parse_args()
@@ -145,7 +145,7 @@ def data_association(dets, trks, metric, threshold, algm='greedy', \
 
 	# compute affinity matrix
 	aff_matrix = compute_affinity(dets, trks, metric, trk_inv_inn_matrices)
-	# print(aff_matrix)
+	print(aff_matrix)
 
 	# association based on the affinity matrix
 	if hypothesis == 1:
@@ -200,7 +200,7 @@ def srv_associate_Callback(req):
 		unpack_dets.append(np.array([det.siz.x, det.siz.y, det.siz.z, det.pos.x, det.pos.y, det.pos.z, det.alp]))
 		# print(np.array([ det.pos.x, det.pos.y, det.pos.z, det.siz.x, det.siz.y, det.siz.z, det.alp]).reshape(1,-1))
 
-	pred_res = get_trk_preds(dets.header.stamp.secs / 10)
+	pred_res = get_trk_preds(dets.header.stamp.secs / 10.0)
 		
 	trks = pred_res.trk_predicts
 	trks = ego_motion_compensation(frame, trks)
@@ -259,6 +259,7 @@ def main(args):
 
     calib = Calibration(calib_path)
     imu_pose = load_oxts(oxt_path)
+    print("there is %d imu_pose", len(imu_pose))
     rospy.init_node('data_association_node', anonymous=True)
 
     rospy.wait_for_service('/trk_predict')

@@ -255,7 +255,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     std::vector<unsigned long> id_list;
     trks_cur.header = request.dets.header;
     //TODO：某一个轨迹，如果上次更新时间间隔小于0.4秒，并且命中次数大于要求值，才会输出，当然最开始的两帧没有命中次数的限制
-    //
+    
     auto obj_list = backend.GetObjlist();
     for(auto pair : obj_list)
     {
@@ -263,7 +263,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
         Vec3 obj_size;
         double last_time = pair.second->GetLaststamp();
         int detected_time = pair.second->GetDetectedTime();
-        if((time - last_time) > 0.3 || (detected_time < 2 && time > 2))
+        if((time - last_time) >= 0.4 || (detected_time < 3 && time > 0.3))
             continue;
         id_list.push_back(pair.first);
         cur_position = pair.second->GetCurPosition();
@@ -281,8 +281,9 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
         info_.orin = pair.second->GetObjObsrvAgl();
         info_.type = 0;
         info_.score = pair.second->GetObjObsrvConf();
+        trks_cur.infos.push_back(info_);
     }
-    // std::cout<<"frame"<<int(request.dets.header.stamp.sec)<<std::endl;
+
     // auto trks_state_cur = backend.GetStateCur();
     // for(auto &pair : trks_state_cur)
     // {
@@ -303,9 +304,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     //     id_list.push_back(pair.first);
     //     // std::cout<<trk_.pos.x<<' '<<trk_.pos.y<<' '<<trk_.pos.z<<std::endl;
     // }
-    //发布活跃轨迹id
-    
-    // auto obj_ids = backend.GetObjwithdetIDlist();
+
     
     active_ids.header = request.dets.header;
     for(auto &id : id_list)
@@ -313,20 +312,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     response.detecs = trks_cur.detecs;
     response.infos = trks_cur.infos;
     response.ids = active_ids.ids;
-    // std::cout<<id_list.size()<<std::endl;
-    // std::cout<<trks_cur.detecs.size()<<std::endl;
-    // std::cout<<trks_cur.infos.size()<<std::endl;
 
-    
-    // track_msgs::Trk_state_store srv;
-    // srv.request.detecs = trks_cur.detecs;
-    // srv.request.infos = trks_cur.infos;
-    // srv.request.header = trks_cur.header;
-    // srv.request.ids = active_ids.ids;
-    // ros::service::waitForService("/trk_state_store");
-    // ROS_INFO("Call service to store trk info");
-    // bool ret = trk_store.call(srv);    
-    // ROS_INFO("Call service to store trk info state: %d", int(ret));
     
     if(int(request.dets.header.stamp.sec) % 1 == 0)
         ROS_INFO("Frame %d optimization finished with %d trks updated, %d trks initialed, %d trks deleted",

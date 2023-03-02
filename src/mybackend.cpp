@@ -109,7 +109,12 @@ void myBackend::StopObj(std::vector<unsigned long> dead_ids)
     {
         // dead_obj_list.insert(make_pair(id, obj_list_[id]->GetTrklist()));
         obj_list_[id]->Stop();
-        obj_list_.erase(id);
+        auto it = obj_list_.find(id);
+        std::cout<<"delete trk_"<<id<<" at:"<<std::endl;
+        std::cout<<obj_list_[id]->GetCurPosition().transpose()<<std::endl;
+        obj_list_.erase(it);
+        if(obj_list_.find(id) == obj_list_.end())
+            std::cout<<"delete trk_"<<id<<" succeed!"<<std::endl;
         state_prediction_list_.erase(id);
         state_cur_list_.erase(id);
     }

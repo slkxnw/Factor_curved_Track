@@ -315,7 +315,15 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     //     // std::cout<<trk_.pos.x<<' '<<trk_.pos.y<<' '<<trk_.pos.z<<std::endl;
     // }
 
-    
+    std::cout<<"remained tracks:"<<std::endl;
+    auto obj_list2 = backend.GetObjlist();
+    for(auto pairs : obj_list2)
+    {
+        Vec3 cur_position;
+        cur_position = pairs.second->GetCurPosition();
+        double z = pairs.second->GetObjZ();
+        std::cout<<cur_position[0]<<' '<<cur_position[1]<<' '<<z<<std::endl;
+    }
     active_ids.header = request.dets.header;
     for(auto &id : id_list)
         active_ids.ids.data.push_back(id); 

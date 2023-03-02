@@ -149,7 +149,7 @@ bool predict_callback(track_msgs::Trk_pred::Request &request, track_msgs::Trk_pr
     track_msgs::Detection trk_;
     track_msgs::Information info_;
     all_trk_ids.clear();
-    auto trk_state_pred = backend.GetStatePrediction(request.pred_time);
+    auto trk_state_pred = backend.GetStatePredictionAll(request.pred_time);
     ROS_INFO("There is %d trks in Frame %d", trk_state_pred.size(), int(request.pred_time * 10));
     //将预测结果按照顺序，生成trk并放入列表中
     trks_pred.header.stamp.sec = request.pred_time * 10;
@@ -238,10 +238,13 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     for (auto &id : request.unmatch_trks.ids.data)
     {
         backend_id = all_trk_ids[id];
+        int time_since_update = backend.GetObjlist()[backend_id]->GetTimeSinceUpdate();
         double last_time = backend.GetObjlist()[backend_id]->GetLaststamp();
         // ROS_INFO("time delay = %f",time - backend.GetObjlist()[backend_id]->GetLastfeame()->time_stamp_);
         //如果有4帧没有检测到物体，就把这个删了
-        if((time - last_time) > 0.3)
+        // if((time - last_time) > 0.3)
+        //     dead_ids.push_back(backend_id);
+        if(time_since_update >= 2)
             dead_ids.push_back(backend_id);
         // ROS_INFO("its id is : %d", id);
         backend.RemoveUnmatchTrk(backend_id);
@@ -261,9 +264,10 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     {
         Vec3 cur_position;
         Vec3 obj_size;
-        double last_time = pair.second->GetLaststamp();
+        int time_since_update = backend.GetObjlist()[pair.first]->GetTimeSinceUpdate();
+        // std::cout<<time_since_update<<std::endl;
         int detected_time = pair.second->GetDetectedTime();
-        if((time - last_time) >= 0.4 || (detected_time < 3 && time > 0.3))
+        if(time_since_update >= 2 || (detected_time < 3 && time > 0.3))
             continue;
         id_list.push_back(pair.first);
         cur_position = pair.second->GetCurPosition();

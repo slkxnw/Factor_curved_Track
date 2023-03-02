@@ -58,6 +58,7 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches,
     // objwithdet_id_list.clear();
     for (auto &match :matches)
     {
+        obj_list_[match.first]->ResetTimeSinceUpdate();
         //检测结果为 x,y,z,w,h,l,theta
         //观测数据，x,y,theta
         measure << match.second[0], match.second[1], match.second[6];
@@ -165,6 +166,57 @@ myBackend::ObjInfotype myBackend::GetStatePrediction(double time)
     }
     
     return state_prediction_list_;
+}
+
+myBackend::ObjInfotype myBackend::GetStatePredictionAll(double time)
+{
+    Vec3 position_prediction;
+    Vec3 obj_size;
+    Vec9 preds;
+    ObjInfotype prediction_list;
+    obj_id_list.clear();
+    for (auto &pair : obj_list_)
+    {
+        //x,y,theta
+        int num_of_kf = obj_list_[pair.first]->GetTrklist()->GetKeyframeNum();
+        if(num_of_kf > kf_opt_thres)
+        {
+            position_prediction = obj_list_[pair.first]->PredictPostion(time);
+        }
+        else
+        {
+            if (filter_type == 1)
+                //使用CV+KF
+                position_prediction = obj_list_[pair.first]->PredictPostionKF(time);
+            else if (filter_type == 2)
+                //使用CA + EKF
+                position_prediction = obj_list_[pair.first]->PredictPostionCA_EKF(time);
+            else if (filter_type == 0)
+                //使用AB3DMOT方法
+                position_prediction = obj_list_[pair.first]->PredictPostionAB3D_KF(time);
+            
+        }
+        
+        // state_pair.second.block<2, 1>(0, 0) = position_prediction;
+        //state_pair.second: x,y,z,l,w,h,th,obsryagl,conf
+        preds[0] = position_prediction[0];
+        preds[1] = position_prediction[1];
+        preds[6] = position_prediction[2];
+        //size
+        obj_size = obj_list_[pair.first]->GetObjSize();
+        preds[3] = obj_size[0];
+        preds[4] = obj_size[1];
+        preds[5] = obj_size[2];
+        //z & 观测角 & 检测置信度
+        preds[2] = obj_list_[pair.first]->GetObjZ();
+        preds[7] = obj_list_[pair.first]->GetObjObsrvAgl();
+        preds[8] = obj_list_[pair.first]->GetObjObsrvConf();
+
+        obj_id_list.push_back(pair.first);
+        prediction_list[pair.first] = preds;
+    }
+    
+    return prediction_list;
 }
 
 myBackend::ObjInfotype myBackend::GetStateCur()

@@ -92,6 +92,15 @@ public:
         ab3d_kf_->SetState(new_pos);
     }
 
+    void ResetTimeSinceUpdate()
+    {
+        time_since_update = 0;
+    }
+    int GetTimeSinceUpdate()
+    {
+        return time_since_update;
+    }
+
 
     //TODO：得到边的测量，并把数据添加给measure——list
     //TODO：设计一个measurelist，他是tek-list的一部分，存放这里计算的结果
@@ -201,6 +210,7 @@ private:
     double observ_agl;
     double observ_conf;
     int detected_time = 1;
+    int time_since_update = 0;
 
 };
 

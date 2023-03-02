@@ -232,29 +232,30 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     backend.InitObj(od_res, time);
     ROS_INFO("Init success!");
 
-    //删除老旧轨迹
-    // for(int i = 0; i < int(request.unmatch_trks.ids.data.size()); ++i)
-    ROS_INFO("Delete start! threr is %d unmatched trks", request.unmatch_trks.ids.data.size());
-    for (auto &id : request.unmatch_trks.ids.data)
-    {
-        backend_id = all_trk_ids[id];
-        int time_since_update = backend.GetObjlist()[backend_id]->GetTimeSinceUpdate();
-        double last_time = backend.GetObjlist()[backend_id]->GetLaststamp();
-        // ROS_INFO("time delay = %f",time - backend.GetObjlist()[backend_id]->GetLastfeame()->time_stamp_);
-        //如果有4帧没有检测到物体，就把这个删了
-        // if((time - last_time) > 0.3)
-        //     dead_ids.push_back(backend_id);
-        if(time_since_update >= 2)
-            dead_ids.push_back(backend_id);
-        // ROS_INFO("its id is : %d", id);
-        backend.RemoveUnmatchTrk(backend_id);
-    }
-    backend.StopObj(dead_ids);
-    ROS_INFO("Delete success, delete %d trks!", dead_ids.size());
+    // //删除老旧轨迹
+    // // for(int i = 0; i < int(request.unmatch_trks.ids.data.size()); ++i)
+    // ROS_INFO("Delete start! threr is %d unmatched trks", request.unmatch_trks.ids.data.size());
+    // for (auto &id : request.unmatch_trks.ids.data)
+    // {
+    //     backend_id = all_trk_ids[id];
+    //     int time_since_update = backend.GetObjlist()[backend_id]->GetTimeSinceUpdate();
+    //     double last_time = backend.GetObjlist()[backend_id]->GetLaststamp();
+    //     // ROS_INFO("time delay = %f",time - backend.GetObjlist()[backend_id]->GetLastfeame()->time_stamp_);
+    //     //如果有4帧没有检测到物体，就把这个删了
+    //     // if((time - last_time) > 0.3)
+    //     //     dead_ids.push_back(backend_id);
+    //     if(time_since_update >= 2)
+    //         dead_ids.push_back(backend_id);
+    //     // ROS_INFO("its id is : %d", id);
+    //     backend.RemoveUnmatchTrk(backend_id);
+    // }
+    // backend.StopObj(dead_ids);
+    // ROS_INFO("Delete success, delete %d trks!", dead_ids.size());
 
 
     
     //获取检测对应轨迹的当前状态，包括观测角/z等数据,这里的观测角/z和上面轨迹预测状态的是一样的，都使用最近的检测数据的参数
+    //并且删除老旧轨迹
     std::vector<unsigned long> id_list;
     trks_cur.header = request.dets.header;
     //TODO：某一个轨迹，如果上次更新时间间隔小于0.4秒，并且命中次数大于要求值，才会输出，当然最开始的两帧没有命中次数的限制
@@ -265,9 +266,14 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
         Vec3 cur_position;
         Vec3 obj_size;
         int time_since_update = backend.GetObjlist()[pair.first]->GetTimeSinceUpdate();
-        // std::cout<<time_since_update<<std::endl;
         int detected_time = pair.second->GetDetectedTime();
-        if(time_since_update >= 2 || (detected_time < 3 && time > 0.3))
+        if(time_since_update >= 2)
+        {
+            dead_ids.push_back(pair.first);
+            std::cout<<pair.first<<std::endl;
+            continue;
+        }
+        if(detected_time < 3 && time > 0.3)
             continue;
         id_list.push_back(pair.first);
         cur_position = pair.second->GetCurPosition();
@@ -287,7 +293,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
         info_.score = pair.second->GetObjObsrvConf();
         trks_cur.infos.push_back(info_);
     }
-
+    backend.StopObj(dead_ids);
     // auto trks_state_cur = backend.GetStateCur();
     // for(auto &pair : trks_state_cur)
     // {

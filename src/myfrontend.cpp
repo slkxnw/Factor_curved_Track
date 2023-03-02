@@ -13,6 +13,8 @@ myFrontend::myFrontend()
     last_state_[4] = 0.0;
     last_state_[5] = 0.0;
     last_timestamp_ = 0;
+    detected_time = 1;
+    time_since_update = 0;
 }
 
 

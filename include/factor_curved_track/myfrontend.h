@@ -209,8 +209,8 @@ private:
     double z_;
     double observ_agl;
     double observ_conf;
-    int detected_time = 1;
-    int time_since_update = 0;
+    int detected_time;
+    int time_since_update;
 
 };
 

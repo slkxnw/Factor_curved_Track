@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument('--datadir', type=str, default='/home/chenz/GD/dataset')
     parser.add_argument('--dataset', type=str, default='KITTI', help='KITTI, nuScenes')
     parser.add_argument('--split', type=str, default='training', help='training, testing')
-    parser.add_argument('--seqs', type=str, default='0012')
+    parser.add_argument('--seqs', type=str, default='0001')
     parser.add_argument('__name', type=str)
     parser.add_argument('__log', type=str)
     args = parser.parse_args()

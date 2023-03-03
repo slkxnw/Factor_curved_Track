@@ -207,7 +207,7 @@ def srv_associate_Callback(req):
 	trks = pred_res.trk_predicts
 	trks = ego_motion_compensation(frame, trks)
 	unpack_trks = []
-	print('predd:')
+	print('trk predd after compensated:')
 	for trk in trks.detecs:
 		# z指向上方
 		unpack_trks.append(np.array([trk.siz.x, trk.siz.y, trk.siz.z, trk.pos.x, trk.pos.y, trk.pos.z, trk.alp]))

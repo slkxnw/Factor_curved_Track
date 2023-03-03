@@ -62,8 +62,8 @@ def transform(args):
     except rospy.ServiceException as e:
         rospy.logwarn(e)
     frame = 0
-    while frame < seq_length[args.seqs]:
-    # while frame < 10:
+    # while frame < seq_length[args.seqs]:
+    while frame < 6:
         rospy.loginfo("Frame----------------------------------------%d", frame)
         res = get_dets_orin(frame)
         # transform_callback(dets,(imu_pose, dets_puber))

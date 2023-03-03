@@ -92,7 +92,8 @@ void AB3D_KF::update(Vec7 measure)
     Vec7 y = measure - C * x_state;
     Mat107 PCT = P * (C.transpose());
     Mat77 Tmp = C * PCT + R;
-    Mat107 K = PCT * (Tmp.inverse());
+    Tmp = Tmp.ldlt().solve(Mat77::Identity());
+    Mat107 K = PCT * Tmp;
     x_state = x_state + K * y;
     //P = (I-KC)P(I-KC)' + KRK'
     Mat1010 I_KC = Mat1010::Identity() - K * C;

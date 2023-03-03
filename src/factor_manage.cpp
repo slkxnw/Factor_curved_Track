@@ -153,7 +153,7 @@ bool predict_callback(track_msgs::Trk_pred::Request &request, track_msgs::Trk_pr
     ROS_INFO("There is %d trks in Frame %d", trk_state_pred.size(), int(request.pred_time * 10));
     //将预测结果按照顺序，生成trk并放入列表中
     trks_pred.header.stamp.sec = request.pred_time * 10;
-    // std::cout<<"frame"<<int(trks_pred.header.stamp.sec)<<std::endl;
+    std::cout<<"trks preds before compensated"<<int(trks_pred.header.stamp.sec)<<std::endl;
     for(auto &pair : trk_state_pred)
     {
         //pair.second: x,y,z,l,w,h,th,obsryagl,conf
@@ -172,7 +172,7 @@ bool predict_callback(track_msgs::Trk_pred::Request &request, track_msgs::Trk_pr
         info_.type = 0;
         info_.score = pair.second[8];
         trks_pred.infos.push_back(info_);
-        // std::cout<<trk_.pos.x<<' '<<trk_.pos.y<<' '<<trk_.pos.z<<std::endl;
+        std::cout<<trk_.pos.x<<' '<<trk_.pos.y<<' '<<trk_.pos.z<<' '<<trk_.alp<<std::endl;
         all_trk_ids.push_back(pair.first);
     }
     response.trk_predicts = trks_pred;

@@ -90,6 +90,9 @@ public:
     void UpdateAB3D_KFPred(Vec3 new_pos)
     {
         ab3d_kf_->SetState(new_pos);
+        cur_frame_->obj_state_[0] = new_pos[0];
+        cur_frame_->obj_state_[1] = new_pos[1];
+        z_ = new_pos[2];
     }
 
     void ResetTimeSinceUpdate()

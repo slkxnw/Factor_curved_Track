@@ -153,7 +153,7 @@ bool predict_callback(track_msgs::Trk_pred::Request &request, track_msgs::Trk_pr
     ROS_INFO("There is %d trks in Frame %d", trk_state_pred.size(), int(request.pred_time * 10));
     //将预测结果按照顺序，生成trk并放入列表中
     trks_pred.header.stamp.sec = request.pred_time * 10;
-    std::cout<<"trks preds before compensated"<<int(trks_pred.header.stamp.sec)<<std::endl;
+    // std::cout<<"trks preds before compensated"<<int(trks_pred.header.stamp.sec)<<std::endl;
     for(auto &pair : trk_state_pred)
     {
         //pair.second: x,y,z,l,w,h,th,obsryagl,conf
@@ -172,7 +172,7 @@ bool predict_callback(track_msgs::Trk_pred::Request &request, track_msgs::Trk_pr
         info_.type = 0;
         info_.score = pair.second[8];
         trks_pred.infos.push_back(info_);
-        std::cout<<trk_.pos.x<<' '<<trk_.pos.y<<' '<<trk_.pos.z<<' '<<trk_.alp<<std::endl;
+        // std::cout<<trk_.pos.x<<' '<<trk_.pos.y<<' '<<trk_.pos.z<<' '<<trk_.alp<<std::endl;
         all_trk_ids.push_back(pair.first);
     }
     response.trk_predicts = trks_pred;
@@ -210,12 +210,15 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     //TODO 确认坐标系，看了kittidevkit，z轴是向前的，和在因子图后端定义的不一样，因此
     //根据det更新和初始化trk时，需要交换一下位置dets的y和z的位置，发布从后端trk获取到的位置时，也要交换y和z的位置
     //TODO 是否会出现，还没有更新完，就发布的情况，也就是说，目前没有机制，使得更新完之前，不能从trk-list里获取最新状态
-    for(int i = 0; i < request.matches.trk.data.size(); ++i)
+    for(int i = 0; i < request.matches.trk.data.size(); i++)
     {
-        det << request.dets.detecs[i].pos.x, request.dets.detecs[i].pos.y, request.dets.detecs[i].pos.z, 
-            request.dets.detecs[i].siz.x, request.dets.detecs[i].siz.y, request.dets.detecs[i].siz.z, 
-            double(request.dets.detecs[i].alp), request.dets.infos[i].orin, request.dets.infos[i].score;
+        int id = request.matches.dets.data[i];
+        // std::cout<<id<<std::endl;
+        det << request.dets.detecs[id].pos.x, request.dets.detecs[id].pos.y, request.dets.detecs[id].pos.z, 
+            request.dets.detecs[id].siz.x, request.dets.detecs[id].siz.y, request.dets.detecs[id].siz.z, 
+            double(request.dets.detecs[id].alp), request.dets.infos[id].orin, request.dets.infos[id].score;
         backend_id = all_trk_ids[request.matches.trk.data[i]];
+        // std::cout<<id<<' '<<request.dets.detecs[id].pos.x<<' '<<request.dets.detecs[id].pos.y<<' '<<request.dets.detecs[id].pos.z<<std::endl;
         matches[backend_id] = det;
     }
     backend.UpdateObjState(matches, time);
@@ -227,6 +230,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
             request.dets.detecs[id].siz.x, request.dets.detecs[id].siz.y, request.dets.detecs[id].siz.z, 
             double(request.dets.detecs[id].alp), request.dets.infos[id].orin, request.dets.infos[id].score;
         od_res.push_back(det);
+        // std::cout<<id<<' '<<request.dets.detecs[id].pos.x<<' '<<request.dets.detecs[id].pos.y<<' '<<request.dets.detecs[id].pos.z<<std::endl;
         // std::cout<<det.transpose()<<std::endl;
     }
     backend.InitObj(od_res, time);
@@ -261,6 +265,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     //TODO：某一个轨迹，如果上次更新时间间隔小于0.4秒，并且命中次数大于要求值，才会输出，当然最开始的两帧没有命中次数的限制
     
     auto obj_list = backend.GetObjlist();
+    std::cout<<"remained tracks:"<<std::endl;
     for(auto pair : obj_list)
     {
         Vec3 cur_position;
@@ -292,6 +297,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
         info_.type = 0;
         info_.score = pair.second->GetObjObsrvConf();
         trks_cur.infos.push_back(info_);
+        // std::cout<<cur_position[0]<<' '<<cur_position[1]<<' '<<trk_.pos.z<<std::endl;
     }
     backend.StopObj(dead_ids);
     // auto trks_state_cur = backend.GetStateCur();
@@ -315,15 +321,15 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     //     // std::cout<<trk_.pos.x<<' '<<trk_.pos.y<<' '<<trk_.pos.z<<std::endl;
     // }
 
-    std::cout<<"remained tracks:"<<std::endl;
-    auto obj_list2 = backend.GetObjlist();
-    for(auto pairs : obj_list2)
-    {
-        Vec3 cur_position;
-        cur_position = pairs.second->GetCurPosition();
-        double z = pairs.second->GetObjZ();
-        std::cout<<cur_position[0]<<' '<<cur_position[1]<<' '<<z<<std::endl;
-    }
+    // std::cout<<"remained tracks:"<<std::endl;
+    // auto obj_list2 = backend.GetObjlist();
+    // for(auto pairs : obj_list2)
+    // {
+    //     Vec3 cur_position;
+    //     cur_position = pairs.second->GetCurPosition();
+    //     double z = pairs.second->GetObjZ();
+    //     std::cout<<cur_position[0]<<' '<<cur_position[1]<<' '<<z<<std::endl;
+    // }
     active_ids.header = request.dets.header;
     for(auto &id : id_list)
         active_ids.ids.data.push_back(id); 

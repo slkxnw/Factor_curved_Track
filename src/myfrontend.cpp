@@ -214,7 +214,7 @@ void myFrontend::UpdateTrkListAB3D_KF()
     //更新frame状态
     double v = sqrtf64(pow(kf_state[7], 2) + pow(kf_state[8], 2));
     // double a = sqrtf64(pow(kf_state[6], 2) + pow(kf_state[7], 2));
-    double th = kf_state[2];
+    double th = kf_state[3];
     //TODO vx和vy的夹角也能表现th，是否考虑把它和上面的th综合一下呢？
     Vec6 new_state;
     //AB3D没有角速度项
@@ -305,8 +305,12 @@ Vec3 myFrontend::PredictPostionAB3D_KF(double time)
 
     pred_position << state[0], state[1], state[3];
 
+    cur_frame_->obj_state_[0] = state[0];
+    cur_frame_->obj_state_[1] = state[1];
+    cur_frame_->obj_state_[2] = state[3];
     z_ = state[2];
     obj_size_ << state[4], state[5], state[6];
+    
 
     return pred_position;
 }

@@ -265,7 +265,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     //TODO：某一个轨迹，如果上次更新时间间隔小于0.4秒，并且命中次数大于要求值，才会输出，当然最开始的两帧没有命中次数的限制
     
     auto obj_list = backend.GetObjlist();
-    std::cout<<"remained tracks:"<<std::endl;
+    // std::cout<<"remained tracks:"<<std::endl;
     for(auto pair : obj_list)
     {
         Vec3 cur_position;
@@ -337,10 +337,11 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     response.infos = trks_cur.infos;
     response.ids = active_ids.ids;
 
+
     
     if(int(request.dets.header.stamp.sec) % 1 == 0)
-        ROS_INFO("Frame %d optimization finished with %d trks updated, %d trks initialed, %d trks deleted",
-                int(request.dets.header.stamp.sec), matches.size(), od_res.size(), dead_ids.size());
+        ROS_INFO("Frame %d optimization finished with %d trks updated, %d trks initialed, %d trks deleted, %d ,%d ,%d trks output",
+                int(request.dets.header.stamp.sec), matches.size(), od_res.size(), dead_ids.size(), active_ids.ids.data.size(), trks_cur.detecs.size(), trks_cur.infos.size());
 
     response.success = true;
     return true;

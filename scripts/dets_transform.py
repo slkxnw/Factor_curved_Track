@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument('--datadir', type=str, default='/home/chenz/GD/dataset')
     parser.add_argument('--dataset', type=str, default='KITTI', help='KITTI, nuScenes')
     parser.add_argument('--split', type=str, default='training', help='training, testing')
-    parser.add_argument('--seqs', type=str, default='0001')
+    parser.add_argument('--seqs', type=str, default='0019')
     parser.add_argument('__name', type=str)
     parser.add_argument('__log', type=str)
     args = parser.parse_args()
@@ -103,8 +103,8 @@ def transform(args):
     except rospy.ServiceException as e:
         rospy.logwarn(e)
     frame = 0
-    # while frame < seq_length[args.seqs]:
-    while frame < 10:
+    while frame < seq_length[args.seqs]:
+    # while frame < 10:
         res = get_dets_orin(frame)
         # transform_callback(dets,(imu_pose, dets_puber))
         transform_callback(res.dets)

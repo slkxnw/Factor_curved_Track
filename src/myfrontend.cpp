@@ -265,7 +265,7 @@ Vec3 myFrontend::PredictPostionKF(double time)
     //使用KF
     kf_->predict(dt);
     //x,y,th,vx,vy,w
-    Vec6 state = kf_->GetState();
+    Vec6 state = kf_->GetStatePred();
 
     pred_position << state[0], state[1], state[2];
 
@@ -283,7 +283,7 @@ Vec3 myFrontend::PredictPostionCA_EKF(double time)
     //使用CA_EKF
     ca_ekf_->predict(dt);
     //x,y,th,vx,vy,w，ax,ay
-    Vec8 state = ca_ekf_->GetState();
+    Vec8 state = ca_ekf_->GetStatePred();
 
     pred_position << state[0], state[1], state[2];
 
@@ -301,7 +301,7 @@ Vec3 myFrontend::PredictPostionAB3D_KF(double time)
     //使用AB3D_KF
     ab3d_kf_->predict(dt);
     //x, y, z, theta, l, w, h, vx, vy, vz
-    Vec10 state = ab3d_kf_->GetState();
+    Vec10 state = ab3d_kf_->GetStatePred();
 
     pred_position << state[0], state[1], state[3];
 

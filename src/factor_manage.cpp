@@ -28,6 +28,7 @@ ros::Publisher trk_cur_pub;
 ros::Publisher trk_id_pub;
 mytrk::myBackend backend;
 ros::ServiceClient trk_store;
+ros::ServiceClient trk_pred_store;
 std::vector<unsigned long> all_trk_ids;
 
 //可以将1，3，4结合到一起
@@ -423,7 +424,10 @@ int main(int argc, char** argv)
     mytrk::myBackend backend;
 
     ros::service::waitForService("/trk_state_store");
+    //呼叫当前轨迹状态存放服务
     ros::ServiceClient trk_store = nh.serviceClient<track_msgs::Trk_state_store>("/trk_state_store");
+    //呼叫当前轨迹，预测状态存放服务,没有用上
+    ros::ServiceClient trk_pred_store = nh.serviceClient<track_msgs::Trk_state_store>("/trk_predict_state_store");
     //轨迹预测服务
     ros::ServiceServer trk_predict = nh.advertiseService("/trk_predict", predict_callback);
     //轨迹更新服务

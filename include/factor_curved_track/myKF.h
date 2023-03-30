@@ -22,6 +22,10 @@ public:
     {
         return x_state;
     }
+    Vec6 GetStatePred()
+    {
+        return x_state_pred;
+    }
 
 private:
 
@@ -37,7 +41,9 @@ private:
     Mat33 R = Mat33::Identity();
     //状态是一个高斯分布，均值为x_state，方差为P
     Vec6 x_state;
+    Vec6 x_state_pred;
     Mat66 P;
+    Mat66 P_pred;
 
     double delta_ax,delta_ay, delta_ath;
 };
@@ -58,6 +64,10 @@ class AB3D_KF
     Vec10 GetState()
     {
         return x_state;
+    }
+    Vec10 GetStatePred()
+    {
+        return x_state_pred;
     }
 
     double within_range(double theta);
@@ -82,7 +92,9 @@ private:
     Mat77 R = Mat77::Identity();
     //状态是一个高斯分布，均值为x_state，方差为P
     Vec10 x_state;
+    Vec10 x_state_pred;
     Mat1010 P;
+    Mat1010 P_pred;
 
     double delta_ax,delta_ay, delta_ath;
 };

@@ -55,6 +55,10 @@ public:
     {
         return x_state;
     }
+    Vec8 GetStatePred()
+    {
+        return x_state_pred;
+    }
 
 private:
 
@@ -70,7 +74,9 @@ private:
     Mat33 R = Mat33::Identity();
     //状态是一个高斯分布，均值为x_state，方差为P
     Vec8 x_state;
+    Vec8 x_state_pred;
     Mat88 P;
+    Mat88 P_pred;
 
     double delta_ax,delta_ay, delta_ath;
 

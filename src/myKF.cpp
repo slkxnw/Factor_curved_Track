@@ -40,17 +40,17 @@ void CV_KF::predict(double dt)
     //      0, 0, 0.5 * delta_ath * delta_ath * (double)pow(dt, 3), 0, 0, dt * dt * delta_ath * delta_ath;
     
     A.block<3, 3>(0, 3) = Mat33::Identity() * dt;
-    x_state = A * x_state;
-    P = A * P * (A.transpose()) + Q;
+    x_state_pred = A * x_state;
+    P_pred = A * P * (A.transpose()) + Q;
 }
 
 void CV_KF::update(Vec3 measure)
 {
-    Mat33 Tmp = C * P * (C.transpose()) + R;
-    Mat63 K = P * (C.transpose()) * (Tmp.inverse());
-    x_state = x_state + K * (measure - C * x_state);
+    Mat33 Tmp = C * P_pred * (C.transpose()) + R;
+    Mat63 K = P_pred * (C.transpose()) * (Tmp.inverse());
+    x_state = x_state_pred + K * (measure - C * x_state_pred);
     
-    P = (Mat66::Identity() - K * C) * P;
+    P = (Mat66::Identity() - K * C) * P_pred;
 }
 
 AB3D_KF::AB3D_KF(Vec10 init_state)
@@ -79,25 +79,29 @@ AB3D_KF::AB3D_KF(Vec10 init_state)
 
 void AB3D_KF::predict(double dt)
 {
+    
     // A.block<3, 3>(0, 7) = Mat33::Identity() * dt;
-    x_state = A * x_state;
-    P = A * P * (A.transpose()) + Q;
-    x_state[3] = within_range(x_state[3]);
+    Mat1010 A_ = A;
+    if(dt != 0.1)
+        A_.block<3, 3>(0, 7) = Mat33::Identity() * dt / 0.1;
+    x_state_pred = A_ * x_state;
+    P_pred = A_ * P * (A_.transpose()) + Q;
+    x_state_pred[3] = within_range(x_state_pred[3]);
 }
 
 void AB3D_KF::update(Vec7 measure)
 {
     measure[3] = orin_correction(measure[3]);
     
-    Vec7 y = measure - C * x_state;
-    Mat107 PCT = P * (C.transpose());
+    Vec7 y = measure - C * x_state_pred;
+    Mat107 PCT = P_pred * (C.transpose());
     Mat77 Tmp = C * PCT + R;
     Tmp = Tmp.ldlt().solve(Mat77::Identity());
     Mat107 K = PCT * Tmp;
-    x_state = x_state + K * y;
+    x_state = x_state_pred + K * y;
     //P = (I-KC)P(I-KC)' + KRK'
     Mat1010 I_KC = Mat1010::Identity() - K * C;
-    P = I_KC * P * I_KC.transpose() + K * R * K.transpose();
+    P = I_KC * P_pred * I_KC.transpose() + K * R * K.transpose();
     // std::cout<<P<<std::endl;
     x_state[3] = within_range(x_state[3]);
 }
@@ -105,20 +109,20 @@ void AB3D_KF::update(Vec7 measure)
 double AB3D_KF::orin_correction(double obv_theta)
 {
     obv_theta = within_range(obv_theta);
-    x_state[3] = within_range(x_state[3]);
+    x_state_pred[3] = within_range(x_state_pred[3]);
 
-    if(abs(x_state[3] - obv_theta) > 3.1415926 / 2.0 && abs(obv_theta - x_state[3]) < 3.1415926 * 3.0 / 2.0)
+    if(abs(x_state_pred[3] - obv_theta) > 3.1415926 / 2.0 && abs(obv_theta - x_state_pred[3]) < 3.1415926 * 3.0 / 2.0)
     {
-        x_state[3] += 3.1415926;
-        x_state[3] = within_range(x_state[3]);
+        x_state_pred[3] += 3.1415926;
+        x_state_pred[3] = within_range(x_state_pred[3]);
     }
 
-    if(abs(obv_theta - x_state[3]) >= 3.1415926 * 3.0 / 2.0)
+    if(abs(obv_theta - x_state_pred[3]) >= 3.1415926 * 3.0 / 2.0)
     {
         if(obv_theta > 0)
-            x_state[3] += 3.1415926 * 2;
+            x_state_pred[3] += 3.1415926 * 2;
         else
-            x_state[3] -= 3.1415926 * 2;
+            x_state_pred[3] -= 3.1415926 * 2;
     }
 
     return obv_theta;

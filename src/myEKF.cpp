@@ -41,23 +41,23 @@ void CA_EKF::calJacobi(double dt)
 void CA_EKF::predict(double dt)
 {
     calJacobi(dt);
-    x_state[0] = x_state[0] + dt * x_state[3] + 0.5 * dt * dt * x_state[6];
-    x_state[1] = x_state[1] + dt * x_state[4] + 0.5 * dt * dt * x_state[7];
-    x_state[2] = x_state[2] + dt * x_state[5];
-    x_state[3] = x_state[3] + dt * x_state[6];
-    x_state[4] = x_state[4] + dt * x_state[7];
+    x_state_pred[0] = x_state[0] + dt * x_state[3] + 0.5 * dt * dt * x_state[6];
+    x_state_pred[1] = x_state[1] + dt * x_state[4] + 0.5 * dt * dt * x_state[7];
+    x_state_pred[2] = x_state[2] + dt * x_state[5];
+    x_state_pred[3] = x_state[3] + dt * x_state[6];
+    x_state_pred[4] = x_state[4] + dt * x_state[7];
 
-    P = J * P * J.transpose() + Q;
+    P_pred = J * P * J.transpose() + Q;
 }
 
 void CA_EKF::update(Vec3 measure)
 {
-    Mat33 tmp = C * P * C.transpose() + R;
-    Mat83 K = P * C.transpose() * tmp.inverse();
+    Mat33 tmp = C * P_pred * C.transpose() + R;
+    Mat83 K = P_pred * C.transpose() * tmp.inverse();
 
-    Vec3 tmp_diff = measure - C * x_state;
-    x_state = x_state + K * tmp_diff;
-    P = (Mat88::Identity() - K * C) * P;
+    Vec3 tmp_diff = measure - C * x_state_pred;
+    x_state = x_state_pred + K * tmp_diff;
+    P = (Mat88::Identity() - K * C) * P_pred;
 }
 
 } // namespace mytrk

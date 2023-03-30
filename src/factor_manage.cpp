@@ -30,7 +30,7 @@ mytrk::myBackend backend;
 ros::ServiceClient trk_store;
 ros::ServiceClient trk_pred_store;
 std::vector<unsigned long> all_trk_ids;
-track_msgs::StampArray active_ids;
+
 
 //可以将1，3，4结合到一起
 // void callback(const track_msgs::PairsConstPtr &match_pair, 
@@ -176,6 +176,45 @@ bool predict_callback(track_msgs::Trk_pred::Request &request, track_msgs::Trk_pr
         trks_pred.infos.push_back(info_);
         // std::cout<<trk_.pos.x<<' '<<trk_.pos.y<<' '<<trk_.pos.z<<' '<<trk_.alp<<std::endl;
         all_trk_ids.push_back(pair.first);
+        
+    }
+    response.trk_predicts = trks_pred;
+
+    return true;
+}
+
+bool future_predict_callback(track_msgs::Trk_pred::Request &request, track_msgs::Trk_pred::Response &response)
+{
+    track_msgs::Detection_list trks_pred;
+    track_msgs::Detection trk_;
+    track_msgs::Information info_;
+    track_msgs::StampArray active_ids;
+    auto trk_state_pred = backend.GetStatePredictionAll(request.pred_time);
+    ROS_INFO("There is %d trks in Frame %d", trk_state_pred.size(), int(request.pred_time * 10));
+    //将预测结果按照顺序，生成trk并放入列表中
+    trks_pred.header.stamp.sec = request.pred_time * 10;
+    // std::cout<<"trks preds before compensated"<<int(trks_pred.header.stamp.sec)<<std::endl;
+    for(auto &pair : trk_state_pred)
+    {
+        //pair.second: x,y,z,l,w,h,th,obsryagl,conf
+        trk_.pos.x = pair.second[0];
+        //z指向上方
+        trk_.pos.y = pair.second[1];
+        trk_.pos.z = pair.second[2];
+        trk_.siz.x = pair.second[3];
+        trk_.siz.y = pair.second[4];
+        trk_.siz.z = pair.second[5];
+        trk_.alp = pair.second[6];
+
+        trks_pred.detecs.push_back(trk_);
+        //这里是当前帧的观测角
+        info_.orin = pair.second[7];
+        info_.type = 0;
+        info_.score = pair.second[8];
+        trks_pred.infos.push_back(info_);
+        // std::cout<<trk_.pos.x<<' '<<trk_.pos.y<<' '<<trk_.pos.z<<' '<<trk_.alp<<std::endl;
+        active_ids.ids.data.push_back(pair.first);
+        
     }
     response.trk_predicts = trks_pred;
     response.ids = active_ids.ids;
@@ -202,6 +241,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     track_msgs::Information info_;
     track_msgs::Detection_list trks_pred;
     track_msgs::Detection_list trks_cur;
+    track_msgs::StampArray active_ids;
 
     //更新匹配到的轨迹
     ROS_INFO("Update starts!");
@@ -429,8 +469,12 @@ int main(int argc, char** argv)
     ros::ServiceClient trk_store = nh.serviceClient<track_msgs::Trk_state_store>("/trk_state_store");
     //呼叫当前轨迹，预测状态存放服务,没有用上
     ros::ServiceClient trk_pred_store = nh.serviceClient<track_msgs::Trk_state_store>("/trk_predict_state_store");
+    
     //轨迹预测服务
     ros::ServiceServer trk_predict = nh.advertiseService("/trk_predict", predict_callback);
+    //轨迹未来位置预测服务
+    ros::ServiceServer trk_future_predict = nh.advertiseService("/trk_future_predict", future_predict_callback);
+    
     //轨迹更新服务
     ros::ServiceServer trk_update = nh.advertiseService("/trk_update", update_callback);
     //KF预测 更新服务

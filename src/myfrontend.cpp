@@ -230,7 +230,7 @@ void myFrontend::UpdateTrkListAB3D_KF()
 */
 Vec3 myFrontend::PredictPostion(double time)
 {
-    time_since_update++;
+
     Vec3 pred_position;
     Vec6 cur_state = cur_frame_->ObjState();
     double cur_time = cur_frame_->ObjTimestamp();
@@ -239,6 +239,8 @@ Vec3 myFrontend::PredictPostion(double time)
     double a = cur_state[4];
     double w = cur_state[5];
     double dt = time - cur_time;
+    // if(dt > 0.11)
+        time_since_update++;
         
     double dth = w * dt;
     double dv = a * dt;
@@ -292,11 +294,13 @@ Vec3 myFrontend::PredictPostionCA_EKF(double time)
 
 Vec3 myFrontend::PredictPostionAB3D_KF(double time)
 {
-    time_since_update++;
+    
     Vec3 pred_position;
     double cur_time = cur_frame_->ObjTimestamp();
     double dt = time - cur_time;
     // std::cout<<dt<<std::endl;
+    if(dt <= 0.11)
+        time_since_update++;
 
     //使用AB3D_KF
     ab3d_kf_->predict(dt);

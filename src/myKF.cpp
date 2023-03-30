@@ -82,7 +82,7 @@ void AB3D_KF::predict(double dt)
     
     // A.block<3, 3>(0, 7) = Mat33::Identity() * dt;
     Mat1010 A_ = A;
-    if(dt != 0.1)
+    if(dt > 0.11)
         A_.block<3, 3>(0, 7) = Mat33::Identity() * dt / 0.1;
     x_state_pred = A_ * x_state;
     P_pred = A_ * P * (A_.transpose()) + Q;

@@ -195,8 +195,8 @@ def srv_associate_Callback(req):
 	# print(len(update_res.ids.data))
 	store_res = trk_store(dets.header, update_res.detecs, update_res.infos, update_res.ids);
 
-	pos_pred_res = get_trk_preds(dets.header.stamp.secs / 10 + 1.0)
-	pred_store_res = trk_predict_store(dets.header, pos_pred_res.trk_predicts.detecs, pos_pred_res.trk_predicts.infos, pos_pred_res.ids)
+	# pos_pred_res = get_future_trk_preds(dets.header.stamp.secs / 10 + 1.0)
+	# pred_store_res = trk_predict_store(dets.header, pos_pred_res.trk_predicts.detecs, pos_pred_res.trk_predicts.infos, pos_pred_res.ids)
 	# match_pub.publish(pub_match)
 	# unmatch_det_pub.publish(pub_undets)
 	# unmatch_trk_pub.publish(pub_untrks)
@@ -220,7 +220,7 @@ def main():
 	rospy.wait_for_service('/trk_update')
 	rospy.wait_for_service('/trk_state_store')
 	rospy.wait_for_service('/trk_predict_state_store')
-	global process_trk_update, get_trk_preds, trk_store, trk_predict_store
+	global process_trk_update, get_trk_preds, trk_store, trk_predict_store,get_future_trk_preds
 	try:
 		process_trk_update = rospy.ServiceProxy('/trk_update', Trk_update)
 	except rospy.ServiceException as e:
@@ -235,6 +235,10 @@ def main():
 		rospy.logwarn(e)
 	try:
 		trk_predict_store = rospy.ServiceProxy('/trk_predict_state_store', Trk_state_store)
+	except rospy.ServiceException as e:
+		rospy.logwarn(e)
+	try:
+		get_future_trk_preds = rospy.ServiceProxy('/trk_future_predict', Trk_pred)
 	except rospy.ServiceException as e:
 		rospy.logwarn(e)
 

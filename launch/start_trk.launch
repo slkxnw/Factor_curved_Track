@@ -1,4 +1,5 @@
 <launch>
+    <node pkg="factor_curved_track" type="trk_predict_posi.py" name="trk_predict_state_store" output="screen"/>
     <node pkg="factor_curved_track" type="dets_transform.py" name="dets_transform" output="screen"/>
     <node pkg="factor_curved_track" type="trks_transform.py" name="trks_transform" output="screen"/>
     <node pkg="factor_curved_track" type="data_associate.py" name="data_associate" output="screen"/>

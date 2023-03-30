@@ -124,10 +124,12 @@ import std_msgs.msg
 import track_msgs.msg
 
 class Trk_predResponse(genpy.Message):
-  _md5sum = "d920b89b48529f9a775a0efecb5602fd"
+  _md5sum = "54681908d21a5805b960bccd9c5aaf2e"
   _type = "track_msgs/Trk_predResponse"
   _has_header = False  # flag to mark the presence of a Header object
   _full_text = """Detection_list trk_predicts
+std_msgs/UInt16MultiArray ids
+
 
 ================================================================================
 MSG: track_msgs/Detection_list
@@ -184,9 +186,52 @@ float32 ymax = 0.0
 float32 xmax = 0.0
 float32 score
 float32 orin
-"""
-  __slots__ = ['trk_predicts']
-  _slot_types = ['track_msgs/Detection_list']
+
+================================================================================
+MSG: std_msgs/UInt16MultiArray
+# Please look at the MultiArrayLayout message definition for
+# documentation on all multiarrays.
+
+MultiArrayLayout  layout        # specification of data layout
+uint16[]            data        # array of data
+
+
+================================================================================
+MSG: std_msgs/MultiArrayLayout
+# The multiarray declares a generic multi-dimensional array of a
+# particular data type.  Dimensions are ordered from outer most
+# to inner most.
+
+MultiArrayDimension[] dim # Array of dimension properties
+uint32 data_offset        # padding elements at front of data
+
+# Accessors should ALWAYS be written in terms of dimension stride
+# and specified outer-most dimension first.
+# 
+# multiarray(i,j,k) = data[data_offset + dim_stride[1]*i + dim_stride[2]*j + k]
+#
+# A standard, 3-channel 640x480 image with interleaved color channels
+# would be specified as:
+#
+# dim[0].label  = "height"
+# dim[0].size   = 480
+# dim[0].stride = 3*640*480 = 921600  (note dim[0] stride is just size of image)
+# dim[1].label  = "width"
+# dim[1].size   = 640
+# dim[1].stride = 3*640 = 1920
+# dim[2].label  = "channel"
+# dim[2].size   = 3
+# dim[2].stride = 3
+#
+# multiarray(i,j,k) refers to the ith row, jth column, and kth channel.
+
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension"""
+  __slots__ = ['trk_predicts','ids']
+  _slot_types = ['track_msgs/Detection_list','std_msgs/UInt16MultiArray']
 
   def __init__(self, *args, **kwds):
     """
@@ -196,7 +241,7 @@ float32 orin
     changes.  You cannot mix in-order arguments and keyword arguments.
 
     The available fields are:
-       trk_predicts
+       trk_predicts,ids
 
     :param args: complete set of field values, in .msg order
     :param kwds: use keyword arguments corresponding to message field names
@@ -207,8 +252,11 @@ float32 orin
       # message fields cannot be None, assign default values for those that are
       if self.trk_predicts is None:
         self.trk_predicts = track_msgs.msg.Detection_list()
+      if self.ids is None:
+        self.ids = std_msgs.msg.UInt16MultiArray()
     else:
       self.trk_predicts = track_msgs.msg.Detection_list()
+      self.ids = std_msgs.msg.UInt16MultiArray()
 
   def _get_types(self):
     """
@@ -246,6 +294,23 @@ float32 orin
       for val1 in self.trk_predicts.infos:
         _x = val1
         buff.write(_get_struct_B2f().pack(_x.type, _x.score, _x.orin))
+      length = len(self.ids.layout.dim)
+      buff.write(_struct_I.pack(length))
+      for val1 in self.ids.layout.dim:
+        _x = val1.label
+        length = len(_x)
+        if python3 or type(_x) == unicode:
+          _x = _x.encode('utf-8')
+          length = len(_x)
+        buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+        _x = val1
+        buff.write(_get_struct_2I().pack(_x.size, _x.stride))
+      _x = self.ids.layout.data_offset
+      buff.write(_get_struct_I().pack(_x))
+      length = len(self.ids.data)
+      buff.write(_struct_I.pack(length))
+      pattern = '<%sH'%length
+      buff.write(struct.Struct(pattern).pack(*self.ids.data))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -259,6 +324,8 @@ float32 orin
     try:
       if self.trk_predicts is None:
         self.trk_predicts = track_msgs.msg.Detection_list()
+      if self.ids is None:
+        self.ids = std_msgs.msg.UInt16MultiArray()
       end = 0
       _x = self
       start = end
@@ -304,6 +371,37 @@ float32 orin
         end += 9
         (_x.type, _x.score, _x.orin,) = _get_struct_B2f().unpack(str[start:end])
         self.trk_predicts.infos.append(val1)
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      self.ids.layout.dim = []
+      for i in range(0, length):
+        val1 = std_msgs.msg.MultiArrayDimension()
+        start = end
+        end += 4
+        (length,) = _struct_I.unpack(str[start:end])
+        start = end
+        end += length
+        if python3:
+          val1.label = str[start:end].decode('utf-8', 'rosmsg')
+        else:
+          val1.label = str[start:end]
+        _x = val1
+        start = end
+        end += 8
+        (_x.size, _x.stride,) = _get_struct_2I().unpack(str[start:end])
+        self.ids.layout.dim.append(val1)
+      start = end
+      end += 4
+      (self.ids.layout.data_offset,) = _get_struct_I().unpack(str[start:end])
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      pattern = '<%sH'%length
+      start = end
+      s = struct.Struct(pattern)
+      end += s.size
+      self.ids.data = s.unpack(str[start:end])
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e)  # most likely buffer underfill
@@ -340,6 +438,23 @@ float32 orin
       for val1 in self.trk_predicts.infos:
         _x = val1
         buff.write(_get_struct_B2f().pack(_x.type, _x.score, _x.orin))
+      length = len(self.ids.layout.dim)
+      buff.write(_struct_I.pack(length))
+      for val1 in self.ids.layout.dim:
+        _x = val1.label
+        length = len(_x)
+        if python3 or type(_x) == unicode:
+          _x = _x.encode('utf-8')
+          length = len(_x)
+        buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+        _x = val1
+        buff.write(_get_struct_2I().pack(_x.size, _x.stride))
+      _x = self.ids.layout.data_offset
+      buff.write(_get_struct_I().pack(_x))
+      length = len(self.ids.data)
+      buff.write(_struct_I.pack(length))
+      pattern = '<%sH'%length
+      buff.write(self.ids.data.tostring())
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -354,6 +469,8 @@ float32 orin
     try:
       if self.trk_predicts is None:
         self.trk_predicts = track_msgs.msg.Detection_list()
+      if self.ids is None:
+        self.ids = std_msgs.msg.UInt16MultiArray()
       end = 0
       _x = self
       start = end
@@ -399,6 +516,37 @@ float32 orin
         end += 9
         (_x.type, _x.score, _x.orin,) = _get_struct_B2f().unpack(str[start:end])
         self.trk_predicts.infos.append(val1)
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      self.ids.layout.dim = []
+      for i in range(0, length):
+        val1 = std_msgs.msg.MultiArrayDimension()
+        start = end
+        end += 4
+        (length,) = _struct_I.unpack(str[start:end])
+        start = end
+        end += length
+        if python3:
+          val1.label = str[start:end].decode('utf-8', 'rosmsg')
+        else:
+          val1.label = str[start:end]
+        _x = val1
+        start = end
+        end += 8
+        (_x.size, _x.stride,) = _get_struct_2I().unpack(str[start:end])
+        self.ids.layout.dim.append(val1)
+      start = end
+      end += 4
+      (self.ids.layout.data_offset,) = _get_struct_I().unpack(str[start:end])
+      start = end
+      end += 4
+      (length,) = _struct_I.unpack(str[start:end])
+      pattern = '<%sH'%length
+      start = end
+      s = struct.Struct(pattern)
+      end += s.size
+      self.ids.data = numpy.frombuffer(str[start:end], dtype=numpy.uint16, count=length)
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e)  # most likely buffer underfill
@@ -407,6 +555,12 @@ _struct_I = genpy.struct_I
 def _get_struct_I():
     global _struct_I
     return _struct_I
+_struct_2I = None
+def _get_struct_2I():
+    global _struct_2I
+    if _struct_2I is None:
+        _struct_2I = struct.Struct("<2I")
+    return _struct_2I
 _struct_3I = None
 def _get_struct_3I():
     global _struct_3I
@@ -433,6 +587,6 @@ def _get_struct_f():
     return _struct_f
 class Trk_pred(object):
   _type          = 'track_msgs/Trk_pred'
-  _md5sum = '3dc63b2f99da79eb20c7b6a1c64058a7'
+  _md5sum = '5e9be3d0eb19860c0fb9f5ec7a49e381'
   _request_class  = Trk_predRequest
   _response_class = Trk_predResponse

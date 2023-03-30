@@ -30,6 +30,7 @@ mytrk::myBackend backend;
 ros::ServiceClient trk_store;
 ros::ServiceClient trk_pred_store;
 std::vector<unsigned long> all_trk_ids;
+track_msgs::StampArray active_ids;
 
 //可以将1，3，4结合到一起
 // void callback(const track_msgs::PairsConstPtr &match_pair, 
@@ -177,6 +178,7 @@ bool predict_callback(track_msgs::Trk_pred::Request &request, track_msgs::Trk_pr
         all_trk_ids.push_back(pair.first);
     }
     response.trk_predicts = trks_pred;
+    response.ids = active_ids.ids;
 
     return true;
 }
@@ -200,7 +202,6 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     track_msgs::Information info_;
     track_msgs::Detection_list trks_pred;
     track_msgs::Detection_list trks_cur;
-    track_msgs::StampArray active_ids;
 
     //更新匹配到的轨迹
     ROS_INFO("Update starts!");
@@ -332,6 +333,7 @@ bool update_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_u
     //     std::cout<<cur_position[0]<<' '<<cur_position[1]<<' '<<z<<std::endl;
     // }
     active_ids.header = request.dets.header;
+    active_ids.ids.data.clear();
     for(auto &id : id_list)
         active_ids.ids.data.push_back(id); 
     response.detecs = trks_cur.detecs;
@@ -365,54 +367,51 @@ bool update_KF_callback(track_msgs::KF_update::Request &request, track_msgs::KF_
     return true;
 }
 
-bool trk_store_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_update::Response& response)
-{
-    track_msgs::Detection trk_;
-    track_msgs::Information info_;
-    track_msgs::Detection_list trks_cur;
-    track_msgs::StampArray active_ids;
-    //发布轨迹当前状态，包括观测角/z等数据,这里的观测角/z和上面轨迹预测状态的是一样的，都使用最近的检测数据的参数
-    auto trks_state_cur = backend.GetStateCur();
-    trks_cur.header = request.dets.header;
-    for(auto &pair : trks_state_cur)
-    {
-        trk_.pos.x = pair.second[0];
-        //因子图坐标系和kitti坐标系不一样
-        trk_.pos.z = pair.second[1];
-        trk_.pos.y = pair.second[2];
-        trk_.siz.x = pair.second[3];
-        trk_.siz.y = pair.second[4];
-        trk_.siz.z = pair.second[5];
-        trk_.alp = pair.second[6];
 
-        trks_cur.detecs.push_back(trk_);
-        //这里是当前帧的观测角
-        info_.orin = pair.second[7];
-        info_.type = 0;
-        info_.score = pair.second[8];
-        trks_cur.infos.push_back(info_);
-    }
+//这个函数没用到，将它的功能结合到update——call_back里了，后续要分出它来
 
-    //发布活跃轨迹id
-    auto obj_ids = backend.GetObjIDlist();
-    active_ids.header = request.dets.header;
-    for(auto &id : obj_ids)
-        active_ids.ids.data.push_back(id);
-    
-    track_msgs::Trk_state_store srv;
-    srv.request.detecs = trks_cur.detecs;
-    srv.request.infos = trks_cur.infos;
-    srv.request.header = trks_cur.header;
-    srv.request.ids = active_ids.ids;
-
-    ROS_INFO("Call service to store trk info");
-    bool ret = trk_store.call(srv);    
-    ROS_INFO("Call service to store trk info state: %d", int(ret));
-
-
-    response.success = true;
-    return true;
-}
+// bool trk_store_callback(track_msgs::Trk_update::Request& request, track_msgs::Trk_update::Response& response)
+// {
+//     track_msgs::Detection trk_;
+//     track_msgs::Information info_;
+//     track_msgs::Detection_list trks_cur;
+//     track_msgs::StampArray active_ids;
+//     //发布轨迹当前状态，包括观测角/z等数据,这里的观测角/z和上面轨迹预测状态的是一样的，都使用最近的检测数据的参数
+//     auto trks_state_cur = backend.GetStateCur();
+//     trks_cur.header = request.dets.header;
+//     for(auto &pair : trks_state_cur)
+//     {
+//         trk_.pos.x = pair.second[0];
+//         //因子图坐标系和kitti坐标系不一样
+//         trk_.pos.z = pair.second[1];
+//         trk_.pos.y = pair.second[2];
+//         trk_.siz.x = pair.second[3];
+//         trk_.siz.y = pair.second[4];
+//         trk_.siz.z = pair.second[5];
+//         trk_.alp = pair.second[6];
+//         trks_cur.detecs.push_back(trk_);
+//         //这里是当前帧的观测角
+//         info_.orin = pair.second[7];
+//         info_.type = 0;
+//         info_.score = pair.second[8];
+//         trks_cur.infos.push_back(info_);
+//     }
+//     //发布活跃轨迹id
+//     auto obj_ids = backend.GetObjIDlist();
+//     active_ids.header = request.dets.header;
+//     for(auto &id : obj_ids)
+//         active_ids.ids.data.push_back(id);   
+//     track_msgs::Trk_state_store srv;
+//     srv.request.detecs = trks_cur.detecs;
+//     srv.request.infos = trks_cur.infos;
+//     srv.request.header = trks_cur.header;
+//     srv.request.ids = active_ids.ids;
+//     ROS_INFO("Call service to store trk info");
+//     bool ret = trk_store.call(srv);    
+//     ROS_INFO("Call service to store trk info state: %d", int(ret));
+//     response.success = true;
+//     return true;
+// }
 
 
 

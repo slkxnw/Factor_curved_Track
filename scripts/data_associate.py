@@ -196,7 +196,7 @@ def srv_associate_Callback(req):
 	store_res = trk_store(dets.header, update_res.detecs, update_res.infos, update_res.ids);
 
 	pos_pred_res = get_trk_preds(dets.header.stamp.secs / 10 + 1.0)
-	pred_store_res = trk_predict_store(dets.header, pos_pred_res.detecs, pos_pred_res.infos, )
+	pred_store_res = trk_predict_store(dets.header, pos_pred_res.trk_predicts.detecs, pos_pred_res.trk_predicts.infos, pos_pred_res.ids)
 	# match_pub.publish(pub_match)
 	# unmatch_det_pub.publish(pub_undets)
 	# unmatch_trk_pub.publish(pub_untrks)

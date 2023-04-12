@@ -239,7 +239,7 @@ Vec3 myFrontend::PredictPostion(double time)
     double a = cur_state[4];
     double w = cur_state[5];
     double dt = time - cur_time;
-    if(dt < 0.6)
+    if(dt < 0.5)
         time_since_update++;
         
     double dth = w * dt;

@@ -15,7 +15,7 @@ def parse_args():
     parser.add_argument('--datadir', type=str, default='/home/chenz/GD/dataset')
     parser.add_argument('--dataset', type=str, default='KITTI', help='KITTI, nuScenes')
     parser.add_argument('--split', type=str, default='training', help='training, testing')
-    parser.add_argument('--seqs', type=str, default='0012')
+    parser.add_argument('--seqs', type=str, default='0001')
     parser.add_argument('__name', type=str)
     parser.add_argument('__log', type=str)
     args = parser.parse_args()
@@ -49,7 +49,8 @@ def save_results(res, save_trk_file, frame, score_threshold):
 def transform_callback(req):
     # 检测结果帧对应的车辆位姿（以初始时刻的坐标为原点，坐标方向为正东）
     # stamp使用frameid代替
-    frame_id = int(req.header.stamp.secs + 10)
+    # frame_id = int(req.header.stamp.secs + 10)
+    frame_id = int(req.header.stamp.secs)
     # rospy.loginfo("Transform cord of trks in frame %d and save them", frame_id)
     # 如果，预测的结果超出真值的frame范围，就不输出了，否则就正常处理
     if frame_id >= len(imu_pose):

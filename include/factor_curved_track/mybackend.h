@@ -73,10 +73,10 @@ private:
 
     unsigned long num_of_obj = 0;
     //滤波和优化切换
-    int kf_opt_thres = 150;
+    int kf_opt_thres = 7;
     //0,AB3dmot;1, CV_KF; 2, CA_EKF
     //后面改用enum
-    int filter_type = 2;
+    int filter_type = 0;
     std::mutex data_lck_;
 
     Frontendtype obj_list_;

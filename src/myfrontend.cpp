@@ -54,6 +54,14 @@ bool myFrontend::BuildInitCA_EKF(Vec8 state)
     return true;
 }
 
+bool myFrontend::BuildInitCTRA_EKF(Vec6 state)
+{
+    std::shared_ptr<CTRA_EKF> new_kf = std::shared_ptr<CTRA_EKF>(new CTRA_EKF(state));
+    ctra_ekf_ = new_kf;
+
+    return true;
+}
+
 bool myFrontend::BuildInitAB3D_KF(Vec10 state)
 {
     std::shared_ptr<AB3D_KF> new_kf = std::shared_ptr<AB3D_KF>(new AB3D_KF(state));
@@ -174,7 +182,7 @@ void myFrontend::UpdateTrkListCA_EKF()
 {
     double dt = cur_frame_->ObjTimestamp() - last_timestamp_;
     // std::cout<<dt<<" "<<dt<<std::endl;
-    //x,y,th,v,a,w
+    //x,y,th,vx,vy,w, ax, ay
     detected_time++;
     Vec6 state = cur_frame_->ObjState();
     Vec3 measure;
@@ -194,6 +202,32 @@ void myFrontend::UpdateTrkListCA_EKF()
     new_state << kf_state[0], kf_state[1], th, v,  a, kf_state[5];
 
     cur_frame_->SetObjState(new_state);
+}
+//CTRA_EKF估计
+void myFrontend::UpdateTrkListCTRA_EKF()
+{
+    double dt = cur_frame_->ObjTimestamp() - last_timestamp_;
+    // std::cout<<dt<<" "<<dt<<std::endl;
+    //x,y,th,v,a,w
+    detected_time++;
+    Vec6 state = cur_frame_->ObjState();
+    Vec3 measure;
+    measure << state[0], state[1], state[2];
+    std::cout<<"start_ekf"<<std::endl;
+    // ca_ekf_->predict(dt);
+    ctra_ekf_->update(measure);
+    std::cout<<"finish_ekf"<<std::endl;
+    //x,y,th,v,a,w
+    Vec6 kf_state = ctra_ekf_->GetState();
+    // //更新frame状态
+    // double v = kf_state[3];
+    // double a = kf_state[4];
+    // double th = kf_state[2];
+    // //TODO vx和vy的夹角也能表现th，是否考虑把它和上面的th综合一下呢？
+    // Vec6 new_state;
+    // new_state << kf_state[0], kf_state[1], th, v,  a, kf_state[5];
+
+    cur_frame_->SetObjState(kf_state);
 }
 //AB3D_KF估计
 void myFrontend::UpdateTrkListAB3D_KF()
@@ -287,6 +321,23 @@ Vec3 myFrontend::PredictPostionCA_EKF(double time)
     ca_ekf_->predict(dt);
     //x,y,th,vx,vy,w，ax,ay
     Vec8 state = ca_ekf_->GetStatePred();
+
+    pred_position << state[0], state[1], state[2];
+
+    return pred_position;
+}
+
+Vec3 myFrontend::PredictPostionCTRA_EKF(double time)
+{
+    time_since_update++;
+    Vec3 pred_position;
+    double cur_time = cur_frame_->ObjTimestamp();
+    double dt = time - cur_time;
+
+    //使用CTRA_EKF
+    ctra_ekf_->predict(dt);
+    //x,y,th,v,a,w
+    Vec6 state = ctra_ekf_->GetStatePred();
 
     pred_position << state[0], state[1], state[2];
 

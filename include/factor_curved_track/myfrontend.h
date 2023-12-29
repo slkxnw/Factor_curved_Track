@@ -34,6 +34,7 @@ public:
     bool BuildInitTrkList(Vec3 measure, double time, unsigned int id);
     bool BuildInitKF(Vec6 state, Vec3 vars);
     bool BuildInitCA_EKF(Vec8 state);
+    bool BuildInitCTRA_EKF(Vec6 state);
     bool BuildInitAB3D_KF(Vec10 state);
 
     //合并两个轨迹
@@ -85,6 +86,7 @@ public:
 
     void UpdateTrkListKF();
     void UpdateTrkListCA_EKF();
+    void UpdateTrkListCTRA_EKF();
     void UpdateTrkListAB3D_KF();
 
     void UpdateAB3D_KFPred(Vec3 new_pos)
@@ -115,6 +117,7 @@ public:
 
     Vec3 PredictPostionKF(double time);
     Vec3 PredictPostionCA_EKF(double time);
+    Vec3 PredictPostionCTRA_EKF(double time);
     Vec3 PredictPostionAB3D_KF(double time);
     //
     Vec6 PredictState(double time);
@@ -201,6 +204,7 @@ private:
     std::shared_ptr<myTrkList> trk_list_ = nullptr;
     std::shared_ptr<CV_KF> kf_ = nullptr;
     std::shared_ptr<CA_EKF> ca_ekf_ = nullptr;
+    std::shared_ptr<CTRA_EKF> ctra_ekf_ = nullptr;
     std::shared_ptr<AB3D_KF> ab3d_kf_ = nullptr;   
     unsigned long num_of_frames = 0;
 

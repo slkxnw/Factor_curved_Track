@@ -12,6 +12,7 @@ void myBackend::InitObj(std::vector<Vec9> &od_res, double time)
     Vec3 box_size;
     Vec6 kf_state;
     Vec8 ca_ekf_state;
+    Vec6 ctra_ekf_state;
     Vec10 ab3d_kf_state;
     for (auto &od :od_res)
     {
@@ -26,6 +27,11 @@ void myBackend::InitObj(std::vector<Vec9> &od_res, double time)
         //ca_ekf,x,y,th,vx,vy,w,ax,ay
         ca_ekf_state << od[0], od[1], od[6], vel[0], vel[1], vel[2], acc_value[0], acc_value[1];
         new_frontend->BuildInitCA_EKF(ca_ekf_state);
+        //ctra_ekf,x,y,th,v,a,w
+        double init_v = sqrt(vel[0] * vel[0] + vel[1] * vel[1]);
+        double init_a = sqrt(acc_value[0] * acc_value[0] + acc_value[1] * acc_value[1]);
+        ctra_ekf_state << od[0], od[1], od[6], init_v, init_a, vel[2];
+        new_frontend->BuildInitCTRA_EKF(ctra_ekf_state);
         //因子图
         //x,y,theta
         measure << od[0], od[1], od[6];
@@ -92,6 +98,9 @@ void myBackend::UpdateObjState(std::unordered_map<unsigned long, Vec9> &matches,
             else if (filter_type == 0)
                 //使用AB3DMOT方法
                 obj_list_[match.first]->UpdateTrkListAB3D_KF();
+            else if (filter_type == 3)
+                //使用CTRA + EKF
+                obj_list_[match.first]->UpdateTrkListCTRA_EKF();
         }
         //如果某个轨迹有了匹配，就在state_cur_list_加上它，用state_prediction_list_[match.first]做一个赋值，
         //后面获取当前状态的时候，会更新掉相关数据
@@ -149,6 +158,9 @@ myBackend::ObjInfotype myBackend::GetStatePrediction(double time)
             else if (filter_type == 0)
                 //使用AB3DMOT方法
                 position_prediction = obj_list_[state_pair.first]->PredictPostionAB3D_KF(time);
+            else if (filter_type == 3)
+                //使用CA + EKF
+                position_prediction = obj_list_[state_pair.first]->PredictPostionCTRA_EKF(time);
             
         }
         
@@ -199,6 +211,9 @@ myBackend::ObjInfotype myBackend::GetStatePredictionAll(double time)
             else if (filter_type == 0)
                 //使用AB3DMOT方法
                 position_prediction = obj_list_[pair.first]->PredictPostionAB3D_KF(time);
+            else if (filter_type == 3)
+                //使用CA + EKF
+                position_prediction = obj_list_[pair.first]->PredictPostionCTRA_EKF(time);
             
         }
         

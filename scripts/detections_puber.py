@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument('--split', type=str, default='val', help='train, val, test')
     parser.add_argument('--det_name', type=str, default='pointrcnn', help='pointrcnn')
     parser.add_argument('--categ', type=str, default='Car',help='Car, Cyclist, Pedestrain')
-    parser.add_argument('--seqs', type=str, default='0001')
+    parser.add_argument('--seqs', type=str, default='0019')
     parser.add_argument('__name', type=str)
     parser.add_argument('__log', type=str)
     args = parser.parse_args()

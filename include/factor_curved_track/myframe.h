@@ -26,6 +26,7 @@ public:
     double time_stamp_;
     //x,y,theta,v,a,omega
     Vec6 obj_state_;
+    Vec3 obj_measure_;
 
     std::mutex data_lck_;
 

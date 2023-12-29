@@ -96,6 +96,7 @@ myFrame::Ptr myFrontend::CreateMeasureFrame(Vec3 measure, double time, bool is_m
     new_frame->obj_state_ = cur_state;
     new_frame->time_stamp_ = time;
     new_frame->is_measure_ = true;
+    new_frame->obj_measure_ = measure;
     
     cur_frame_ = new_frame;
     
@@ -367,6 +368,7 @@ void myFrontend::Optimize(myTrkList::KeyframeType &keyframes, std::vector<int> &
     int edge_cnt = 0;
     std::map<unsigned long, VertexState *> vertexs;
     std::map<unsigned long, EdgeConstVary *> edges;
+    std::map<unsigned long, EdgeMeasure *> mea_edges;
     std::sort(kf_ids.begin(), kf_ids.end());
     double last_time = 0;
     unsigned long last_id = 0;
@@ -380,6 +382,18 @@ void myFrontend::Optimize(myTrkList::KeyframeType &keyframes, std::vector<int> &
         vertex_state->setEstimate(kf->obj_state_);
         optimizer.addVertex(vertex_state);
         vertexs.insert({frame_id, vertex_state});
+        //基于观测的误差边
+        EdgeMeasure *edge2 = new EdgeMeasure(0.1);
+        edge2->setId(edge_cnt);
+        edge2->setVertex(0, vertexs.at(frame_id));
+        edge2->setMeasurement(kf->obj_measure_);
+        edge2->setInformation(Mat33::Identity());
+        auto rk = new g2o::RobustKernelHuber();
+        rk->setDelta(chi2_th);
+        edge2->setRobustKernel(rk);
+        optimizer.addEdge(edge2);
+        mea_edges.insert({edge_cnt, edge2});
+        //基于运动模型的误差边
         if(vertexs.size() > 1)
         {
             double dt = kf->time_stamp_ - last_time;
